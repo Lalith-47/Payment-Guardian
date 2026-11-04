@@ -1,7 +1,7 @@
 services:
-  postgres:
+  db:
     image: postgres:16-alpine
-    container_name: m0-postgres
+    container_name: rg-postgres
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: revenue_guardian
     ports:
       - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d revenue_guardian"]
       interval: 3s
@@ -18,10 +20,12 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: m0-redis
+    container_name: rg-redis
     restart: always
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
@@ -29,3 +33,53 @@ services:
       retries: 5
       start_period: 3s
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rg-web
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - RUN_MIGRATIONS=true
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/revenue_guardian
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rg-worker
+    restart: always
+    command: ["pnpm", "worker"]
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - RUN_MIGRATIONS=false
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/revenue_guardian
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
