@@ -1,0 +1,8 @@
+.skills/
+.env
+.hallmark/
+security-audit-skill
+hallmark
+node_modules
+PROMPT.md
+scripts
