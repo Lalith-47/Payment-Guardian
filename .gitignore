@@ -1,8 +1,13 @@
 .skills/
 .env
+.env*.local
 .hallmark/
 security-audit-skill
 hallmark
 node_modules
+.next
+dist
+coverage
+*.log
 PROMPT.md
 scripts
