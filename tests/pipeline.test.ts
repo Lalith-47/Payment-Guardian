@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, vi } from "vitest";
 import { verifyPayPalWebhookSignature, validateCertUrl, crc32 } from "@/webhooks/verify";
 import { processEventPipeline } from "@/pipeline/processor";
 import { createEvent, getEventById } from "@/db/queries/events";
@@ -7,6 +7,7 @@ import { queryAuditLogs } from "@/db/queries/audit";
 import { getProposalByEventId } from "@/db/queries/proposals";
 import { upsertPayPalOrder, getPayPalOrder } from "@/db/queries/paypal-entities";
 import { reconcileNonTerminalRecords } from "@/reconciler";
+import { paypalClient } from "@/paypal/client";
 import crypto from "crypto";
 
 describe("End-to-End Pipelines & Webhook Verification (Deliverable 8)", () => {
@@ -148,9 +149,21 @@ describe("End-to-End Pipelines & Webhook Verification (Deliverable 8)", () => {
         rawPayload: { id: syncOrderId, status: "CREATED" },
       });
 
+      const getOrderSpy = vi.spyOn(paypalClient, "getOrder").mockResolvedValue({
+        id: syncOrderId,
+        status: "COMPLETED",
+        intent: "CAPTURE",
+      } as any);
+      const getInvoiceSpy = vi.spyOn(paypalClient, "getInvoice").mockResolvedValue({
+        id: "INV_SYNC",
+        status: "PAID",
+      } as any);
+
       // Run reconciler sweep
       const summary = await reconcileNonTerminalRecords();
       expect(summary.ordersChecked).toBeGreaterThan(0);
+      getOrderSpy.mockRestore();
+      getInvoiceSpy.mockRestore();
     });
   });
 });
