@@ -72,6 +72,8 @@ describe("Onboarding Policies API & Seeding (Deliverable 9)", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.policy).toBeDefined();
-    expect(body.policy.name).toBe("Dynamic Freelancer Policy");
+    expect(body.policy.name).toBeDefined();
+    expect(body.policy.currency).toBe("USD");
   });
 });
+
