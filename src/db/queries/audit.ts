@@ -47,3 +47,4 @@ export async function queryAuditLogs(limitCount = 100, eventId?: string): Promis
     .orderBy(desc(auditLog.timestamp))
     .limit(limitCount);
 }
+

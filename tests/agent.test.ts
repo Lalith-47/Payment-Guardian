@@ -1,13 +1,15 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { AgentProposalSchema, AgentContext } from "@/agent/schema";
 import { buildAgentPrompt, buildRepairPrompt } from "@/agent/prompts";
-import { AgentService, ModelCallerFn } from "@/agent/client";
+import { AgentService, ModelCallerFn, isDailyQuotaError } from "@/agent/client";
 import { redis } from "@/lib/redis";
+import { checkClientRateLimit, getLlmDailyUsage } from "@/lib/llm-budget";
 
 describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
   beforeEach(async () => {
-    // Clear any test cache keys
-    const keys = await redis.keys("rg:llm_cache:test_*");
+    // Clear any test cache keys, usage counters, and exhaustion flag
+    await redis.del("rg:llm_daily_cap_exhausted");
+    const keys = await redis.keys("rg:llm_*");
     if (keys.length > 0) {
       await redis.del(...keys);
     }
@@ -197,4 +199,69 @@ describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
     expect(res2.status).toBe("SUCCESS");
     expect(calls).toBe(1); // Caller was NOT invoked again!
   });
+
+  it("8. 429 Classification (Daily Cap): halts immediately on free-models-per-day, does not try fallbacks, marks budget exhausted", async () => {
+    let callCount = 0;
+    const dailyCapCaller: ModelCallerFn = async () => {
+      callCount++;
+      const err = new Error("HTTP 429: free-models-per-day limit reached for account") as Error & {
+        status?: number;
+        bodyText?: string;
+      };
+      err.status = 429;
+      err.bodyText = '{"error":{"message":"free-models-per-day limit reached"}}';
+      throw err;
+    };
+
+    const service = new AgentService(dailyCapCaller);
+    const result = await service.evaluateEvent({
+      eventId: "test_evt_daily_cap_1",
+      eventType: "payment.capture_declined",
+      source: "sandbox_negative_testing",
+    });
+
+    // Cascade MUST halt on attempt 1 without attempting fallback models
+    expect(callCount).toBe(1);
+    expect(result.status).toBe("WAITING_FOR_AI");
+    if (result.status === "WAITING_FOR_AI") {
+      expect(result.proposal).toBeNull();
+      expect(result.error).toContain("daily free-tier cap reached");
+    }
+
+    // Verify budget is marked exhausted
+    const usage = await getLlmDailyUsage();
+    expect(usage.exhaustedByCap).toBe(true);
+    expect(usage.remaining).toBe(0);
+
+    // Clean up daily cap flag for remaining tests
+    await redis.del("rg:llm_daily_cap_exhausted");
+  });
+
+  it("9. 429 Classification helper: detects known daily quota patterns", () => {
+    expect(isDailyQuotaError("free-models-per-day limit reached")).toBe(true);
+    expect(isDailyQuotaError("openrouter_free_tier_daily limit")).toBe(true);
+    expect(isDailyQuotaError("daily quota exceeded")).toBe(true);
+    expect(isDailyQuotaError("Please add credits to unlock higher limits")).toBe(true);
+    expect(isDailyQuotaError("Rate limit exceeded. Try again in 2 seconds.")).toBe(false);
+  });
+
+  it("10. Client-side Rate Limiter: enforces max 15 requests per minute", async () => {
+    const minute = Math.floor(Date.now() / 60000);
+    const key = `rg:llm_rpm:${minute}`;
+    await redis.del(key);
+
+    // First 15 calls should be allowed
+    for (let i = 1; i <= 15; i++) {
+      const res = await checkClientRateLimit(15);
+      expect(res.allowed).toBe(true);
+    }
+
+    // 16th call should be blocked
+    const blocked = await checkClientRateLimit(15);
+    expect(blocked.allowed).toBe(false);
+    expect(blocked.retryAfterMs).toBeGreaterThan(0);
+
+    await redis.del(key);
+  });
 });
+

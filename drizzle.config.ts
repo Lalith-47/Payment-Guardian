@@ -11,3 +11,4 @@ export default defineConfig({
     url: process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5433/revenue_guardian",
   },
 });
+

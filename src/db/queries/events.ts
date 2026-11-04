@@ -36,3 +36,4 @@ export async function updateEventStatus(
 export async function listRecentEvents(limitCount = 50): Promise<EventRecord[]> {
   return db.select().from(events).orderBy(desc(events.createdAt)).limit(limitCount);
 }
+

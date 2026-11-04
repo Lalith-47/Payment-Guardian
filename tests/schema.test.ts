@@ -225,3 +225,4 @@ describe("Database Schema & Model Queries (Deliverable 3)", () => {
     expect(fetchedInvoice?.recipientEmail).toBe("client@example.com");
   });
 });
+

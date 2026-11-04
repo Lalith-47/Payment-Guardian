@@ -54,14 +54,10 @@ async function main() {
   startReconciliationWorker();
 
   // Schedule repeatable reconciliation sweep every 60 seconds
-  await reconciliationQueue.add(
-    "sweep",
-    {},
+  await reconciliationQueue.upsertJobScheduler(
+    "repeatable_reconciliation_sweep",
     {
-      repeat: {
-        every: 60000, // every 60 seconds
-      },
-      jobId: "repeatable_reconciliation_sweep",
+      every: 60000, // every 60 seconds
     }
   );
 

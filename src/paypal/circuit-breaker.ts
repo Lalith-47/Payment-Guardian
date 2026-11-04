@@ -63,3 +63,4 @@ export class CircuitBreaker {
     this.nextAttemptTimestamp = 0;
   }
 }
+

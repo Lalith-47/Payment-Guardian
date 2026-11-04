@@ -97,3 +97,4 @@ export async function listNonTerminalInvoices(): Promise<PayPalInvoiceRecord[]> 
     .from(paypalInvoices)
     .where(sql`${paypalInvoices.status} NOT IN ('PAID', 'MARKED_AS_PAID', 'CANCELLED', 'REFUNDED')`);
 }
+

@@ -8,3 +8,4 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
 fi
 
 exec "$@"
+

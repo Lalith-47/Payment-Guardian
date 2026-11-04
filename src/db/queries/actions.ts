@@ -20,6 +20,14 @@ export async function getActionByIdempotencyKey(key: string): Promise<ActionReco
   return action || null;
 }
 
+export async function getActionsByEventId(eventId: string): Promise<ActionRecord[]> {
+  return await db
+    .select()
+    .from(actions)
+    .where(eq(actions.eventId, eventId))
+    .orderBy(desc(actions.executedAt));
+}
+
 export async function updateActionStatus(
   id: string,
   status: ActionRecord["status"],
@@ -42,3 +50,4 @@ export async function updateActionStatus(
 
   return updated || null;
 }
+

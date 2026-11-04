@@ -56,6 +56,7 @@ const envSchema = z.object({
     ),
   LLM_BASE_URL_2: z.string().url().optional(),
   LLM_API_KEY_2: z.string().optional(),
+  LLM_PROVIDER_DAILY_CAP: z.coerce.number().default(100),
   LLM_DAILY_BUDGET: z.coerce.number().default(100),
 
   // Auth (better-auth single owner)
@@ -63,8 +64,15 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url().default("http://localhost:3000"),
   OWNER_EMAIL: z.string().email("OWNER_EMAIL must be a valid email"),
   OWNER_PASSWORD: z.string().min(8, "OWNER_PASSWORD must be at least 8 chars"),
-});
+}).refine(
+  (data) => data.LLM_DAILY_BUDGET <= data.LLM_PROVIDER_DAILY_CAP,
+  {
+    message: "LLM_DAILY_BUDGET must not exceed LLM_PROVIDER_DAILY_CAP",
+    path: ["LLM_DAILY_BUDGET"],
+  }
+);
 
+export { envSchema };
 export type EnvConfig = z.infer<typeof envSchema>;
 
 function loadAndValidateEnv(): EnvConfig {
@@ -89,3 +97,4 @@ function loadAndValidateEnv(): EnvConfig {
 }
 
 export const env = loadAndValidateEnv();
+

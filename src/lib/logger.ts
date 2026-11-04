@@ -39,3 +39,4 @@ export const logger = pino({
 export function createChildLogger(moduleName: string, meta?: Record<string, unknown>) {
   return logger.child({ module: moduleName, ...meta });
 }
+

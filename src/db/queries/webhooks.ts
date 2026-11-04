@@ -36,3 +36,4 @@ export async function markWebhookProcessed(id: number): Promise<void> {
     .set({ processedAt: new Date() })
     .where(eq(webhookDeliveries.id, id));
 }
+

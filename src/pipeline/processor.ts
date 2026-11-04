@@ -4,7 +4,7 @@ import { createProposal } from "@/db/queries/proposals";
 import { createApproval } from "@/db/queries/approvals";
 import { appendAuditLog } from "@/db/queries/audit";
 import { upsertPayPalOrder, upsertPayPalInvoice } from "@/db/queries/paypal-entities";
-import { agentService } from "@/agent/client";
+import { agentService, AgentService } from "@/agent/client";
 import { evaluatePolicy } from "@/policy/engine";
 import { actionExecutor } from "@/executor";
 import { createChildLogger } from "@/lib/logger";
@@ -12,16 +12,21 @@ import crypto from "crypto";
 
 const log = createChildLogger("pipeline-processor");
 
-export async function processEventPipeline(jobData: {
-  eventId: string;
-  type: string;
-  source: string;
-  orderId?: string;
-  payload?: Record<string, unknown>;
-  issue?: string;
-  description?: string;
-}) {
+export async function processEventPipeline(
+  jobData: {
+    eventId: string;
+    type: string;
+    source: string;
+    orderId?: string;
+    payload?: Record<string, unknown>;
+    issue?: string;
+    description?: string;
+  },
+  customAgent?: AgentService
+) {
   log.info({ eventId: jobData.eventId, type: jobData.type }, "Starting pipeline execution for event");
+
+  const activeAgent = customAgent || agentService;
 
   // ==========================================
   // Pipeline Branch 1: Capture Declined Recovery
@@ -42,7 +47,7 @@ export async function processEventPipeline(jobData: {
     }
 
     // Step 2: Agent Module Evaluation
-    const agentResult = await agentService.evaluateEvent({
+    const agentResult = await activeAgent.evaluateEvent({
       eventId: jobData.eventId,
       eventType: jobData.type,
       source: jobData.source,
@@ -240,3 +245,4 @@ export async function processEventPipeline(jobData: {
       break;
   }
 }
+

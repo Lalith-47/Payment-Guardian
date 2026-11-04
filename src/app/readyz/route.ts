@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/db";
 import { redis } from "@/lib/redis";
+import { env } from "@/config/env";
+import { paypalClient } from "@/paypal/client";
 import { getLlmDailyUsage } from "@/lib/llm-budget";
 import { createChildLogger } from "@/lib/logger";
 
@@ -35,7 +37,50 @@ export async function GET() {
     checks.redis = { status: "DOWN", error: (err as Error).message };
   }
 
-  // 3. LLM Budget Check
+  // 3. PayPal Sandbox Auth Check
+  const ppStart = Date.now();
+  try {
+    const token = await paypalClient.getAccessToken();
+    if (token && token.length > 0) {
+      checks.paypalAuth = { status: "UP", latencyMs: Date.now() - ppStart };
+    } else {
+      isReady = false;
+      checks.paypalAuth = { status: "DOWN", error: "Empty token returned" };
+    }
+  } catch (err) {
+    isReady = false;
+    checks.paypalAuth = { status: "DOWN", error: (err as Error).message };
+  }
+
+  // 4. Model Reachability via /models endpoint (no completion calls)
+  const modelStart = Date.now();
+  try {
+    const baseUrl = env.OPENROUTER_BASE_URL.replace(/\/+$/, "");
+    const res = await fetch(`${baseUrl}/models`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+      },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (res.ok) {
+      checks.modelReachability = { status: "UP", latencyMs: Date.now() - modelStart };
+    } else {
+      checks.modelReachability = {
+        status: "DOWN",
+        latencyMs: Date.now() - modelStart,
+        error: `HTTP ${res.status}: ${res.statusText}`,
+      };
+    }
+  } catch (err) {
+    checks.modelReachability = {
+      status: "DOWN",
+      latencyMs: Date.now() - modelStart,
+      error: (err as Error).message,
+    };
+  }
+
+  // 5. LLM Budget Check
   const llmUsage = await getLlmDailyUsage();
 
   const responseBody = {
@@ -46,7 +91,8 @@ export async function GET() {
       dailyBudget: llmUsage.budget,
       usedToday: llmUsage.used,
       remaining: llmUsage.remaining,
-      budgetExhausted: llmUsage.remaining <= 0,
+      budgetExhausted: llmUsage.remaining <= 0 || llmUsage.exhaustedByCap,
+      exhaustedByCap: llmUsage.exhaustedByCap,
     },
   };
 
@@ -54,3 +100,4 @@ export async function GET() {
     status: isReady ? 200 : 503,
   });
 }
+

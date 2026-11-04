@@ -1,16 +1,37 @@
 import { env } from "@/config/env";
 import { redis } from "@/lib/redis";
 import { createChildLogger } from "@/lib/logger";
-import { incrementLlmUsage, isLlmBudgetAvailable } from "@/lib/llm-budget";
+import {
+  incrementLlmUsage,
+  isLlmBudgetAvailable,
+  markDailyBudgetExhausted,
+  checkClientRateLimit,
+} from "@/lib/llm-budget";
 import { AgentContext, AgentProposal, AgentProposalSchema, AgentResult } from "./schema";
 import { SYSTEM_PROMPT, buildAgentPrompt, buildRepairPrompt } from "./prompts";
 
 const log = createChildLogger("agent-client");
 
+export interface CallResult {
+  content: string;
+  retryAfterSeconds?: number;
+}
+
 export type ModelCallerFn = (
   model: string,
   messages: Array<{ role: string; content: string }>
-) => Promise<{ content: string; retryAfterSeconds?: number }>;
+) => Promise<CallResult>;
+
+export function isDailyQuotaError(errorMessage: string): boolean {
+  const lower = errorMessage.toLowerCase();
+  return (
+    lower.includes("free-models-per-day") ||
+    lower.includes("openrouter_free_tier_daily") ||
+    lower.includes("daily limit") ||
+    lower.includes("daily quota") ||
+    lower.includes("credits to unlock")
+  );
+}
 
 /**
  * Default OpenAI-compatible HTTP model caller
@@ -18,7 +39,7 @@ export type ModelCallerFn = (
 export async function defaultOpenRouterCaller(
   model: string,
   messages: Array<{ role: string; content: string }>
-): Promise<{ content: string; retryAfterSeconds?: number }> {
+): Promise<CallResult> {
   const apiKey = env.OPENROUTER_API_KEY;
   const baseUrl = env.OPENROUTER_BASE_URL.replace(/\/+$/, "");
 
@@ -46,9 +67,11 @@ export async function defaultOpenRouterCaller(
     const error = new Error(`LLM call failed (${res.status}): ${errText}`) as Error & {
       retryAfterSeconds?: number;
       status?: number;
+      bodyText?: string;
     };
     error.retryAfterSeconds = retryAfter;
     error.status = res.status;
+    error.bodyText = errText;
     throw error;
   }
 
@@ -105,9 +128,15 @@ export class AgentService {
 
       // Max 2 attempts per model with backoff
       for (let modelAttempt = 1; modelAttempt <= 2; modelAttempt++) {
+        // Enforce client-side rate limit (15 req/min)
+        const rateLimit = await checkClientRateLimit(15);
+        if (!rateLimit.allowed) {
+          log.warn({ retryAfterMs: rateLimit.retryAfterMs }, "Rate limit (15 RPM) exceeded, waiting...");
+          await new Promise((r) => setTimeout(r, Math.min(rateLimit.retryAfterMs, 4000)));
+        }
+
         totalAttempts++;
         try {
-          // Increment budget counter for this live attempt
           const { allowed } = await incrementLlmUsage();
           if (!allowed) {
             return {
@@ -162,20 +191,45 @@ export class AgentService {
             };
           }
         } catch (err: unknown) {
-          const errorObj = err as { retryAfterSeconds?: number; message?: string };
+          const errorObj = err as {
+            retryAfterSeconds?: number;
+            message?: string;
+            bodyText?: string;
+            status?: number;
+          };
+          const errDetail = `${errorObj.message || ""} ${errorObj.bodyText || ""}`;
           log.warn(
-            { model, attempt: modelAttempt, err: errorObj.message },
+            { model, attempt: modelAttempt, status: errorObj.status, err: errorObj.message },
             "Model call encountered an error"
           );
 
-          if (errorObj.retryAfterSeconds && errorObj.retryAfterSeconds > 0) {
-            const delayMs = Math.min(errorObj.retryAfterSeconds * 1000, 5000);
-            await new Promise((r) => setTimeout(r, delayMs));
-          } else {
-            // Exponential backoff + jitter
-            const backoffMs = Math.pow(2, modelAttempt) * 300 + Math.random() * 200;
-            await new Promise((r) => setTimeout(r, backoffMs));
+          // 1. CLASSIFY 429: Account-wide daily cap reached (free-models-per-day)
+          if (errorObj.status === 429 && isDailyQuotaError(errDetail)) {
+            log.error(
+              { model, err: errorObj.message },
+              "CRITICAL: OpenRouter free-models-per-day cap reached. Halting fallback cascade immediately."
+            );
+            await markDailyBudgetExhausted("OpenRouter free-models-per-day cap reached");
+            return {
+              status: "WAITING_FOR_AI",
+              proposal: null,
+              error: "OpenRouter daily free-tier cap reached. Event transitioned to WAITING_FOR_AI.",
+            };
           }
+
+          // 2. CLASSIFY 429: Per-minute rate limit -> backoff with jitter
+          if (errorObj.status === 429) {
+            const retryDelay = errorObj.retryAfterSeconds
+              ? errorObj.retryAfterSeconds * 1000
+              : Math.pow(2, modelAttempt) * 1000 + Math.random() * 500;
+            log.info({ retryDelay }, "Per-minute rate limit hit; backing off with jitter");
+            await new Promise((r) => setTimeout(r, Math.min(retryDelay, 5000)));
+            continue;
+          }
+
+          // Generic backoff + jitter for transient network / 5xx errors
+          const backoffMs = Math.pow(2, modelAttempt) * 300 + Math.random() * 200;
+          await new Promise((r) => setTimeout(r, backoffMs));
         }
       }
     }
@@ -193,7 +247,6 @@ export class AgentService {
     content: string
   ): { success: boolean; proposal?: AgentProposal; error: string } {
     try {
-      // Clean possible code fences
       let cleaned = content.trim();
       if (cleaned.startsWith("```json")) {
         cleaned = cleaned.replace(/^```json/, "").replace(/```$/, "").trim();

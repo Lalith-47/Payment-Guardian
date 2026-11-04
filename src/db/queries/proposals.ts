@@ -20,3 +20,4 @@ export async function getProposalByEventId(eventId: string): Promise<ProposalRec
 
   return proposal || null;
 }
+
