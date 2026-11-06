@@ -130,9 +130,12 @@ export class ActionExecutor {
         eventType: "action.executed",
         eventId: req.eventId,
         actor: "executor",
-        action: `EXECUTE_${req.proposal.action.toUpperCase()}`,
+        action: "STATE_TRANSITION",
         details: {
+          from: "DECIDED",
+          to: "EXECUTED",
           actionId,
+          actionType: req.proposal.action,
           idempotencyKey,
           result: execResult,
         },
@@ -149,8 +152,7 @@ export class ActionExecutor {
       const errMsg = (err as Error).message || "Unknown error during mutation";
       log.error({ err, actionId, idempotencyKey }, "Action execution failed");
 
-      // Mark as DEAD_LETTER if non-retryable or fatal
-      await updateActionStatus(actionId, "DEAD_LETTER", {
+      await updateActionStatus(actionId, "FAILED", {
         errorMessage: errMsg,
       });
 
@@ -161,9 +163,12 @@ export class ActionExecutor {
         eventType: "action.failed",
         eventId: req.eventId,
         actor: "executor",
-        action: `FAILED_${req.proposal.action.toUpperCase()}`,
+        action: "STATE_TRANSITION",
         details: {
+          from: "DECIDED",
+          to: "FAILED",
           actionId,
+          actionType: req.proposal.action,
           idempotencyKey,
           error: errMsg,
         },
@@ -244,7 +249,7 @@ export class ActionExecutor {
       }
 
       case "offer": {
-        // Create alternative offer invoice
+        // Create alternative offer draft invoice (stored as draft, no external sending in MVP)
         const invoiceDraft = await paypalClient.createDraftInvoice({
           recipientEmail: "client@example.com",
           amount: (req.proposal.amount || 10).toFixed(2),
@@ -253,13 +258,11 @@ export class ActionExecutor {
           requestId: idempotencyKey,
         });
 
-        await paypalClient.sendInvoice(invoiceDraft.id);
-        const details = await paypalClient.getInvoice(invoiceDraft.id);
-
         return {
           invoiceId: invoiceDraft.id,
           invoiceNumber: invoiceDraft.invoiceNumber,
-          payerViewUrl: details.payerViewUrl,
+          draftCustomerMessage: req.proposal.message,
+          status: "DRAFT_STORED",
         };
       }
 

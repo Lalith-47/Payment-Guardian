@@ -110,8 +110,12 @@ export async function processEventPipeline(
         eventType: jobData.type,
         eventId: jobData.eventId,
         actor: "agent",
-        action: "TRANSITION_WAITING_FOR_AI",
-        details: { error: agentResult.error },
+        action: "STATE_TRANSITION",
+        details: {
+          from: "RECEIVED",
+          to: "WAITING_FOR_AI",
+          error: agentResult.error,
+        },
       });
       return; // NEVER auto-act when AI fails
     }
@@ -134,6 +138,23 @@ export async function processEventPipeline(
       contextSnapshot: agentResult.contextSnapshot,
     });
 
+    // State Transition: RECEIVED -> PROPOSED
+    await updateEventStatus(jobData.eventId, "PROPOSED");
+    await appendAuditLog({
+      source: "agent",
+      eventType: jobData.type,
+      eventId: jobData.eventId,
+      actor: "agent",
+      action: "STATE_TRANSITION",
+      details: {
+        from: "RECEIVED",
+        to: "PROPOSED",
+        proposalId,
+        action: proposal.action,
+        confidence: proposal.confidence,
+      },
+    });
+
     // Step 3: Policy Engine Evaluation (Deterministic, Fail Closed)
     const policyResult = evaluatePolicy(policy, proposal);
     log.info(
@@ -141,15 +162,17 @@ export async function processEventPipeline(
       "Policy engine evaluated agent proposal"
     );
 
-    await updateEventStatus(jobData.eventId, "POLICY_EVALUATED");
-
+    // State Transition: PROPOSED -> DECIDED
+    await updateEventStatus(jobData.eventId, "DECIDED");
     await appendAuditLog({
       source: "policy_engine",
       eventType: jobData.type,
       eventId: jobData.eventId,
       actor: "policy_engine",
-      action: "EVALUATE_POLICY",
+      action: "STATE_TRANSITION",
       details: {
+        from: "PROPOSED",
+        to: "DECIDED",
         proposalId,
         decision: policyResult.decision,
         reason: policyResult.reason,
@@ -160,6 +183,7 @@ export async function processEventPipeline(
     // Step 4: Act based on Decision
     if (policyResult.decision === "AUTO") {
       log.info({ eventId: jobData.eventId, action: proposal.action }, "Dispatching to Executor under AUTO approval");
+      // Executor handles concrete execution and state transition to EXECUTED or FAILED
       await actionExecutor.execute({
         eventId: jobData.eventId,
         proposalId,
@@ -170,22 +194,25 @@ export async function processEventPipeline(
     } else if (policyResult.decision === "NEEDS_APPROVAL") {
       log.info({ eventId: jobData.eventId }, "Proposal requires manual owner approval; generating single-use token");
       const approval = await createApproval(jobData.eventId, proposalId, 120);
-      await updateEventStatus(jobData.eventId, "WAITING_FOR_APPROVAL");
 
+      // State Transition: DECIDED -> AWAITING_APPROVAL
+      await updateEventStatus(jobData.eventId, "AWAITING_APPROVAL");
       await appendAuditLog({
         source: "policy_engine",
         eventType: jobData.type,
         eventId: jobData.eventId,
         actor: "policy_engine",
-        action: "APPROVAL_REQUESTED",
+        action: "STATE_TRANSITION",
         details: {
+          from: "DECIDED",
+          to: "AWAITING_APPROVAL",
           proposalId,
           approvalId: approval.id,
           expiresAt: approval.expiresAt,
         },
       });
     } else {
-      // BLOCKED
+      // BLOCKED -> State Transition: DECIDED -> REJECTED
       log.warn({ eventId: jobData.eventId, reason: policyResult.reason }, "Proposal blocked by policy engine");
       await updateEventStatus(jobData.eventId, "REJECTED", policyResult.reason);
       await appendAuditLog({
@@ -193,8 +220,12 @@ export async function processEventPipeline(
         eventType: jobData.type,
         eventId: jobData.eventId,
         actor: "policy_engine",
-        action: "ACTION_BLOCKED",
-        details: { reason: policyResult.reason },
+        action: "STATE_TRANSITION",
+        details: {
+          from: "DECIDED",
+          to: "REJECTED",
+          reason: policyResult.reason,
+        },
       });
     }
 
