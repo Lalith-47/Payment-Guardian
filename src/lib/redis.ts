@@ -14,6 +14,7 @@ export function getRedisClient(): Redis {
     global.__redisClient = new Redis(env.REDIS_URL, {
       maxRetriesPerRequest: null, // Required by BullMQ
       enableReadyCheck: true,
+      lazyConnect: process.env.SKIP_ENV_VALIDATION === "1",
       retryStrategy(times) {
         const delay = Math.min(times * 100, 3000);
         log.warn({ attempt: times, delay }, "Reconnecting to Redis...");

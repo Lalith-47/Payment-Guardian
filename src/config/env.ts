@@ -76,6 +76,30 @@ export { envSchema };
 export type EnvConfig = z.infer<typeof envSchema>;
 
 function loadAndValidateEnv(): EnvConfig {
+  if (process.env.SKIP_ENV_VALIDATION === "1" || process.env.NEXT_PHASE === "phase-production-build") {
+    return {
+      NODE_ENV: "production",
+      PORT: 3000,
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/revenue_guardian",
+      REDIS_URL: "redis://localhost:6379",
+      PAYPAL_CLIENT_ID: "build_dummy",
+      PAYPAL_CLIENT_SECRET: "build_dummy",
+      PAYPAL_BASE_URL: "https://api-m.sandbox.paypal.com",
+      PAYPAL_WEBHOOK_TOLERANCE_SECONDS: 300,
+      SANDBOX_NEGATIVE_TESTING: false,
+      OPENROUTER_API_KEY: "build_dummy",
+      OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1",
+      MODEL_PRIMARY: "nvidia/nemotron-3-ultra-550b-a55b:free",
+      MODEL_FALLBACKS: [],
+      LLM_PROVIDER_DAILY_CAP: 100,
+      LLM_DAILY_BUDGET: 100,
+      BETTER_AUTH_SECRET: "build_dummy_secret_at_least_32_characters_long",
+      BETTER_AUTH_URL: "http://localhost:3000",
+      OWNER_EMAIL: "owner@build.local",
+      OWNER_PASSWORD: "build_password_123",
+    };
+  }
+
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
