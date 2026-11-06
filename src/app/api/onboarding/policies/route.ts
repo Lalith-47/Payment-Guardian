@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { getActivePolicy, createPolicy, updatePolicy } from "@/db/queries/policies";
 import { appendAuditLog } from "@/db/queries/audit";
+import { requireOwnerSession } from "@/lib/api-auth";
 import { createChildLogger } from "@/lib/logger";
 
 const log = createChildLogger("onboarding-api");
@@ -18,12 +19,21 @@ const policyInputSchema = z.object({
   requireApprovalForActions: z.array(z.string()).default(["escalate"]),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const authResult = await requireOwnerSession(req);
+  if ("errorResponse" in authResult) {
+    return authResult.errorResponse;
+  }
+
   const activePolicy = await getActivePolicy();
   return NextResponse.json({ policy: activePolicy });
 }
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireOwnerSession(req);
+  if ("errorResponse" in authResult) {
+    return authResult.errorResponse;
+  }
   let body: unknown;
   try {
     body = await req.json();

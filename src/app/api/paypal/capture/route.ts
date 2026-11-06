@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { paypalClient } from "@/paypal/client";
 import { createEvent, updateEventStatus } from "@/db/queries/events";
-import { upsertPayPalOrder } from "@/db/queries/paypal-entities";
+import { getPayPalOrder, upsertPayPalOrder } from "@/db/queries/paypal-entities";
+import { getActivePolicy } from "@/db/queries/policies";
 import { appendAuditLog } from "@/db/queries/audit";
+import { requireOwnerSession } from "@/lib/api-auth";
+import { redis } from "@/lib/redis";
+import { db } from "@/db";
+import { events } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import { eventsQueue } from "@/queue";
 import { env } from "@/config/env";
 import { createChildLogger } from "@/lib/logger";
@@ -11,6 +17,12 @@ import { createChildLogger } from "@/lib/logger";
 const log = createChildLogger("capture-route");
 
 export async function POST(req: NextRequest) {
+  // S1: Enforce Owner Session authentication
+  const authResult = await requireOwnerSession(req);
+  if ("errorResponse" in authResult) {
+    return authResult.errorResponse;
+  }
+
   let body: {
     orderId?: string;
     mockCode?: "INSTRUMENT_DECLINED" | "TRANSACTION_REFUSED";
@@ -29,6 +41,60 @@ export async function POST(req: NextRequest) {
 
   const orderId = body.orderId;
   const requestId = body.requestId || `req_${crypto.randomUUID()}`;
+
+  // S2: Accept only an orderId that exists in our own paypal_orders table (created via our app)
+  const existingOrder = await getPayPalOrder(orderId);
+  if (!existingOrder) {
+    log.warn({ orderId }, "Capture rejected: Order not found in local paypal_orders table");
+    return NextResponse.json(
+      { error: `Order '${orderId}' not found. Only orders created through this application can be captured.` },
+      { status: 404 }
+    );
+  }
+
+  // S2: Rate-limit via Redis (max 5 capture attempts per order per minute)
+  const rateLimitKey = `rg:ratelimit:capture:${orderId}`;
+  try {
+    const attempts = await redis.incr(rateLimitKey);
+    if (attempts === 1) {
+      await redis.expire(rateLimitKey, 60);
+    }
+    if (attempts > 5) {
+      log.warn({ orderId, attempts }, "Capture rate limit exceeded for order");
+      return NextResponse.json(
+        { error: "Too many capture attempts for this order. Rate limit exceeded (max 5 per minute)." },
+        { status: 429 }
+      );
+    }
+  } catch (err) {
+    log.warn({ err, orderId }, "Redis rate limiter check failed; proceeding safely");
+  }
+
+  // S2: Cap decline events per order so repeated declines cannot trigger unlimited model calls
+  const policy = await getActivePolicy();
+  const maxRetries = policy?.autoRetryMaxAttempts ?? 2;
+  const existingDeclineEvents = await db
+    .select()
+    .from(events)
+    .where(
+      and(
+        eq(events.externalId, orderId),
+        eq(events.type, "payment.capture_declined")
+      )
+    );
+
+  if (existingDeclineEvents.length > maxRetries) {
+    log.warn(
+      { orderId, existingDeclineCount: existingDeclineEvents.length, maxRetries },
+      "Decline retry cap reached for order; refusing repeated capture to prevent quota exhaustion"
+    );
+    return NextResponse.json(
+      {
+        error: `Decline cap reached for order ${orderId} (${existingDeclineEvents.length}/${maxRetries} policy max). Repeated capture rejected.`,
+      },
+      { status: 422 }
+    );
+  }
 
   // Validate Negative Testing mock code if passed
   if (body.mockCode) {
