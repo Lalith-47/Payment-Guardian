@@ -3,11 +3,15 @@ import { getActivePolicy } from "@/db/queries/policies";
 import { createProposal } from "@/db/queries/proposals";
 import { createApproval } from "@/db/queries/approvals";
 import { appendAuditLog } from "@/db/queries/audit";
-import { upsertPayPalOrder, upsertPayPalInvoice } from "@/db/queries/paypal-entities";
+import { getPayPalOrder, upsertPayPalOrder, upsertPayPalInvoice } from "@/db/queries/paypal-entities";
 import { agentService, AgentService } from "@/agent/client";
+import { AgentContextSnapshot } from "@/agent/schema";
 import { evaluatePolicy } from "@/policy/engine";
 import { actionExecutor } from "@/executor";
 import { createChildLogger } from "@/lib/logger";
+import { db } from "@/db";
+import { paypalOrders } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import crypto from "crypto";
 
 const log = createChildLogger("pipeline-processor");
@@ -46,15 +50,56 @@ export async function processEventPipeline(
       return;
     }
 
-    // Step 2: Agent Module Evaluation
-    const agentResult = await activeAgent.evaluateEvent({
+    // Step 2: Agent Module Evaluation with Grounded Structured Context Snapshot
+    const order = jobData.orderId ? await getPayPalOrder(jobData.orderId) : null;
+    const retryCount = (jobData.payload?.retryCount as number) || 0;
+    const customerEmail =
+      (order?.payerEmail as string) || (jobData.payload?.customerEmail as string) || null;
+    const customerName = (jobData.payload?.customerName as string) || null;
+    const customerNote = (jobData.payload?.customerNote as string) || null;
+    const amount = order?.amount
+      ? parseFloat(order.amount)
+      : jobData.payload?.amount != null
+      ? Number(jobData.payload.amount)
+      : null;
+    const currency = order?.currency || (jobData.payload?.currency as string) || "USD";
+
+    // Query DB strictly for prior completed orders for this customer; if none, customerHistory is null
+    let customerHistory: string | null = null;
+    if (customerEmail) {
+      try {
+        const priorOrders = await db
+          .select()
+          .from(paypalOrders)
+          .where(eq(paypalOrders.payerEmail, customerEmail));
+        const priorCompleted = priorOrders.filter(
+          (o) => o.id !== jobData.orderId && o.status === "COMPLETED"
+        );
+        if (priorCompleted.length > 0) {
+          customerHistory = `${priorCompleted.length} prior completed order(s) in store history`;
+        }
+      } catch (err) {
+        log.warn({ err, customerEmail }, "Could not query customer order history from DB");
+      }
+    }
+
+    const contextSnapshot: AgentContextSnapshot = {
       eventId: jobData.eventId,
       eventType: jobData.type,
       source: jobData.source,
-      orderId: jobData.orderId,
-      declineReason: jobData.issue || "INSTRUMENT_DECLINED",
-      customerNote: (jobData.payload?.customerNote as string) || undefined,
-    });
+      orderId: jobData.orderId || null,
+      invoiceId: null,
+      amount,
+      currency,
+      retryCount,
+      declineReason: jobData.issue || (jobData.payload?.mockCode as string) || "INSTRUMENT_DECLINED",
+      customerEmail,
+      customerName,
+      customerNote,
+      customerHistory,
+    };
+
+    const agentResult = await activeAgent.evaluateEvent(contextSnapshot);
 
     // Handle Fail-Safe: All models failed or budget exhausted
     if (agentResult.status === "WAITING_FOR_AI" || !agentResult.proposal) {
@@ -74,7 +119,7 @@ export async function processEventPipeline(
     const proposal = agentResult.proposal;
     const proposalId = `prop_${crypto.randomUUID()}`;
 
-    // Record Proposal in DB
+    // Record Proposal in DB with exact context snapshot
     await createProposal({
       id: proposalId,
       eventId: jobData.eventId,
@@ -86,6 +131,7 @@ export async function processEventPipeline(
       reasoning: proposal.reasoning,
       modelUsed: agentResult.modelUsed,
       attempts: agentResult.attempts,
+      contextSnapshot: agentResult.contextSnapshot,
     });
 
     // Step 3: Policy Engine Evaluation (Deterministic, Fail Closed)

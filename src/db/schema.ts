@@ -113,6 +113,7 @@ export const proposals = pgTable("proposals", {
   reasoning: text("reasoning").notNull(),
   modelUsed: text("model_used").notNull(),
   attempts: integer("attempts").notNull().default(1),
+  contextSnapshot: jsonb("context_snapshot"), // Structured context snapshot stored with each proposal
   rawResponse: jsonb("raw_response"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

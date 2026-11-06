@@ -7,10 +7,63 @@ import {
   markDailyBudgetExhausted,
   checkClientRateLimit,
 } from "@/lib/llm-budget";
-import { AgentContext, AgentProposal, AgentProposalSchema, AgentResult } from "./schema";
+import {
+  AgentContext,
+  AgentContextSnapshot,
+  AgentProposal,
+  AgentProposalSchema,
+  AgentResult,
+  GroundingValidation,
+} from "./schema";
 import { SYSTEM_PROMPT, buildAgentPrompt, buildRepairPrompt } from "./prompts";
 
 const log = createChildLogger("agent-client");
+
+export function validateGrounding(
+  reasoning: string,
+  context: AgentContext
+): GroundingValidation {
+  const hasCustomerHistory = Boolean(
+    context.customerHistory &&
+      context.customerHistory.trim().length > 0 &&
+      !context.customerHistory.toLowerCase().includes("null")
+  );
+
+  if (!hasCustomerHistory) {
+    const forbiddenHistoryPatterns = [
+      /\bestablished (client|customer|account)\b/i,
+      /\bloyal (client|customer)\b/i,
+      /\brepeat (client|customer|buyer)\b/i,
+      /\bfrequent (client|customer|buyer)\b/i,
+      /\bprevious (transactions?|orders?|payments?|purchases?)\b/i,
+      /\bpast (transactions?|orders?|payments?|purchases?|history)\b/i,
+      /\bprior (transactions?|orders?|payments?|purchases?|history)\b/i,
+      /\bhistory of (payments?|on-time|successful)\b/i,
+      /\blong-standing (client|customer)\b/i,
+      /\bgood (standing|history|track record)\b/i,
+      /\bexisting (client|customer) with (good )?history\b/i,
+      /\btrusted (client|customer)\b/i,
+    ];
+
+    const flaggedPhrases: string[] = [];
+    for (const pattern of forbiddenHistoryPatterns) {
+      const match = reasoning.match(pattern);
+      if (match) {
+        flaggedPhrases.push(match[0]);
+      }
+    }
+
+    if (flaggedPhrases.length > 0) {
+      return {
+        isGrounded: false,
+        flaggedPhrases,
+        reason: `Reasoning claims customer history (${flaggedPhrases.join(", ")}) that was not provided in the DB context object`,
+      };
+    }
+  }
+
+  return { isGrounded: true, flaggedPhrases: [] };
+}
 
 export interface CallResult {
   content: string;
@@ -101,6 +154,8 @@ export class AgentService {
           proposal: parsed.proposal,
           modelUsed: parsed.modelUsed || "cache",
           attempts: 0,
+          contextSnapshot: parsed.contextSnapshot || context,
+          groundingValidation: parsed.groundingValidation || { isGrounded: true, flaggedPhrases: [] },
         };
       }
     } catch (err) {
@@ -115,6 +170,7 @@ export class AgentService {
         status: "WAITING_FOR_AI",
         proposal: null,
         error: "Daily LLM budget exhausted. Action held in WAITING_FOR_AI state.",
+        contextSnapshot: context,
       };
     }
 
@@ -143,6 +199,7 @@ export class AgentService {
               status: "WAITING_FOR_AI",
               proposal: null,
               error: "Daily LLM budget exceeded during execution",
+              contextSnapshot: context,
             };
           }
 
@@ -171,11 +228,28 @@ export class AgentService {
           if (candidate.success && candidate.proposal) {
             log.info({ model, eventId: context.eventId }, "Agent successfully generated valid proposal");
 
+            // Validate Grounding: verify reasoning doesn't claim customer history when none provided in context
+            const grounding = validateGrounding(candidate.proposal.reasoning, context);
+            if (!grounding.isGrounded) {
+              log.warn(
+                { eventId: context.eventId, flaggedPhrases: grounding.flaggedPhrases },
+                "Grounding violation: reasoning claimed customer history without DB context. Downgrading confidence to force NEEDS_APPROVAL."
+              );
+              // Mark low confidence (< threshold 0.80) to force policy engine to evaluate NEEDS_APPROVAL
+              candidate.proposal.confidence = Math.min(candidate.proposal.confidence, 0.40);
+              candidate.proposal.reasoning = `[UNGROUNDED CLAIM: ${grounding.reason}] ${candidate.proposal.reasoning}`;
+            }
+
             // Cache proposal in Redis (24 hour TTL)
             try {
               await redis.set(
                 cacheKey,
-                JSON.stringify({ proposal: candidate.proposal, modelUsed: model }),
+                JSON.stringify({
+                  proposal: candidate.proposal,
+                  modelUsed: model,
+                  contextSnapshot: context,
+                  groundingValidation: grounding,
+                }),
                 "EX",
                 60 * 60 * 24
               );
@@ -188,6 +262,8 @@ export class AgentService {
               proposal: candidate.proposal,
               modelUsed: model,
               attempts: totalAttempts,
+              contextSnapshot: context,
+              groundingValidation: grounding,
             };
           }
         } catch (err: unknown) {
@@ -214,6 +290,7 @@ export class AgentService {
               status: "WAITING_FOR_AI",
               proposal: null,
               error: "OpenRouter daily free-tier cap reached. Event transitioned to WAITING_FOR_AI.",
+              contextSnapshot: context,
             };
           }
 
@@ -240,6 +317,7 @@ export class AgentService {
       status: "WAITING_FOR_AI",
       proposal: null,
       error: "All LLM models and fallback providers failed or timed out",
+      contextSnapshot: context,
     };
   }
 

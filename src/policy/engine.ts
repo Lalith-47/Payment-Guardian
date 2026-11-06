@@ -51,6 +51,18 @@ export function evaluatePolicy(
     };
   }
 
+  // Fail closed rule: Ungrounded claims in reasoning (F1 Grounding)
+  if (
+    proposal.reasoning.includes("[UNGROUNDED CLAIM") ||
+    proposal.reasoning.includes("UNGROUNDED_CUSTOMER_HISTORY")
+  ) {
+    return {
+      decision: "NEEDS_APPROVAL",
+      reason: "Proposal reasoning claims customer history that was not provided in the DB context object.",
+      ruleTriggered: "UNGROUNDED_CUSTOMER_HISTORY",
+    };
+  }
+
   const confidenceThreshold = parseFloat(policy.confidenceThreshold?.toString() || "0.80");
   const autoRefundMax = parseFloat(policy.autoRefundMaxAmount?.toString() || "25.00");
   const maxRetries = policy.autoRetryMaxAttempts ?? 2;

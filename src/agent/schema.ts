@@ -11,17 +11,28 @@ export const AgentProposalSchema = z.object({
 
 export type AgentProposal = z.infer<typeof AgentProposalSchema>;
 
-export interface AgentContext {
+export interface AgentContextSnapshot {
   eventId: string;
   eventType: string;
   source: string;
-  orderId?: string;
-  invoiceId?: string;
-  amount?: number;
-  currency?: string;
-  declineReason?: string;
-  customerNote?: string;
-  customerEmail?: string;
+  orderId?: string | null;
+  invoiceId?: string | null;
+  amount?: number | null;
+  currency?: string | null;
+  retryCount: number;
+  declineReason?: string | null;
+  customerEmail?: string | null;
+  customerName?: string | null;
+  customerNote?: string | null;
+  customerHistory?: string | null; // Verified past history from DB only; null if none exists
+}
+
+export type AgentContext = AgentContextSnapshot;
+
+export interface GroundingValidation {
+  isGrounded: boolean;
+  flaggedPhrases: string[];
+  reason?: string;
 }
 
 export type AgentResult =
@@ -30,10 +41,13 @@ export type AgentResult =
       proposal: AgentProposal;
       modelUsed: string;
       attempts: number;
+      contextSnapshot: AgentContextSnapshot;
+      groundingValidation: GroundingValidation;
     }
   | {
       status: "WAITING_FOR_AI";
       proposal: null;
       error: string;
+      contextSnapshot: AgentContextSnapshot;
     };
 
