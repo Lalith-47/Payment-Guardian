@@ -10,12 +10,26 @@ function getTodayKey(): string {
 }
 
 const DAILY_EXHAUSTED_FLAG = "rg:llm_daily_cap_exhausted";
+export const CAP_EXHAUSTED_TTL_SECONDS = 1800; // 30 minutes short TTL for re-probe
 
-export async function getLlmDailyUsage(): Promise<{ used: number; budget: number; remaining: number; exhaustedByCap: boolean }> {
+export async function getLlmDailyUsage(): Promise<{
+  used: number;
+  budget: number;
+  remaining: number;
+  exhaustedByCap: boolean;
+  reprobeInSeconds?: number;
+}> {
   try {
     const isExhausted = await redis.get(DAILY_EXHAUSTED_FLAG);
     if (isExhausted) {
-      return { used: env.LLM_DAILY_BUDGET, budget: env.LLM_DAILY_BUDGET, remaining: 0, exhaustedByCap: true };
+      const ttl = await redis.ttl(DAILY_EXHAUSTED_FLAG);
+      return {
+        used: env.LLM_DAILY_BUDGET,
+        budget: env.LLM_DAILY_BUDGET,
+        remaining: 0,
+        exhaustedByCap: true,
+        reprobeInSeconds: ttl > 0 ? ttl : 0,
+      };
     }
 
     const key = getTodayKey();
@@ -31,12 +45,9 @@ export async function getLlmDailyUsage(): Promise<{ used: number; budget: number
 }
 
 export async function markDailyBudgetExhausted(reason = "Provider daily cap reached"): Promise<void> {
-  log.warn({ reason }, "Marking LLM daily budget as EXHAUSTED");
-  // Set flag until midnight UTC
-  const now = new Date();
-  const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-  const ttlSeconds = Math.max(60, Math.floor((midnight.getTime() - now.getTime()) / 1000));
-  await redis.set(DAILY_EXHAUSTED_FLAG, "1", "EX", ttlSeconds);
+  log.warn({ reason, ttlSeconds: CAP_EXHAUSTED_TTL_SECONDS }, "Marking LLM daily budget as EXHAUSTED (30m TTL for re-probe)");
+  // 30 minute TTL for re-probe, never permanent until midnight
+  await redis.set(DAILY_EXHAUSTED_FLAG, "1", "EX", CAP_EXHAUSTED_TTL_SECONDS);
 }
 
 export async function incrementLlmUsage(): Promise<{ used: number; allowed: boolean }> {

@@ -52,25 +52,50 @@ export async function GET() {
     checks.paypalAuth = { status: "DOWN", error: (err as Error).message };
   }
 
-  // 4. Model Reachability via /models endpoint (no completion calls)
+  // 4. Model Reachability & Provider Usage Check via /key endpoint (no completion calls)
   const modelStart = Date.now();
+  let providerUsage: Record<string, unknown> | null = null;
   try {
     const baseUrl = env.OPENROUTER_BASE_URL.replace(/\/+$/, "");
-    const res = await fetch(`${baseUrl}/models`, {
+    // Try /key first (lightweight, provides quota + auth check)
+    let keyRes = await fetch(`${baseUrl}/key`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
       },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(10000),
     });
-    if (res.ok) {
+
+    if (keyRes.ok) {
       checks.modelReachability = { status: "UP", latencyMs: Date.now() - modelStart };
+      const keyData = await keyRes.json();
+      if (keyData?.data) {
+        providerUsage = {
+          limitUsd: keyData.data.limit,
+          limitRemainingUsd: keyData.data.limit_remaining,
+          usageDailyUsd: keyData.data.usage_daily,
+          isFreeTier: keyData.data.is_free_tier,
+          freeModelDailyRequests: keyData.data.free_model_daily_requests,
+        };
+      }
     } else {
-      checks.modelReachability = {
-        status: "DOWN",
-        latencyMs: Date.now() - modelStart,
-        error: `HTTP ${res.status}: ${res.statusText}`,
-      };
+      // Fallback to /models if /key is unsupported by provider
+      const modelsRes = await fetch(`${baseUrl}/models`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (modelsRes.ok) {
+        checks.modelReachability = { status: "UP", latencyMs: Date.now() - modelStart };
+      } else {
+        checks.modelReachability = {
+          status: "DOWN",
+          latencyMs: Date.now() - modelStart,
+          error: `HTTP ${modelsRes.status}: ${modelsRes.statusText}`,
+        };
+      }
     }
   } catch (err) {
     checks.modelReachability = {
@@ -80,7 +105,7 @@ export async function GET() {
     };
   }
 
-  // 5. LLM Budget Check
+  // 5. LLM Budget Check (Local Counter + Provider Data)
   const llmUsage = await getLlmDailyUsage();
 
   const responseBody = {
@@ -88,6 +113,16 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     checks,
     llm: {
+      local: {
+        dailyBudget: llmUsage.budget,
+        usedToday: llmUsage.used,
+        remaining: llmUsage.remaining,
+        budgetExhausted: llmUsage.remaining <= 0 || llmUsage.exhaustedByCap,
+        exhaustedByCap: llmUsage.exhaustedByCap,
+        reprobeInSeconds: llmUsage.reprobeInSeconds ?? null,
+      },
+      provider: providerUsage,
+      // Backward-compatible top-level fields
       dailyBudget: llmUsage.budget,
       usedToday: llmUsage.used,
       remaining: llmUsage.remaining,

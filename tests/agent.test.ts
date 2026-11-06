@@ -228,10 +228,12 @@ describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
       expect(result.error).toContain("daily free-tier cap reached");
     }
 
-    // Verify budget is marked exhausted
+    // Verify budget is marked exhausted with short TTL (~1800s)
     const usage = await getLlmDailyUsage();
     expect(usage.exhaustedByCap).toBe(true);
     expect(usage.remaining).toBe(0);
+    expect(usage.reprobeInSeconds).toBeGreaterThan(1700);
+    expect(usage.reprobeInSeconds).toBeLessThanOrEqual(1800);
 
     // Clean up daily cap flag for remaining tests
     await redis.del("rg:llm_daily_cap_exhausted");
