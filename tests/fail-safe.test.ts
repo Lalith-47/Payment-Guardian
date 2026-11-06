@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from "vitest";
 import { processEventPipeline } from "@/pipeline/processor";
 import { createEvent, getEventById } from "@/db/queries/events";
 import { createPolicy } from "@/db/queries/policies";
@@ -181,5 +181,9 @@ describe("Fail-Safe Verification: All-Models-Fail -> WAITING_FOR_AI with Zero Mu
     const transitionLog = auditLogs.find((l) => l.action === "TRANSITION_WAITING_FOR_AI");
     expect(transitionLog).toBeDefined();
     expect(transitionLog?.actor).toBe("agent");
+  });
+
+  afterAll(async () => {
+    await redis.del("rg:llm_daily_cap_exhausted");
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { AgentProposalSchema, AgentContext } from "@/agent/schema";
 import { buildAgentPrompt, buildRepairPrompt } from "@/agent/prompts";
 import { AgentService, ModelCallerFn, isDailyQuotaError } from "@/agent/client";
@@ -262,6 +262,10 @@ describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
     expect(blocked.retryAfterMs).toBeGreaterThan(0);
 
     await redis.del(key);
+  });
+
+  afterAll(async () => {
+    await redis.del("rg:llm_daily_cap_exhausted");
   });
 });
 
