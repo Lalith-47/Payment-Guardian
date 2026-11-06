@@ -21,7 +21,7 @@
 | **G0.7** | Docker clean clone in `/tmp` | **PASS** | Cloned to `/tmp/fresh-rg`, configured `.env`, ran `docker compose up --build -d`. Container health checks passed: `/healthz` 200 OK, `/readyz` 200 OK. |
 | **G0.8** | Live proof (declined capture flow) | **PASS** | Order `08R76067P3655072J` created and approved by user. Captured with `mockCode: "INSTRUMENT_DECLINED"`. Synchronous event recorded. Live primary model (`nvidia/nemotron-3-ultra-550b-a55b:free`) evaluated event and returned `action: "retry"` with confidence `0.90`. Policy engine evaluated `AUTO` decision. Proposal and audit rows written to PostgreSQL. Exactly 1 live LLM call used. |
 | **G0.9** | Executor audit | **PASS** | Audited all mutating PayPal client methods. Mutating calls restricted exclusively to `ActionExecutor` and merchant checkout routes. Enforced permanently via `tests/architecture-executor.test.ts`. |
-| **G0.10** | Security audit guidance mode | **PASS** | Reconnaissance completed. Documented platform constraints (no `general` subagent role, lack of OS network namespace `unshare -n`, no descriptor pinning). |
+| **G0.10** | Security audit guidance mode | **PARTIAL** | Reconnaissance completed. Documented platform constraints (no `general` subagent role, lack of OS network namespace `unshare -n`, no descriptor pinning). Full audit mode not possible in this environment. |
 | **Graphify** | Knowledge Graph | **CURRENT** | Updated via `graphify update .`. 430 nodes, 903 edges, 21 communities in `graphify-out/`. |
 
 ---
