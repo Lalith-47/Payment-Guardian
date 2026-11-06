@@ -19,8 +19,9 @@ const policyInputSchema = z.object({
   requireApprovalForActions: z.array(z.string()).default(["escalate"]),
 });
 
-export async function GET(req: NextRequest) {
-  const authResult = await requireOwnerSession(req);
+export async function GET(req?: NextRequest) {
+  const request = req || new NextRequest("http://localhost:3000/api/onboarding/policies");
+  const authResult = await requireOwnerSession(request);
   if ("errorResponse" in authResult) {
     return authResult.errorResponse;
   }

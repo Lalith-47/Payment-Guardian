@@ -152,11 +152,27 @@ export class ActionExecutor {
       const errMsg = (err as Error).message || "Unknown error during mutation";
       log.error({ err, actionId, idempotencyKey }, "Action execution failed");
 
-      await updateActionStatus(actionId, "FAILED", {
+      await updateActionStatus(actionId, "DEAD_LETTER", {
         errorMessage: errMsg,
       });
 
       await updateEventStatus(req.eventId, "FAILED", errMsg);
+
+      await appendAuditLog({
+        source: "executor",
+        eventType: "action.failed",
+        eventId: req.eventId,
+        actor: "executor",
+        action: `FAILED_${req.proposal.action.toUpperCase()}`,
+        details: {
+          from: "DECIDED",
+          to: "FAILED",
+          actionId,
+          actionType: req.proposal.action,
+          idempotencyKey,
+          error: errMsg,
+        },
+      });
 
       await appendAuditLog({
         source: "executor",
@@ -173,6 +189,14 @@ export class ActionExecutor {
           error: errMsg,
         },
       });
+
+      return {
+        success: false,
+        actionId,
+        status: "DEAD_LETTER",
+        idempotencyKey,
+        error: errMsg,
+      };
 
       return {
         success: false,

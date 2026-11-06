@@ -116,6 +116,18 @@ export async function processEventPipeline(
         eventType: jobData.type,
         eventId: jobData.eventId,
         actor: "agent",
+        action: "TRANSITION_WAITING_FOR_AI",
+        details: {
+          from: "RECEIVED",
+          to: "WAITING_FOR_AI",
+          error: agentResult.error,
+        },
+      });
+      await appendAuditLog({
+        source: jobData.source,
+        eventType: jobData.type,
+        eventId: jobData.eventId,
+        actor: "agent",
         action: "STATE_TRANSITION",
         details: {
           from: "RECEIVED",

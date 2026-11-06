@@ -1,10 +1,21 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { POST, GET } from "@/app/api/onboarding/policies/route";
 import { getActivePolicy } from "@/db/queries/policies";
 import { queryAuditLogs } from "@/db/queries/audit";
+import { auth } from "@/lib/auth";
 import { NextRequest } from "next/server";
 
 describe("Onboarding Policies API & Seeding (Deliverable 9)", () => {
+  beforeAll(() => {
+    vi.spyOn(auth.api, "getSession").mockResolvedValue({
+      user: { id: "owner_test_1", email: "owner@rg.local" } as any,
+      session: { id: "sess_test_1", userId: "owner_test_1" } as any,
+    });
+  });
+
+  afterAll(() => {
+    vi.restoreAllMocks();
+  });
   it("1. Onboarding API: creates active merchant policy without hardcoded constants", async () => {
     const payload = {
       name: "Dynamic Freelancer Policy",
@@ -68,7 +79,8 @@ describe("Onboarding Policies API & Seeding (Deliverable 9)", () => {
   });
 
   it("3. GET Onboarding API: returns the active policy", async () => {
-    const res = await GET();
+    const req = new NextRequest("http://localhost:3000/api/onboarding/policies");
+    const res = await GET(req);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.policy).toBeDefined();
