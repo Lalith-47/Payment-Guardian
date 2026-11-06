@@ -83,6 +83,12 @@ export async function processEventPipeline(
       }
     }
 
+    const realDeclineReason =
+      jobData.issue ||
+      (jobData.payload?.issue as string) ||
+      (jobData.payload?.mockCode as string) ||
+      null;
+
     const contextSnapshot: AgentContextSnapshot = {
       eventId: jobData.eventId,
       eventType: jobData.type,
@@ -92,7 +98,7 @@ export async function processEventPipeline(
       amount,
       currency,
       retryCount,
-      declineReason: jobData.issue || (jobData.payload?.mockCode as string) || "INSTRUMENT_DECLINED",
+      declineReason: realDeclineReason,
       customerEmail,
       customerName,
       customerNote,

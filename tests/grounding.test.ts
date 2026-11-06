@@ -210,4 +210,75 @@ describe("F1 Grounding & Context Snapshot Verification", () => {
     expect(snapshot.declineReason).toBe("INSTRUMENT_DECLINED");
     expect(snapshot.customerHistory).toBeNull();
   });
+
+  it("6. S5 processor.ts removes hardcoded INSTRUMENT_DECLINED; uses real issue or null, and prompt formats null", async () => {
+    const eventId = `evt_no_issue_${runId}`;
+
+    await createEvent({
+      id: eventId,
+      type: "payment.capture_declined",
+      source: "paypal_capture_route",
+      externalId: `ORD_NO_ISSUE_${runId}`,
+      status: "RECEIVED",
+      payload: {
+        // Missing issue and mockCode
+        description: "Some unclassified decline",
+      },
+    });
+
+    let receivedContext: AgentContextSnapshot | null = null;
+    const caller: ModelCallerFn = async () => ({
+      content: JSON.stringify({
+        action: "escalate",
+        amount: null,
+        currency: "USD",
+        message: "Under review",
+        confidence: 0.90,
+        reasoning: "Unclassified decline; escalating for manual review",
+      }),
+    });
+
+    const agent = new AgentService(caller);
+    const evaluateSpy = vi.spyOn(agent, "evaluateEvent").mockImplementationOnce(async (ctx) => {
+      receivedContext = ctx;
+      return {
+        status: "SUCCESS",
+        proposal: {
+          action: "escalate",
+          amount: null,
+          currency: "USD",
+          message: "Under review",
+          confidence: 0.9,
+          reasoning: "Unclassified decline; escalating for review",
+        },
+        modelUsed: "mock-model",
+        attempts: 1,
+        contextSnapshot: ctx,
+        groundingValidation: { isGrounded: true, flaggedPhrases: [] },
+      };
+    });
+
+    await processEventPipeline(
+      {
+        eventId,
+        type: "payment.capture_declined",
+        source: "paypal_capture_route",
+        orderId: `ORD_NO_ISSUE_${runId}`,
+        // No issue passed
+      },
+      agent
+    );
+
+    // Verify declineReason was strictly null, NOT hardcoded to INSTRUMENT_DECLINED
+    expect(receivedContext).toBeDefined();
+    expect(receivedContext?.declineReason).toBeNull();
+
+    // Verify prompt formats null cleanly
+    const prompt = buildAgentPrompt(receivedContext!);
+    expect(prompt).toContain("- decline_reason: null");
+    expect(prompt).not.toContain("INSTRUMENT_DECLINED");
+
+    evaluateSpy.mockRestore();
+  });
 });
+

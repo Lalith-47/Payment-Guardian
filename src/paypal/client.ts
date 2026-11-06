@@ -280,7 +280,10 @@ export class PayPalClient {
     // Check for synchronous 422 decline (Amendment A1)
     if (res.status === 422) {
       const details = (data.details as Array<{ issue: string; description: string }>) || [];
-      const primaryIssue = details[0] || { issue: "INSTRUMENT_DECLINED", description: "Payment declined by processor" };
+      const primaryIssue = details[0] || {
+        issue: (data.name as string) || "UNKNOWN",
+        description: (data.message as string) || "Payment capture declined",
+      };
 
       log.warn(
         { orderId: params.orderId, issue: primaryIssue.issue, debugId: res.headers.get("paypal-debug-id") },
