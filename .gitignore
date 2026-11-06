@@ -13,4 +13,5 @@ coverage
 PROMPT.md
 scripts
 graphify*
+graphify-out/
 .agents/
