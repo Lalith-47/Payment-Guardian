@@ -83,3 +83,4 @@ describe("Architecture Audit: Mutating PayPal Client Methods (Gate G0 Item 9)", 
     expect(violations.length).toBe(0);
   });
 });
+

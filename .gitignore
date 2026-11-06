@@ -12,3 +12,6 @@ coverage
 *.tsbuildinfo
 PROMPT.md
 scripts
+graphify*
+.agents/
+progress.md
