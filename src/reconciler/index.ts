@@ -136,13 +136,26 @@ export async function reconcileNonTerminalRecords(): Promise<ReconciliationSumma
       if (remoteStatus !== inv.status) {
         log.info({ invoiceId: inv.id, oldStatus: inv.status, newStatus: remoteStatus }, "Reconciler updated invoice status");
 
+        const finalStatus =
+          inv.status === "PAID"
+            ? "PAID"
+            : remoteStatus === "PAID"
+            ? "PAID_CONFIRMED_BY_POLLING"
+            : remoteStatus;
+
         await upsertPayPalInvoice({
           id: inv.id,
-          status: remoteStatus,
+          status: finalStatus,
           invoiceNumber: inv.invoiceNumber,
           amount: inv.amount,
           currency: inv.currency,
           recipientEmail: inv.recipientEmail,
+          customerName: inv.customerName,
+          dueDays: inv.dueDays,
+          items: inv.items,
+          note: inv.note,
+          draftMessage: inv.draftMessage,
+          confirmationSource: "polling",
           payerViewUrl: remote.payerViewUrl,
           rawPayload: remote.raw,
         });
@@ -156,7 +169,8 @@ export async function reconcileNonTerminalRecords(): Promise<ReconciliationSumma
           details: {
             invoiceId: inv.id,
             previousStatus: inv.status,
-            reconciledStatus: remoteStatus,
+            reconciledStatus: finalStatus,
+            confirmationSource: "polling",
           },
         });
 

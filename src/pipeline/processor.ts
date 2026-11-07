@@ -433,16 +433,55 @@ export async function processEventPipeline(
     }
 
     case "INVOICING.INVOICE.PAID": {
-      const detail = (resource.detail as Record<string, unknown>) || {};
-      const amountObj = (resource.amount as Record<string, string>) || { value: "0.00", currency_code: "USD" };
+      // 1. Signature validity check in webhook_deliveries
+      const [delivery] = await db
+        .select()
+        .from(webhookDeliveries)
+        .where(
+          and(
+            eq(webhookDeliveries.transmissionId, jobData.transmissionId || ""),
+            eq(webhookDeliveries.eventId, jobData.eventId || ""),
+            eq(webhookDeliveries.signatureStatus, "VALID")
+          )
+        )
+        .limit(1);
+
+      if (!delivery) {
+        log.warn(
+          { transmissionId: jobData.transmissionId, eventId: jobData.eventId },
+          "Rejected INVOICING.INVOICE.PAID: No signature-VALID webhook_deliveries row found"
+        );
+        break;
+      }
+
+      const invoiceObj = (resource.invoice as Record<string, unknown>) || resource;
+      const targetInvoiceId = (invoiceObj.id as string) || resourceId;
+      const detail =
+        (invoiceObj.detail as Record<string, unknown>) ||
+        (resource.detail as Record<string, unknown>) ||
+        {};
+      const amountObj =
+        (invoiceObj.amount as Record<string, string>) ||
+        (resource.amount as Record<string, string>) ||
+        { value: "0.00", currency_code: "USD" };
+
+      // Look up existing invoice to preserve recipient, items, etc.
+      const existing = await getPayPalInvoice(targetInvoiceId);
 
       await upsertPayPalInvoice({
-        id: resourceId,
+        id: targetInvoiceId,
         status: "PAID",
-        invoiceNumber: (detail.invoice_number as string) || null,
-        amount: amountObj.value,
-        currency: amountObj.currency_code,
-        recipientEmail: "client@example.com",
+        invoiceNumber: (detail.invoice_number as string) || existing?.invoiceNumber || null,
+        amount: amountObj.value || existing?.amount || "0.00",
+        currency: amountObj.currency_code || existing?.currency || "USD",
+        recipientEmail: existing?.recipientEmail || "client@example.com",
+        customerName: existing?.customerName,
+        dueDays: existing?.dueDays,
+        items: existing?.items,
+        note: existing?.note,
+        draftMessage: existing?.draftMessage,
+        confirmationSource: "webhook",
+        payerViewUrl: existing?.payerViewUrl,
         rawPayload: resource,
       });
 
@@ -450,9 +489,15 @@ export async function processEventPipeline(
         source: "webhook",
         eventType: jobData.type,
         eventId: jobData.eventId,
-        actor: "system",
+        actor: "webhook",
         action: "INVOICE_PAID",
-        details: { invoiceId: resourceId },
+        details: {
+          from: existing?.status || "UNKNOWN",
+          to: "PAID",
+          invoiceId: targetInvoiceId,
+          confirmationSource: "webhook",
+          transmissionId: jobData.transmissionId,
+        },
       });
       break;
     }
