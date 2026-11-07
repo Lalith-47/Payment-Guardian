@@ -32,7 +32,7 @@ export function validateGrounding(
     /\bunder\s+([a-z-]+\s+)?limits?\b/i,
     /\bexceeds?\s+([a-z-]+\s+)?limits?\b/i,
     /\bthresholds?\b/i,
-    /\b(is\s+)?allowed\b/i,
+    /\ballowed\b/i,
     /\bpolicy\s+(allows?|permits?|requires?|mandates?)\b/i,
     /\bpolicy\s+rules?\b/i,
   ];
