@@ -73,8 +73,8 @@
   --z-modal: 400;
   --z-toast: 500;
   --z-tooltip: 600;
-  --tex-cotton: url("cotton.svg");
-  --tex-desk: url("felt.svg");
+  --tex-cotton: none;
+  --tex-desk: none;
   --shade: 32% 0.03 50;
   --lit: 100% 0.005 80;
   --deep: 7% 0.01 40;

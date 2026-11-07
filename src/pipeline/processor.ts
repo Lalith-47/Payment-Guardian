@@ -211,7 +211,7 @@ export async function processEventPipeline(
       });
     } else if (policyResult.decision === "NEEDS_APPROVAL") {
       log.info({ eventId: jobData.eventId }, "Proposal requires manual owner approval; generating single-use token");
-      const approval = await createApproval(jobData.eventId, proposalId, 120);
+      const approval = await createApproval(jobData.eventId, proposalId, 120, policyResult.ruleTriggered);
 
       // State Transition: DECIDED -> AWAITING_APPROVAL
       await updateEventStatus(jobData.eventId, "AWAITING_APPROVAL");

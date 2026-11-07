@@ -49,10 +49,13 @@ describe("S4 Executor Retry Mock Guard", () => {
         throw new Error("SECURITY VIOLATION: Executor passed mockCode to captureOrder!");
       }
       return {
+        success: true,
+        declined: false,
+        orderId: `ORD_MOCKGUARD_${runId}`,
         captureId: `CAP_EXECUTOR_${runId}`,
         status: "COMPLETED",
         amount: { value: "50.00", currency_code: "USD" },
-        declined: false,
+        raw: {},
       };
     });
 
@@ -94,3 +97,4 @@ describe("S4 Executor Retry Mock Guard", () => {
     requestWithRetrySpy.mockRestore();
   });
 });
+

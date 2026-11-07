@@ -82,3 +82,4 @@ describe("S1 Architecture Audit: API Route Authentication Enforcement", () => {
     expect(isAllowlistedPath("/api/approvals")).toBe(false);
   });
 });
+

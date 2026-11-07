@@ -9,7 +9,8 @@ export type NewApprovalRecord = typeof approvals.$inferInsert;
 export async function createApproval(
   eventId: string,
   proposalId: string,
-  expiresInMinutes = 60
+  expiresInMinutes = 60,
+  triggerRule?: string
 ): Promise<ApprovalRecord> {
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000);
@@ -22,6 +23,7 @@ export async function createApproval(
       proposalId,
       token,
       status: "PENDING",
+      triggerRule,
       expiresAt,
     })
     .returning();
@@ -42,7 +44,8 @@ export async function getApprovalByToken(token: string): Promise<ApprovalRecord 
 export async function decideApproval(
   token: string,
   decision: "APPROVED" | "REJECTED",
-  decidedBy: string
+  decidedBy: string,
+  rejectionReason?: string
 ): Promise<{ success: boolean; error?: string; approval?: ApprovalRecord }> {
   const existing = await getApprovalByToken(token);
   if (!existing) {
@@ -67,6 +70,7 @@ export async function decideApproval(
       status: decision,
       decidedAt: new Date(),
       decidedBy,
+      rejectionReason: decision === "REJECTED" ? rejectionReason : null,
     })
     .where(eq(approvals.id, existing.id))
     .returning();

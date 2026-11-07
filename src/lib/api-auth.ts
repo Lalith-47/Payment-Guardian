@@ -38,3 +38,4 @@ export function withOwnerAuth<T = unknown>(
     return handler(req, authResult.session, context);
   };
 }
+

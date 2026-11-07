@@ -160,3 +160,4 @@ describe("S2 Capture Route Security Enforcement", () => {
     getSessionSpy.mockRestore();
   });
 });
+

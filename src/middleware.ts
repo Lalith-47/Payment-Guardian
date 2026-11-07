@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSessionCookie } from "better-auth/cookies";
 
 // Public routes that do not require owner session authentication:
 // 1. /api/auth/*: Better-auth endpoints (login, register, session)
@@ -31,18 +31,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Enforce Owner Session on all other /api routes
-  try {
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: "Unauthorized: Owner session required" },
-        { status: 401 }
-      );
-    }
-  } catch {
+  // Edge-safe check: verify session cookie exists before allowing request to reach route handlers
+  const sessionCookie = getSessionCookie(request);
+  if (!sessionCookie) {
     return NextResponse.json(
-      { error: "Unauthorized: Session verification failed" },
+      { error: "Unauthorized: Owner session required" },
       { status: 401 }
     );
   }
@@ -53,3 +46,4 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/api/:path*"],
 };
+

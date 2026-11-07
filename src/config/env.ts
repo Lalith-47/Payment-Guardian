@@ -44,6 +44,7 @@ const envSchema = z.object({
   // LLM Layer
   OPENROUTER_API_KEY: z.string().min(1, "OPENROUTER_API_KEY is required"),
   OPENROUTER_BASE_URL: z.string().url().default("https://openrouter.ai/api/v1"),
+  LLM_BASE_URL: z.string().url().optional(),
   MODEL_PRIMARY: z.string().min(1, "MODEL_PRIMARY is required"),
   MODEL_FALLBACKS: z
     .string()
@@ -107,14 +108,14 @@ function loadAndValidateEnv(): EnvConfig {
       .map((i) => `  - ${i.path.join(".")}: ${i.message}`)
       .join("\n");
     console.error(`FATAL: Environment validation failed at boot:\n${errorDetails}`);
-    process.exit(1);
+    throw new Error(`FATAL: Environment validation failed at boot:\n${errorDetails}`);
   }
 
   // Double-check sandbox hostname guard
   const paypalUrl = new URL(result.data.PAYPAL_BASE_URL);
   if (!paypalUrl.hostname.includes("sandbox")) {
     console.error(`FATAL: Non-sandbox PAYPAL_BASE_URL (${paypalUrl.hostname}) detected. Halting.`);
-    process.exit(1);
+    throw new Error(`FATAL: Non-sandbox PAYPAL_BASE_URL (${paypalUrl.hostname}) detected. Halting.`);
   }
 
   return result.data;

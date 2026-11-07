@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { validateGrounding, AgentService, ModelCallerFn } from "@/agent/client";
 import { buildAgentPrompt } from "@/agent/prompts";
 import { AgentContextSnapshot } from "@/agent/schema";
@@ -226,7 +226,7 @@ describe("F1 Grounding & Context Snapshot Verification", () => {
       },
     });
 
-    let receivedContext: AgentContextSnapshot | null = null;
+    let receivedContext: any = null;
     const caller: ModelCallerFn = async () => ({
       content: JSON.stringify({
         action: "escalate",
@@ -239,7 +239,7 @@ describe("F1 Grounding & Context Snapshot Verification", () => {
     });
 
     const agent = new AgentService(caller);
-    const evaluateSpy = vi.spyOn(agent, "evaluateEvent").mockImplementationOnce(async (ctx) => {
+    const evaluateSpy = vi.spyOn(agent, "evaluateEvent").mockImplementationOnce(async (ctx: AgentContextSnapshot) => {
       receivedContext = ctx;
       return {
         status: "SUCCESS",

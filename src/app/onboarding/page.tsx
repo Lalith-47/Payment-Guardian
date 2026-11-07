@@ -58,7 +58,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 p-6 flex items-center justify-center">
-      <div className="max-w-2xl w-full rounded-2xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-md">
+      <div className="max-w-2xl w-full rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-md">
         <div className="mb-6">
           <span className="rounded-md bg-blue-950 border border-blue-800 px-2.5 py-1 text-xs font-medium text-blue-300">
             Initial Setup
@@ -78,7 +78,7 @@ export default function OnboardingPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <label className="block text-xs font-semibold text-slate-300">
                 Policy Name
               </label>
               <input
@@ -91,7 +91,7 @@ export default function OnboardingPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <label className="block text-xs font-semibold text-slate-300">
                 Store Currency
               </label>
               <select
@@ -109,7 +109,7 @@ export default function OnboardingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <label className="block text-xs font-semibold text-slate-300">
                 Max Auto-Refund Amount (${currency})
               </label>
               <input
@@ -125,7 +125,7 @@ export default function OnboardingPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <label className="block text-xs font-semibold text-slate-300">
                 Max Automated Retries
               </label>
               <input
@@ -143,7 +143,7 @@ export default function OnboardingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <label className="block text-xs font-semibold text-slate-300">
                 AI Confidence Threshold ({Math.round(confidenceThreshold * 100)}%)
               </label>
               <input
@@ -159,7 +159,7 @@ export default function OnboardingPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <label className="block text-xs font-semibold text-slate-300">
                 Max Offer Discount ({offerDiscountPct}%)
               </label>
               <input
@@ -176,7 +176,7 @@ export default function OnboardingPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+            <label className="block text-xs font-semibold text-slate-300 mb-2">
               Always Require Approval For:
             </label>
             <div className="flex gap-4">

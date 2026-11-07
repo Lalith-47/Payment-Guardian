@@ -76,10 +76,24 @@ export const policies = pgTable("policies", {
   autoRefundMaxAmount: numeric("auto_refund_max_amount", { precision: 10, scale: 2 }).notNull().default("25.00"),
   offerAlternativeMaxDiscountPct: integer("offer_alternative_max_discount_pct").notNull().default(10),
   confidenceThreshold: numeric("confidence_threshold", { precision: 3, scale: 2 }).notNull().default("0.80"),
+  reminderCadenceHours: integer("reminder_cadence_hours").notNull().default(24),
+  tone: text("tone").notNull().default("empathetic"), // 'empathetic' | 'professional' | 'urgent'
   requireApprovalForActions: jsonb("require_approval_for_actions").notNull().default(["escalate"]),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const policyVersions = pgTable("policy_versions", {
+  id: serial("id").primaryKey(),
+  policyId: text("policy_id")
+    .notNull()
+    .references(() => policies.id, { onDelete: "cascade" }),
+  version: integer("version").notNull(),
+  snapshot: jsonb("snapshot").notNull(),
+  changedBy: text("changed_by").notNull(),
+  changeReason: text("change_reason"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // ==========================================
@@ -151,6 +165,8 @@ export const approvals = pgTable("approvals", {
     .references(() => proposals.id, { onDelete: "cascade" }),
   token: text("token").notNull().unique(),
   status: text("status").notNull().default("PENDING"), // 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED'
+  triggerRule: text("trigger_rule"), // Policy rule that required manual approval
+  rejectionReason: text("rejection_reason"), // Owner explanation if rejected
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   decidedAt: timestamp("decided_at", { withTimezone: true }),
   decidedBy: text("decided_by"),

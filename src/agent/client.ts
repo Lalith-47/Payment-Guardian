@@ -94,7 +94,7 @@ export async function defaultOpenRouterCaller(
   messages: Array<{ role: string; content: string }>
 ): Promise<CallResult> {
   const apiKey = env.OPENROUTER_API_KEY;
-  const baseUrl = env.OPENROUTER_BASE_URL.replace(/\/+$/, "");
+  const baseUrl = (env.LLM_BASE_URL || env.OPENROUTER_BASE_URL).replace(/\/+$/, "");
 
   const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",

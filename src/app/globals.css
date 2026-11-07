@@ -1,15 +1,31 @@
+@import "./tokens.css";
+@import "./base.css";
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-quartz.css";
 @import "tailwindcss";
 
 :root {
-  --background: #090a0f;
-  --foreground: #f3f4f6;
-  --card: #11131a;
-  --card-foreground: #f3f4f6;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --border: #1f2430;
-  --muted: #1a1e29;
-  --muted-foreground: #9ca3af;
+  --background: oklch(14% 0.01 40);
+  --foreground: oklch(96% 0.005 60);
+  --card: oklch(18% 0.012 40);
+  --card-foreground: oklch(96% 0.005 60);
+  --primary: oklch(74% 0.125 30);
+  --primary-foreground: oklch(21% 0.012 38);
+  --border: oklch(28% 0.012 40);
+  --muted: oklch(24% 0.012 40);
+  --muted-foreground: oklch(65% 0.01 50);
+}
+
+.ag-theme-quartz-dark {
+  --ag-background-color: var(--card);
+  --ag-foreground-color: var(--card-foreground);
+  --ag-border-color: var(--border);
+  --ag-header-background-color: var(--muted);
+  --ag-header-foreground-color: var(--muted-foreground);
+  --ag-row-hover-color: var(--muted);
+  --ag-selected-row-background-color: var(--primary);
+  font-family: inherit;
+  font-size: 12px;
 }
 
 body {

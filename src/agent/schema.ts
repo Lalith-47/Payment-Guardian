@@ -19,7 +19,7 @@ export interface AgentContextSnapshot {
   invoiceId?: string | null;
   amount?: number | null;
   currency?: string | null;
-  retryCount: number;
+  retryCount?: number;
   declineReason?: string | null;
   customerEmail?: string | null;
   customerName?: string | null;

@@ -37,7 +37,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-md">
+      <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-8 shadow-md">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-white">Revenue Guardian</h1>
           <p className="mt-2 text-sm text-slate-400">Owner Back-Office Login</p>
@@ -51,7 +51,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <label className="block text-xs font-semibold text-slate-300">
               Owner Email
             </label>
             <input
@@ -65,7 +65,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <label className="block text-xs font-semibold text-slate-300">
               Password
             </label>
             <input

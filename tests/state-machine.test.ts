@@ -51,10 +51,13 @@ describe("F2 Event State Machine & Concrete Action Execution", () => {
 
     // Mock captureOrder to succeed
     const captureSpy = vi.spyOn(paypalClient, "captureOrder").mockResolvedValueOnce({
+      success: true,
+      declined: false,
+      orderId: `ORD_SM_AUTO_${runId}`,
       captureId: `CAP_${runId}`,
       status: "COMPLETED",
       amount: { value: "35.00", currency_code: "USD" },
-      declined: false,
+      raw: {},
     });
 
     // Agent proposes 'retry' with confidence 0.90 (qualifies for AUTO)
