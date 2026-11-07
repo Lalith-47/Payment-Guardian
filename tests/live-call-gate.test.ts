@@ -38,7 +38,7 @@ describe("Item 3: Live-Call Gate (LLM_ALLOW_LIVE)", () => {
     });
 
     expect(result.status).toBe("WAITING_FOR_AI");
-    expect(result.error).toContain("LLM_ALLOW_LIVE is false");
+    expect((result as any).error).toContain("LLM_ALLOW_LIVE is false");
 
     // Verify defaultOpenRouterCaller also refuses directly
     await expect(
@@ -95,7 +95,7 @@ describe("Item 3: Live-Call Gate (LLM_ALLOW_LIVE)", () => {
 
     // Does NOT get blocked by the safety gate
     expect(result.status).toBe("SUCCESS");
-    expect(result.error).toBeUndefined();
+    expect((result as any).error).toBeUndefined();
 
     isRealSpy.mockRestore();
     vi.unstubAllGlobals();

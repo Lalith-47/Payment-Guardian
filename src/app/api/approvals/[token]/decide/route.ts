@@ -3,7 +3,7 @@ import { requireOwnerSession } from "@/lib/api-auth";
 import { db } from "@/db";
 import { approvals, proposals, events } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { getApprovalByToken, decideApproval } from "@/db/queries/approvals";
+import { getApprovalByToken, decideApproval, computePayloadHash, buildProposalCanonicalPayload } from "@/db/queries/approvals";
 import { updateEventStatus } from "@/db/queries/events";
 import { appendAuditLog } from "@/db/queries/audit";
 import { ActionExecutor } from "@/executor";
@@ -82,6 +82,21 @@ export async function POST(
 
   if (!prop || !ev) {
     return NextResponse.json({ error: "Associated proposal or event missing" }, { status: 500 });
+  }
+
+  // 4. Cryptographic Binding: Recompute payload hash and return 409 on mismatch
+  if (approval.payloadHash !== "LEGACY") {
+    const currentPayloadHash = computePayloadHash(buildProposalCanonicalPayload(prop));
+    if (approval.payloadHash !== currentPayloadHash) {
+      log.warn(
+        { approvalId: approval.id, storedHash: approval.payloadHash, currentPayloadHash },
+        "Payload hash mismatch: proposal was altered"
+      );
+      return NextResponse.json(
+        { error: "Payload hash mismatch: proposal was altered" },
+        { status: 409 }
+      );
+    }
   }
 
   if (decision === "APPROVED") {

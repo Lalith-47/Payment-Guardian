@@ -71,8 +71,8 @@ describe("E2E Stack Isolation & Zero Provider Leakage", () => {
     process.env.STACK_ROLE = "demo";
 
     const isE2E =
-      (process.env.STACK_ROLE === "e2e") &&
-      process.env.STACK_ROLE !== "demo";
+      ((process.env.STACK_ROLE as string) === "e2e") &&
+      ((process.env.STACK_ROLE as string) !== "demo");
     expect(isE2E).toBe(false);
 
     const testNum = "0065";

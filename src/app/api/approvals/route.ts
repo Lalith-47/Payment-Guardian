@@ -3,6 +3,7 @@ import { requireOwnerSession } from "@/lib/api-auth";
 import { db } from "@/db";
 import { approvals, proposals, events } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { redis } from "@/lib/redis";
 import { createChildLogger } from "@/lib/logger";
 
 const log = createChildLogger("approvals-api");
@@ -18,6 +19,8 @@ export async function GET(req: NextRequest) {
       .select({
         id: approvals.id,
         token: approvals.token,
+        tokenHash: approvals.tokenHash,
+        payloadHash: approvals.payloadHash,
         status: approvals.status,
         triggerRule: approvals.triggerRule,
         rejectionReason: approvals.rejectionReason,
@@ -34,6 +37,14 @@ export async function GET(req: NextRequest) {
 
     const enriched = await Promise.all(
       rawApprovals.map(async (appr) => {
+        let activeToken: string | null = null;
+        try {
+          activeToken = (await redis.get(`approval_raw:${appr.tokenHash}`)) ||
+                        (await redis.get(`approval_token:${appr.id}`));
+        } catch {
+          // ignore redis error
+        }
+
         const [prop] = await db
           .select()
           .from(proposals)
@@ -48,6 +59,7 @@ export async function GET(req: NextRequest) {
 
         return {
           ...appr,
+          token: activeToken || appr.token || appr.id,
           proposal: prop || null,
           event: ev || null,
         };

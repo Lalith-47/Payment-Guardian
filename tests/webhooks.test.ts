@@ -240,6 +240,8 @@ describe("Webhook Processing: Unknown Event Types (* subscription)", () => {
       valid: false,
       status: "INVALID",
       error: "Signature verification failed",
+      signingString: "mock",
+      crc: 0,
     });
 
     const e2eTransmissionId = `trans_sig_first_${Date.now()}`;
@@ -290,6 +292,8 @@ describe("Webhook Processing: Unknown Event Types (* subscription)", () => {
     const verifySpy = vi.spyOn(verifier, "verifyPayPalWebhookSignature").mockResolvedValueOnce({
       valid: true,
       status: "VALID",
+      signingString: "mock",
+      crc: 0,
     });
 
     const e2eTransmissionId = `trans_e2e_valid_${Date.now()}`;
@@ -342,6 +346,8 @@ describe("Webhook Processing: Unknown Event Types (* subscription)", () => {
     const verifySpy = vi.spyOn(verifier, "verifyPayPalWebhookSignature").mockResolvedValueOnce({
       valid: true,
       status: "VALID",
+      signingString: "mock",
+      crc: 0,
     });
 
     const realTransmissionId = `trans_real_${Date.now()}`;

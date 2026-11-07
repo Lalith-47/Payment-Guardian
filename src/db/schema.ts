@@ -166,8 +166,10 @@ export const approvals = pgTable("approvals", {
   proposalId: text("proposal_id")
     .notNull()
     .references(() => proposals.id, { onDelete: "cascade" }),
-  token: text("token").notNull().unique(),
-  status: text("status").notNull().default("PENDING"), // 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED'
+  token: text("token"),
+  tokenHash: text("token_hash").notNull().unique(),
+  payloadHash: text("payload_hash").notNull().default("LEGACY"),
+  status: text("status").notNull().default("PENDING"), // 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'VOIDED'
   triggerRule: text("trigger_rule"), // Policy rule that required manual approval
   rejectionReason: text("rejection_reason"), // Owner explanation if rejected
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
