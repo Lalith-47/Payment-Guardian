@@ -115,13 +115,13 @@ test.describe("M2 End-to-End Suite: Dashboard, Policies, Checkout, Events, Appro
     await page.screenshot({ path: "docs/screenshots/05-approvals.png" });
 
     // Verify Pending Approval is rendered with policy trigger rule
-    const approvalCard = page.locator('div:has-text("Policy Trigger: AMOUNT_EXCEEDS_AUTO_REFUND_LIMIT")').first();
+    const approvalCard = page.locator('.rounded-xl:has-text("AMOUNT_EXCEEDS_AUTO_REFUND_LIMIT")').first();
     await expect(approvalCard).toBeVisible({ timeout: 20000 });
-    await expect(page.locator("text=Proposed Action")).toBeVisible();
+    await expect(approvalCard.locator("text=Proposed Action")).toBeVisible();
 
     // Approve the proposed action via Executor
     page.on("dialog", (dialog) => dialog.accept());
-    await page.click('button:has-text("Approve & Execute via Executor")');
+    await approvalCard.locator('button:has-text("Approve & Execute via Executor")').click();
     await expect(page.locator("text=approved and executed successfully")).toBeVisible({ timeout: 20000 });
 
     // 6. WAITING_FOR_AI & Retry Flow
