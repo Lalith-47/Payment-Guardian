@@ -89,6 +89,7 @@ function loadAndValidateEnv(): EnvConfig {
       PAYPAL_CLIENT_SECRET: "build_dummy",
       PAYPAL_BASE_URL: "https://api-m.sandbox.paypal.com",
       PAYPAL_WEBHOOK_TOLERANCE_SECONDS: 300,
+      RECONCILER_TIMEOUT_MINUTES: 5,
       SANDBOX_NEGATIVE_TESTING: false,
       OPENROUTER_API_KEY: "build_dummy",
       OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1",
