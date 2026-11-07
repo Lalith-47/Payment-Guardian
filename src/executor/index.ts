@@ -4,6 +4,8 @@ import { createAction, getActionByIdempotencyKey, updateActionStatus } from "@/d
 import { appendAuditLog } from "@/db/queries/audit";
 import { updateEventStatus } from "@/db/queries/events";
 import { getApprovalByToken, decideApproval } from "@/db/queries/approvals";
+import { upsertPayPalInvoice } from "@/db/queries/paypal-entities";
+import { env } from "@/config/env";
 import { createChildLogger } from "@/lib/logger";
 import { AgentProposal } from "@/agent/schema";
 import { PolicyDecision } from "@/policy/engine";
@@ -219,6 +221,7 @@ export class ActionExecutor {
       case "refund":
         return { endpoint: `/v2/payments/captures/${targetId}/refund`, method: "POST" };
       case "offer":
+      case "invoice":
         return { endpoint: `/v2/invoicing/invoices`, method: "POST" };
       case "escalate":
       case "none":
@@ -288,6 +291,77 @@ export class ActionExecutor {
           invoiceNumber: invoiceDraft.invoiceNumber,
           draftCustomerMessage: req.proposal.message,
           status: "DRAFT_STORED",
+        };
+      }
+
+      case "invoice": {
+        const metadata = ((req.proposal as unknown) as Record<string, unknown>)?.metadata as
+          | Record<string, unknown>
+          | undefined;
+        const propAny = req.proposal as unknown as Record<string, unknown>;
+        const recipientEmail =
+          (metadata?.customerEmail as string) ||
+          (propAny?.customerEmail as string) ||
+          (req as unknown as Record<string, unknown>)?.recipientEmail as string ||
+          env.SANDBOX_PERSONAL_EMAIL ||
+          "sb-b6gt753713793@personal.example.com";
+        const customerName =
+          (metadata?.customerName as string) ||
+          (propAny?.customerName as string) ||
+          "Customer";
+        const amount = req.proposal.amount ? req.proposal.amount.toFixed(2) : "10.00";
+        const currency = req.proposal.currency || "USD";
+        const note = req.proposal.message || "Invoice for services rendered";
+        const dueDays =
+          (metadata?.dueDays as number) ||
+          (propAny?.dueDays as number) ||
+          15;
+        const lineItems = (metadata?.lineItems || propAny?.lineItems) as
+          | Array<{ description: string; quantity: number; unitPrice: number }>
+          | undefined;
+
+        // 1. Create draft invoice (executor-only, idempotent via PayPal-Request-Id)
+        const draftRes = await paypalClient.createDraftInvoice({
+          recipientEmail,
+          amount,
+          currency,
+          itemName: lineItems?.[0]?.description || note || "Invoice Item",
+          note,
+          requestId: idempotencyKey,
+        });
+
+        // 2. Send invoice (executor-only, idempotent via PayPal-Request-Id)
+        const sendRequestId = `send_${idempotencyKey}`;
+        const sendRes = await paypalClient.sendInvoice(draftRes.id, sendRequestId);
+
+        // 3. Upsert into paypal_invoices table
+        await upsertPayPalInvoice({
+          id: draftRes.id,
+          status: "SENT",
+          invoiceNumber: draftRes.invoiceNumber,
+          amount,
+          currency,
+          recipientEmail,
+          customerName,
+          dueDays,
+          items: lineItems || [{ description: note, quantity: 1, unitPrice: parseFloat(amount) }],
+          note,
+          draftMessage: note, // stored as DRAFT only
+          confirmationSource: "executor",
+          payerViewUrl: (draftRes.raw as { detail?: { metadata?: { payer_view_url?: string } } })?.detail?.metadata?.payer_view_url || null,
+          rawPayload: { draft: draftRes.raw, send: sendRes.raw },
+        });
+
+        return {
+          invoiceId: draftRes.id,
+          invoiceNumber: draftRes.invoiceNumber,
+          status: "SENT",
+          recipientEmail,
+          customerName,
+          amount,
+          currency,
+          draftCustomerMessage: note,
+          statusCode: 200,
         };
       }
 

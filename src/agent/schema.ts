@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const AgentProposalSchema = z.object({
-  action: z.enum(["retry", "offer", "refund", "escalate", "none"]),
+  action: z.enum(["retry", "offer", "refund", "escalate", "none", "invoice"]),
   amount: z.number().nullable(),
   currency: z.string().nullable(),
   message: z.string().min(1, "Message must not be empty"),

@@ -58,6 +58,12 @@ export async function upsertPayPalInvoice(data: {
   amount: string;
   currency: string;
   recipientEmail: string;
+  customerName?: string | null;
+  dueDays?: number | null;
+  items?: unknown;
+  note?: string | null;
+  draftMessage?: string | null;
+  confirmationSource?: string | null;
   payerViewUrl?: string | null;
   rawPayload: Record<string, unknown>;
 }): Promise<PayPalInvoiceRecord> {
@@ -75,6 +81,12 @@ export async function upsertPayPalInvoice(data: {
         amount: data.amount,
         currency: data.currency,
         recipientEmail: data.recipientEmail,
+        customerName: data.customerName,
+        dueDays: data.dueDays,
+        items: data.items,
+        note: data.note,
+        draftMessage: data.draftMessage,
+        confirmationSource: data.confirmationSource,
         payerViewUrl: data.payerViewUrl,
         rawPayload: data.rawPayload,
         lastSyncedAt: new Date(),
