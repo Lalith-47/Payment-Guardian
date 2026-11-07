@@ -64,12 +64,9 @@ export default function ApprovalsPage() {
       if (res.ok) {
         const data = await res.json();
         setApprovals(data.approvals || []);
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        setStatusMsg({ type: "error", text: errData.error || "Failed to load approvals" });
       }
-    } catch (err) {
-      setStatusMsg({ type: "error", text: (err as Error).message });
+    } catch {
+      // keep existing
     } finally {
       setLoading(false);
     }
@@ -194,7 +191,7 @@ export default function ApprovalsPage() {
             <button
               onClick={fetchApprovals}
               disabled={loading}
-              className="inline-flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink-2 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-focus active:opacity-80"
+              className="inline-flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink/60 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-focus active:opacity-80"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
               <span>Refresh</span>
@@ -222,7 +219,7 @@ export default function ApprovalsPage() {
         {/* Rejection Reason Modal */}
         {rejectingItem && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="w-full max-w-md rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
+            <div className="w-full max-w-md rounded-card border border-rule-2 bg-ink-2 p-6 shadow-[0_20px_60px_-20px_rgb(0,0,0/0.5)] space-y-4">
               <div className="flex items-center space-x-2 text-error">
                 <XCircle className="h-5 w-5" />
                 <h3 className="text-sm font-semibold text-board-type">Reject Proposed Action</h3>
@@ -249,7 +246,7 @@ export default function ApprovalsPage() {
                       setRejectingItem(null);
                       setRejectReason("");
                     }}
-                    className="rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink-2 active:opacity-80"
+                    className="rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink/60 active:opacity-80"
                   >
                     Cancel
                   </button>
