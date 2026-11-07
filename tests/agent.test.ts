@@ -13,6 +13,10 @@ describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
     if (testKeys.length > 0) {
       await redis.del(...testKeys);
     }
+    const cacheKeys = await redis.keys("rg:llm_cache:test_evt_*");
+    if (cacheKeys.length > 0) {
+      await redis.del(...cacheKeys);
+    }
   });
 
   it("1. Zod Schema: validates compliant agent proposals", () => {
@@ -236,6 +240,7 @@ describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
     expect(usage.reprobeInSeconds).toBeLessThanOrEqual(1800);
 
     // Clean up daily cap flag for remaining tests
+    await redis.del("rg:test:llm_daily_cap_exhausted");
     await redis.del("rg:llm_daily_cap_exhausted");
   });
 
