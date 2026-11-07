@@ -19,3 +19,5 @@ scripts/m0/
 .DS_Store
 .idea/
 .vscode/
+docs/progress.md
+docs/checklist.md
