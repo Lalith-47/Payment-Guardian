@@ -37,3 +37,4 @@ if (process.argv[1]?.endsWith("seed-owner.ts") || process.argv[1]?.endsWith("see
       process.exit(1);
     });
 }
+

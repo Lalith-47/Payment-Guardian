@@ -10,8 +10,8 @@ import { evaluatePolicy } from "@/policy/engine";
 import { actionExecutor } from "@/executor";
 import { createChildLogger } from "@/lib/logger";
 import { db } from "@/db";
-import { paypalOrders } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { paypalOrders, events } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 
 const log = createChildLogger("pipeline-processor");
@@ -295,6 +295,45 @@ export async function processEventPipeline(
 
     case "PAYMENT.CAPTURE.COMPLETED": {
       const amountObj = (resource.amount as Record<string, string>) || { value: "0.00", currency_code: "USD" };
+
+      // Link back to original order and recovery event
+      const supplementaryData = resource.supplementary_data as Record<string, any> | undefined;
+      const orderId =
+        supplementaryData?.related_ids?.order_id ||
+        (resource.order_id as string) ||
+        (resource.custom_id as string) ||
+        jobData.orderId ||
+        null;
+
+      if (orderId) {
+        const matchedEvents = await db
+          .select()
+          .from(events)
+          .where(
+            and(
+              eq(events.externalId, orderId),
+              eq(events.type, "payment.capture_declined")
+            )
+          );
+
+        for (const ev of matchedEvents) {
+          await updateEventStatus(ev.id, "RECOVERED");
+          await appendAuditLog({
+            source: "webhook",
+            eventType: jobData.type,
+            eventId: ev.id,
+            actor: "paypal_webhook",
+            action: "STATE_TRANSITION",
+            details: {
+              from: ev.status,
+              to: "RECOVERED",
+              captureId: resourceId,
+              orderId,
+            },
+          });
+        }
+      }
+
       await appendAuditLog({
         source: "webhook",
         eventType: jobData.type,
@@ -304,6 +343,7 @@ export async function processEventPipeline(
         details: {
           captureId: resourceId,
           amount: amountObj,
+          orderId,
         },
       });
       break;

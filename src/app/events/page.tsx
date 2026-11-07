@@ -185,7 +185,7 @@ function EventsContent() {
         cellRenderer: (params: any) => {
           const s = params.value;
           let badge = "bg-slate-800 text-slate-300 border-slate-700";
-          if (s === "EXECUTED" || s === "COMPLETED") {
+          if (s === "EXECUTED" || s === "COMPLETED" || s === "RECOVERED") {
             badge = "bg-emerald-950 text-emerald-300 border-emerald-800";
           } else if (s === "AWAITING_APPROVAL") {
             badge = "bg-amber-950 text-amber-300 border-amber-800";
