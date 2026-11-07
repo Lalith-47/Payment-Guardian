@@ -42,6 +42,7 @@ test.describe("M2 End-to-End Suite: Dashboard, Policies, Checkout, Events, Appro
   }) => {
     // 1. Login as Store Owner
     await page.goto("/login");
+    await page.screenshot({ path: "docs/screenshots/07-login.png" });
     await page.fill('input[type="email"]', env.OWNER_EMAIL);
     await page.fill('input[type="password"]', env.OWNER_PASSWORD);
     await page.click('button[type="submit"]');
@@ -52,6 +53,11 @@ test.describe("M2 End-to-End Suite: Dashboard, Policies, Checkout, Events, Appro
 
     // Take screenshot of Dashboard
     await page.screenshot({ path: "docs/screenshots/01-dashboard.png" });
+
+    // Onboarding screen screenshot
+    await page.goto("/onboarding");
+    await expect(page.locator("h1")).toContainText("Merchant Guardrail Onboarding");
+    await page.screenshot({ path: "docs/screenshots/08-onboarding.png" });
 
     // 2. Configure Policies in /policies
     await page.goto("/policies");
