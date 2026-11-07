@@ -1,0 +1,13 @@
+# Optional Docker Compose overrides (e.g. custom DNS for corporate networks or VPNs)
+# Copy this file to docker-compose.override.yml if needed.
+services:
+  web:
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+  worker:
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+

@@ -21,3 +21,4 @@ scripts/m0/
 .vscode/
 docs/progress.md
 docs/checklist.md
+docker-compose.override.yml

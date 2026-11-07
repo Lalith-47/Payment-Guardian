@@ -1,4 +1,4 @@
-CREATE TABLE "llm_requests" (
+CREATE TABLE IF NOT EXISTS "llm_requests" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"timestamp" timestamp with time zone DEFAULT now() NOT NULL,
 	"caller" text NOT NULL,
