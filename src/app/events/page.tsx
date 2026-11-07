@@ -184,17 +184,17 @@ function EventsContent() {
         width: 160,
         cellRenderer: (params: any) => {
           const s = params.value;
-          let badge = "bg-ink text-board-type border-rule-2";
+          let badge = "bg-ink text-board-type border border-rule-2";
           if (s === "RECOVERED" || s === "EXECUTED" || s === "COMPLETED") {
-            badge = "bg-success/15 text-success border-success/30";
+            badge = "bg-success/15 text-success border border-success/30";
           } else if (s === "EXECUTED_CONFIRMED_BY_POLLING") {
-            badge = "bg-info/15 text-info border-info/30";
+            badge = "bg-info/15 text-info border border-info/30";
           } else if (s === "AWAITING_APPROVAL") {
-            badge = "bg-warning/15 text-warning border-warning/30";
+            badge = "bg-warning/15 text-warning border border-warning/30";
           } else if (s === "WAITING_FOR_AI") {
-            badge = "bg-info/15 text-info border-info/30";
+            badge = "bg-info/15 text-info border border-info/30";
           } else if (s === "FAILED" || s === "REJECTED") {
-            badge = "bg-error/15 text-error border-error/30";
+            badge = "bg-error/15 text-error border border-error/30";
           }
           return (
             <span className={`inline-flex items-center rounded-pill border px-2 py-0.5 text-xs font-medium ${badge}`}>
@@ -244,7 +244,7 @@ function EventsContent() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-xl font-bold text-board-type flex items-center gap-2">
               <ListOrdered className="h-5 w-5 text-info" />
               <span>Payment Recovery Events</span>
             </h1>
@@ -255,7 +255,7 @@ function EventsContent() {
           <button
             onClick={fetchEvents}
             disabled={loading}
-            className="inline-flex items-center space-x-1.5 rounded-input border border-ink/40 bg-ink-2/60 px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink-2 hover:text-board-type transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent active:scale-[0.98]"
+            className="inline-flex items-center space-x-1.5 rounded-input border border-ink/40 bg-ink/60 px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink hover:text-board-type transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent active:scale-[0.98]"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
             <span>Refresh Events</span>
@@ -266,7 +266,7 @@ function EventsContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* AG Grid Table */}
           <div className={selectedEventId ? "lg:col-span-7" : "lg:col-span-12"}>
-            <div className="rounded-card border border-ink/40 bg-board p-4 shadow-card space-y-3">
+            <div className="rounded-card border border-ink/40 bg-ink-2 p-4 shadow-card space-y-3">
               <div className="flex items-center justify-between text-xs text-muted pb-2 border-b border-ink/30">
                 <span>{events.length} Events Ingested</span>
                 <span>Click a row to inspect end-to-end proposal and execution trail</span>
@@ -287,7 +287,7 @@ function EventsContent() {
 
           {/* Side Detail Panel */}
           {selectedEventId && (
-            <div className="lg:col-span-5 rounded-card border border-ink/40 bg-board p-5 shadow-card space-y-4">
+            <div className="lg:col-span-5 rounded-card border border-ink/40 bg-ink-2 p-5 shadow-card space-y-4">
               <div className="flex items-center justify-between border-b border-ink/30 pb-3">
                 <div className="flex items-center space-x-2">
                   <ShieldAlert className="h-4 w-4 text-accent" />
@@ -308,10 +308,10 @@ function EventsContent() {
               ) : (
                 <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 text-xs">
                   {/* Event summary */}
-                  <div className="rounded-input border border-ink/30 bg-ink-2/40 p-3 space-y-1.5">
+                  <div className="rounded-input border border-ink/30 bg-ink/40 p-3 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-accent font-semibold">{detail.event.id}</span>
-                      <span className="rounded-input bg-ink-2 px-2 py-0.5 text-[11px] font-medium text-board-type">
+                      <span className="rounded-input bg-ink px-2 py-0.5 text-[11px] font-medium text-board-type">
                         {detail.event.status}
                       </span>
                     </div>
@@ -357,7 +357,7 @@ function EventsContent() {
                     ) : (
                       <div className="space-y-3">
                         {detail.proposals.map((p) => (
-                          <div key={p.id} className="rounded-input border border-ink/30 bg-ink-2/30 p-3 space-y-2">
+                          <div key={p.id} className="rounded-input border border-ink/30 bg-ink/30 p-3 space-y-2">
                             <div className="flex items-center justify-between">
                               <span className="font-semibold text-success capitalize">Action: {p.action}</span>
                               <span className="text-muted">Confidence: {Math.round(parseFloat(p.confidence) * 100)}%</span>
@@ -398,7 +398,7 @@ function EventsContent() {
                     ) : (
                       <div className="space-y-2">
                         {detail.actions.map((act) => (
-                          <div key={act.id} className="rounded-input border border-ink/30 bg-ink-2/30 p-3 space-y-1">
+                          <div key={act.id} className="rounded-input border border-ink/30 bg-ink/30 p-3 space-y-1">
                             <div className="flex items-center justify-between">
                               <span className="font-medium text-board-type">{act.actionType}</span>
                               <span
@@ -407,7 +407,7 @@ function EventsContent() {
                                     ? "bg-success/20 text-success border border-success/30"
                                     : act.status === "DEAD_LETTER"
                                     ? "bg-error/20 text-error border border-error/30"
-                                    : "bg-ink-2 text-board-type"
+                                    : "bg-ink text-board-type"
                                 }`}
                               >
                                 {act.status}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ShieldAlert, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -60,8 +61,9 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-board p-6 flex items-center justify-center">
       <div className="max-w-2xl w-full rounded-card border border-rule-2 bg-ink-2 p-8 shadow-card">
         <div className="mb-6">
-          <span className="rounded-input bg-info/10 border border-info/30 px-2.5 py-1 text-xs font-medium text-info">
-            Initial Setup
+          <span className="inline-flex items-center gap-1.5 rounded-input bg-info/10 border border-info/30 px-2.5 py-1 text-xs font-medium text-info">
+            <ShieldAlert className="h-3.5 w-3.5" />
+            <span>Initial Setup</span>
           </span>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-board-type">Merchant Guardrail Onboarding</h1>
           <p className="mt-1 text-sm text-muted">
@@ -70,8 +72,9 @@ export default function OnboardingPage() {
         </div>
 
         {error && (
-          <div className="mb-6 rounded-input bg-error/10 border border-error/30 p-3 text-sm text-error">
-            {error}
+          <div className="mb-6 rounded-input bg-error/10 border border-error/30 p-3 text-sm text-error flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -179,7 +182,7 @@ export default function OnboardingPage() {
             <label className="block text-xs font-semibold text-board-type mb-2">
               Always Require Approval For:
             </label>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               {["escalate", "refund", "offer", "retry"].map((act) => (
                 <label key={act} className="inline-flex items-center space-x-2 text-xs text-board-type capitalize cursor-pointer">
                   <input
@@ -198,9 +201,10 @@ export default function OnboardingPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-input bg-accent px-5 py-2.5 font-medium text-accent-ink hover:opacity-90 active:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50 transition-colors"
+              className="inline-flex items-center space-x-2 rounded-input bg-accent px-5 py-2.5 font-medium text-accent-ink hover:opacity-90 active:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50 transition-colors"
             >
-              {loading ? "Saving Guardrails..." : "Save Guardrails & Enter Dashboard"}
+              <CheckCircle className="h-4 w-4" />
+              <span>{loading ? "Saving Guardrails..." : "Save Guardrails & Enter Dashboard"}</span>
             </button>
           </div>
         </form>
@@ -208,4 +212,3 @@ export default function OnboardingPage() {
     </div>
   );
 }
-

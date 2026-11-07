@@ -168,7 +168,7 @@ export default function AuditLogPage() {
           <div className="flex items-center space-x-3">
             <button
               onClick={handleExportCsv}
-              className="inline-flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink-2 active:opacity-80 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-focus disabled:opacity-50"
+              className="inline-flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink/60 active:opacity-80 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-focus disabled:opacity-50"
             >
               <Download className="h-3.5 w-3.5" />
               <span>Export CSV</span>
@@ -176,7 +176,7 @@ export default function AuditLogPage() {
             <button
               onClick={fetchLogs}
               disabled={loading}
-              className="inline-flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink-2 active:opacity-80 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-focus disabled:opacity-50"
+              className="inline-flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink/60 active:opacity-80 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-focus disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
               <span>Refresh</span>
@@ -218,4 +218,3 @@ export default function AuditLogPage() {
     </DashboardShell>
   );
 }
-

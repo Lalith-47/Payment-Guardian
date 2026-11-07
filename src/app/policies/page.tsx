@@ -364,7 +364,7 @@ export default function PoliciesPage() {
                     {["USD", "EUR", "GBP", "CAD"].map((curr) => (
                       <label
                         key={curr}
-                        className="inline-flex items-center space-x-2 text-xs text-board-type cursor-pointer"
+                        className="inline-flex items-center space-x-2 text-xs text-board-type capitalize cursor-pointer"
                       >
                         <input
                           type="checkbox"
@@ -471,4 +471,3 @@ export default function PoliciesPage() {
     </DashboardShell>
   );
 }
-
