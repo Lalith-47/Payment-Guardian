@@ -1,6 +1,11 @@
 import { listNonTerminalOrders, upsertPayPalOrder, listNonTerminalInvoices, upsertPayPalInvoice } from "@/db/queries/paypal-entities";
 import { paypalClient } from "@/paypal/client";
 import { appendAuditLog } from "@/db/queries/audit";
+import { updateEventStatus } from "@/db/queries/events";
+import { db } from "@/db";
+import { events } from "@/db/schema";
+import { eq, and, lte } from "drizzle-orm";
+import { env } from "@/config/env";
 import { createChildLogger } from "@/lib/logger";
 
 const log = createChildLogger("reconciler");
@@ -10,6 +15,67 @@ export interface ReconciliationSummary {
   ordersUpdated: number;
   invoicesChecked: number;
   invoicesUpdated: number;
+  executedEventsChecked: number;
+  executedEventsReconciled: number;
+}
+
+export async function reconcileExecutedEvents(
+  timeoutMinutes = env.RECONCILER_TIMEOUT_MINUTES,
+  targetEventId?: string
+): Promise<{ checked: number; reconciled: number }> {
+  const cutoffTime = new Date(Date.now() - timeoutMinutes * 60 * 1000);
+
+  const conditions = [
+    eq(events.status, "EXECUTED"),
+    lte(events.updatedAt, cutoffTime),
+  ];
+  if (targetEventId) {
+    conditions.push(eq(events.id, targetEventId));
+  }
+
+  const pendingExecuted = await db
+    .select()
+    .from(events)
+    .where(and(...conditions));
+
+  let reconciled = 0;
+  for (const ev of pendingExecuted) {
+    if (!ev.externalId) continue;
+
+    try {
+      const remote = await paypalClient.getOrder(ev.externalId);
+      const remoteStatus = remote.status as string;
+
+      if (remoteStatus === "COMPLETED") {
+        log.info(
+          { eventId: ev.id, orderId: ev.externalId, timeoutMinutes },
+          "No webhook arrived within timeout; polling confirmed order COMPLETED on PayPal. Transitioning to EXECUTED_CONFIRMED_BY_POLLING"
+        );
+
+        await updateEventStatus(ev.id, "EXECUTED_CONFIRMED_BY_POLLING");
+
+        await appendAuditLog({
+          source: "polling_reconciler",
+          eventType: "order.polling_confirmed",
+          eventId: ev.id,
+          actor: "reconciler",
+          action: "STATE_TRANSITION",
+          details: {
+            from: "EXECUTED",
+            to: "EXECUTED_CONFIRMED_BY_POLLING",
+            orderId: ev.externalId,
+            reason: `No webhook arrived within ${timeoutMinutes} minutes. Confirmed COMPLETED via polling GET order.`,
+          },
+        });
+
+        reconciled++;
+      }
+    } catch (err) {
+      log.warn({ err, eventId: ev.id, orderId: ev.externalId }, "Failed to fetch order during executed events reconciliation");
+    }
+  }
+
+  return { checked: pendingExecuted.length, reconciled };
 }
 
 export async function reconcileNonTerminalRecords(): Promise<ReconciliationSummary> {
@@ -101,8 +167,18 @@ export async function reconcileNonTerminalRecords(): Promise<ReconciliationSumma
     }
   }
 
+  // 3. Reconcile Executed Events (confirm COMPLETED when webhook timed out)
+  const { checked: executedEventsChecked, reconciled: executedEventsReconciled } = await reconcileExecutedEvents();
+
   log.info(
-    { ordersChecked: pendingOrders.length, ordersUpdated, invoicesChecked: pendingInvoices.length, invoicesUpdated },
+    {
+      ordersChecked: pendingOrders.length,
+      ordersUpdated,
+      invoicesChecked: pendingInvoices.length,
+      invoicesUpdated,
+      executedEventsChecked,
+      executedEventsReconciled,
+    },
     "Polling reconciliation sweep completed successfully"
   );
 
@@ -111,6 +187,8 @@ export async function reconcileNonTerminalRecords(): Promise<ReconciliationSumma
     ordersUpdated,
     invoicesChecked: pendingInvoices.length,
     invoicesUpdated,
+    executedEventsChecked,
+    executedEventsReconciled,
   };
 }
 

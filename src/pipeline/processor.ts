@@ -10,8 +10,9 @@ import { evaluatePolicy } from "@/policy/engine";
 import { actionExecutor } from "@/executor";
 import { createChildLogger } from "@/lib/logger";
 import { db } from "@/db";
-import { paypalOrders, events } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { paypalOrders, events, actions, webhookDeliveries } from "@/db/schema";
+import { markWebhookProcessed } from "@/db/queries/webhooks";
+import { eq, and, sql } from "drizzle-orm";
 import crypto from "crypto";
 
 const log = createChildLogger("pipeline-processor");
@@ -22,6 +23,7 @@ export async function processEventPipeline(
     type: string;
     source: string;
     orderId?: string;
+    transmissionId?: string;
     payload?: Record<string, unknown>;
     issue?: string;
     description?: string;
@@ -296,43 +298,111 @@ export async function processEventPipeline(
     case "PAYMENT.CAPTURE.COMPLETED": {
       const amountObj = (resource.amount as Record<string, string>) || { value: "0.00", currency_code: "USD" };
 
-      // Link back to original order and recovery event
+      // 1. Must check that this delivery exists in webhook_deliveries with signature_status = 'VALID'
+      const [delivery] = await db
+        .select()
+        .from(webhookDeliveries)
+        .where(
+          and(
+            eq(webhookDeliveries.transmissionId, jobData.transmissionId || ""),
+            eq(webhookDeliveries.eventId, jobData.eventId || ""),
+            eq(webhookDeliveries.signatureStatus, "VALID")
+          )
+        )
+        .limit(1);
+
+      if (!delivery) {
+        log.warn(
+          { transmissionId: jobData.transmissionId, eventId: jobData.eventId },
+          "Rejected PAYMENT.CAPTURE.COMPLETED: No signature-VALID webhook_deliveries row found"
+        );
+        break;
+      }
+
+      // 2. Extract verified order id and capture id strictly from verified payload resource
       const supplementaryData = resource.supplementary_data as Record<string, any> | undefined;
-      const orderId =
+      const verifiedOrderId =
         supplementaryData?.related_ids?.order_id ||
         (resource.order_id as string) ||
-        (resource.custom_id as string) ||
-        jobData.orderId ||
         null;
+      const verifiedCaptureId = (resource.id as string) || null;
 
-      if (orderId) {
-        const matchedEvents = await db
+      // Reject if simulator event with fake/generic IDs or no resource IDs
+      if (!verifiedOrderId && !verifiedCaptureId) {
+        log.warn({ resource }, "PAYMENT.CAPTURE.COMPLETED missing both order_id and capture_id in resource; ignoring");
+        break;
+      }
+
+      // 3. Match against an existing event in the DB whose externalId matches verifiedOrderId,
+      // OR who has an executed action whose captureId matches verifiedCaptureId
+      let matchedEventId: string | null = null;
+      let previousStatus: string | null = null;
+
+      if (verifiedOrderId) {
+        const [ev] = await db
           .select()
           .from(events)
           .where(
             and(
-              eq(events.externalId, orderId),
+              eq(events.externalId, verifiedOrderId),
               eq(events.type, "payment.capture_declined")
             )
-          );
-
-        for (const ev of matchedEvents) {
-          await updateEventStatus(ev.id, "RECOVERED");
-          await appendAuditLog({
-            source: "webhook",
-            eventType: jobData.type,
-            eventId: ev.id,
-            actor: "paypal_webhook",
-            action: "STATE_TRANSITION",
-            details: {
-              from: ev.status,
-              to: "RECOVERED",
-              captureId: resourceId,
-              orderId,
-            },
-          });
+          )
+          .limit(1);
+        if (ev) {
+          matchedEventId = ev.id;
+          previousStatus = ev.status;
         }
       }
+
+      if (!matchedEventId && verifiedCaptureId) {
+        // Look up by action response_summary.captureId
+        const [act] = await db
+          .select()
+          .from(actions)
+          .where(eq(sql`${actions.responseSummary}->>'captureId'`, verifiedCaptureId))
+          .limit(1);
+        if (act && act.eventId) {
+          const [ev] = await db
+            .select()
+            .from(events)
+            .where(eq(events.id, act.eventId))
+            .limit(1);
+          if (ev) {
+            matchedEventId = ev.id;
+            previousStatus = ev.status;
+          }
+        }
+      }
+
+      // If neither orderId nor captureId matched an existing real event in DB, it's an unlinked/simulator event
+      if (!matchedEventId) {
+        log.warn(
+          { verifiedOrderId, verifiedCaptureId },
+          "PAYMENT.CAPTURE.COMPLETED verified but did not match any recorded declined event; no transition"
+        );
+        break;
+      }
+
+      // Move to RECOVERED
+      await updateEventStatus(matchedEventId, "RECOVERED");
+      await markWebhookProcessed(delivery.id);
+
+      await appendAuditLog({
+        source: "webhook",
+        eventType: jobData.type,
+        eventId: matchedEventId,
+        actor: "paypal_webhook",
+        action: "STATE_TRANSITION",
+        details: {
+          from: previousStatus,
+          to: "RECOVERED",
+          captureId: verifiedCaptureId,
+          orderId: verifiedOrderId,
+          transmissionId: delivery.transmissionId,
+          deliveryId: delivery.id,
+        },
+      });
 
       await appendAuditLog({
         source: "webhook",
@@ -341,9 +411,10 @@ export async function processEventPipeline(
         actor: "system",
         action: "CAPTURE_COMPLETED",
         details: {
-          captureId: resourceId,
+          captureId: verifiedCaptureId,
           amount: amountObj,
-          orderId,
+          orderId: verifiedOrderId,
+          matchedEventId,
         },
       });
       break;

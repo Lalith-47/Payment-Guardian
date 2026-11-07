@@ -200,6 +200,8 @@ export default async function DashboardPage() {
                           className={`inline-flex items-center rounded-pill px-2 py-0.5 text-xs font-medium border ${
                             ev.status === "EXECUTED" || ev.status === "COMPLETED" || ev.status === "RECOVERED"
                               ? "bg-success/15 text-success border-success/30"
+                              : ev.status === "EXECUTED_CONFIRMED_BY_POLLING"
+                              ? "bg-info/15 text-info border-info/30"
                               : ev.status === "AWAITING_APPROVAL"
                               ? "bg-warning/15 text-warning border-warning/30"
                               : ev.status === "WAITING_FOR_AI"

@@ -185,8 +185,10 @@ function EventsContent() {
         cellRenderer: (params: any) => {
           const s = params.value;
           let badge = "bg-ink text-board-type border-rule-2";
-          if (s === "EXECUTED" || s === "COMPLETED" || s === "RECOVERED") {
+          if (s === "RECOVERED" || s === "EXECUTED" || s === "COMPLETED") {
             badge = "bg-success/15 text-success border-success/30";
+          } else if (s === "EXECUTED_CONFIRMED_BY_POLLING") {
+            badge = "bg-info/15 text-info border-info/30";
           } else if (s === "AWAITING_APPROVAL") {
             badge = "bg-warning/15 text-warning border-warning/30";
           } else if (s === "WAITING_FOR_AI") {
