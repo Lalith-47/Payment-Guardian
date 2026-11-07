@@ -5,7 +5,7 @@ import { createChildLogger } from "@/lib/logger";
 const log = createChildLogger("llm-budget");
 
 export function isRealProvider(): boolean {
-  const effectiveUrl = env.LLM_BASE_URL || env.OPENROUTER_BASE_URL;
+  const effectiveUrl = process.env.LLM_BASE_URL || env.LLM_BASE_URL || env.OPENROUTER_BASE_URL;
   try {
     const url = new URL(effectiveUrl);
     return url.hostname.endsWith("openrouter.ai") && process.env.NODE_ENV !== "test";

@@ -1,11 +1,13 @@
 import { env } from "@/config/env";
 import { redis } from "@/lib/redis";
 import { createChildLogger } from "@/lib/logger";
+import { db, schema } from "@/db";
 import {
   incrementLlmUsage,
   isLlmBudgetAvailable,
   markDailyBudgetExhausted,
   checkClientRateLimit,
+  isRealProvider,
 } from "@/lib/llm-budget";
 import {
   AgentContext,
@@ -102,9 +104,16 @@ export interface CallResult {
   retryAfterSeconds?: number;
 }
 
+export interface CallerOptions {
+  caller?: string;
+  eventId?: string;
+  attempt?: number;
+}
+
 export type ModelCallerFn = (
   model: string,
-  messages: Array<{ role: string; content: string }>
+  messages: Array<{ role: string; content: string }>,
+  options?: CallerOptions
 ) => Promise<CallResult>;
 
 export function isDailyQuotaError(errorMessage: string): boolean {
@@ -123,31 +132,90 @@ export function isDailyQuotaError(errorMessage: string): boolean {
  */
 export async function defaultOpenRouterCaller(
   model: string,
-  messages: Array<{ role: string; content: string }>
+  messages: Array<{ role: string; content: string }>,
+  options?: CallerOptions
 ): Promise<CallResult> {
   const apiKey = env.OPENROUTER_API_KEY;
-  const baseUrl = (env.LLM_BASE_URL || env.OPENROUTER_BASE_URL).replace(/\/+$/, "");
+  const baseUrl = (process.env.LLM_BASE_URL || env.LLM_BASE_URL || env.OPENROUTER_BASE_URL).replace(/\/+$/, "");
+  const caller = options?.caller || "agent";
+  const eventId = options?.eventId || null;
+  const attempt = options?.attempt || 1;
 
-  const res = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://revenueguardian.local",
-      "X-Title": "Revenue Guardian",
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.1,
-      response_format: { type: "json_object" },
-    }),
-  });
+  const isReal = isRealProvider();
+  const startTime = Date.now();
+
+  // Increment usage for EVERY outbound HTTP request (retries, repair attempts, fallbacks included)
+  if (isReal) {
+    try {
+      await incrementLlmUsage("real");
+    } catch (err) {
+      log.error({ err }, "Failed to increment real LLM usage counter");
+    }
+  } else {
+    try {
+      await incrementLlmUsage("test");
+    } catch (err) {
+      log.error({ err }, "Failed to increment test LLM usage counter");
+    }
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://revenueguardian.local",
+        "X-Title": "Revenue Guardian",
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: 0.1,
+        response_format: { type: "json_object" },
+      }),
+    });
+  } catch (err) {
+    const latencyMs = Date.now() - startTime;
+    const errorMsg = (err as Error).message;
+    try {
+      await db.insert(schema.llmRequests).values({
+        caller,
+        model,
+        eventId,
+        httpStatus: null,
+        attempt,
+        latencyMs,
+        errorMessage: errorMsg,
+      });
+    } catch (dbErr) {
+      log.error({ dbErr }, "Failed to record outbound LLM request in db");
+    }
+    throw err;
+  }
+
+  const latencyMs = Date.now() - startTime;
 
   if (!res.ok) {
     const retryAfterHeader = res.headers.get("retry-after");
     const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined;
     const errText = await res.text();
+
+    try {
+      await db.insert(schema.llmRequests).values({
+        caller,
+        model,
+        eventId,
+        httpStatus: res.status,
+        attempt,
+        latencyMs,
+        errorMessage: errText.slice(0, 1000),
+      });
+    } catch (dbErr) {
+      log.error({ dbErr }, "Failed to record outbound LLM request in db");
+    }
+
     log.warn({ status: res.status, model, retryAfter, err: errText }, "LLM provider call failed");
     const error = new Error(`LLM call failed (${res.status}): ${errText}`) as Error & {
       retryAfterSeconds?: number;
@@ -158,6 +226,20 @@ export async function defaultOpenRouterCaller(
     error.status = res.status;
     error.bodyText = errText;
     throw error;
+  }
+
+  try {
+    await db.insert(schema.llmRequests).values({
+      caller,
+      model,
+      eventId,
+      httpStatus: res.status,
+      attempt,
+      latencyMs,
+      errorMessage: null,
+    });
+  } catch (dbErr) {
+    log.error({ dbErr }, "Failed to record outbound LLM request in db");
   }
 
   const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
@@ -229,8 +311,8 @@ export class AgentService {
 
         totalAttempts++;
         try {
-          const { allowed } = await incrementLlmUsage(scope);
-          if (!allowed) {
+          const budgetAvailableNow = await isLlmBudgetAvailable(scope);
+          if (!budgetAvailableNow) {
             return {
               status: "WAITING_FOR_AI",
               proposal: null,
@@ -244,12 +326,17 @@ export class AgentService {
             { role: "user", content: userPrompt },
           ];
 
-          let callResult = await this.caller(model, messages);
+          let callResult = await this.caller(model, messages, {
+            caller: "worker",
+            eventId: context.eventId,
+            attempt: totalAttempts,
+          });
           let candidate = this.extractAndValidateJson(callResult.content);
 
           // One JSON repair retry if parsing failed
           if (!candidate.success) {
             log.warn({ model, error: candidate.error }, "JSON parsing failed; attempting one repair call");
+            totalAttempts++;
             const repairMessages = [
               { role: "system", content: SYSTEM_PROMPT },
               { role: "user", content: userPrompt },
@@ -257,7 +344,11 @@ export class AgentService {
               { role: "user", content: buildRepairPrompt(callResult.content, candidate.error) },
             ];
 
-            callResult = await this.caller(model, repairMessages);
+            callResult = await this.caller(model, repairMessages, {
+              caller: "worker_repair",
+              eventId: context.eventId,
+              attempt: totalAttempts,
+            });
             candidate = this.extractAndValidateJson(callResult.content);
           }
 

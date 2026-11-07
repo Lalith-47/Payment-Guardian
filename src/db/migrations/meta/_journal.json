@@ -29,6 +29,13 @@
       "when": 1793975230675,
       "tag": "0003_modern_alex_wilder",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794061604498,
+      "tag": "0004_slim_wolf_cub",
+      "breakpoints": true
     }
   ]
 }

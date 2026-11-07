@@ -244,3 +244,18 @@ export const paypalInvoices = pgTable("paypal_invoices", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ==========================================
+// 11. LLM Outbound Request Log
+// ==========================================
+export const llmRequests = pgTable("llm_requests", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
+  caller: text("caller").notNull(), // 'worker', 'agent', 'test', etc.
+  model: text("model").notNull(),
+  eventId: text("event_id"),
+  httpStatus: integer("http_status"),
+  attempt: integer("attempt").notNull().default(1),
+  latencyMs: integer("latency_ms"),
+  errorMessage: text("error_message"),
+});

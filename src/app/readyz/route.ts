@@ -134,6 +134,11 @@ export async function GET() {
   // 6. LLM Budget Check (Local Counter + Provider Data)
   const llmUsage = await getLlmDailyUsage();
 
+  const providerRequests = (providerUsage as { freeModelDailyRequests?: { used?: number } } | null)
+    ?.freeModelDailyRequests;
+  const providerUsed = typeof providerRequests?.used === "number" ? providerRequests.used : null;
+  const mismatch = providerUsed !== null ? providerUsed !== llmUsage.used : false;
+
   const responseBody = {
     status: isReady ? "READY" : "NOT_READY",
     timestamp: new Date().toISOString(),
@@ -148,6 +153,7 @@ export async function GET() {
         reprobeInSeconds: llmUsage.reprobeInSeconds ?? null,
       },
       provider: providerUsage,
+      mismatch,
       // Backward-compatible top-level fields
       dailyBudget: llmUsage.budget,
       usedToday: llmUsage.used,
