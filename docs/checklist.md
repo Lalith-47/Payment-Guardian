@@ -13,5 +13,5 @@
 - [x] **C5 consistent drafts**: Retry draft is a courtesy notice ("we are retrying your payment"), not customer instruction; documented in `docs/progress.md` (commit `007830e`).
 - [x] **forged-cookie test on every route**: Forged `better-auth.session_token=forged` returns 401 across all protected routes under `src/app/api`; session validated against DB/store (commit `c0db4dc`).
 - [ ] **clean Docker rebuild + green Playwright**: `docker compose build --no-cache web worker && docker compose up -d`, unmodified stack with fake LLM worker overrides, Playwright e2e green.
-- [ ] **owner seed from env**: Verified credentials read from env with no hardcoded password in repo, tests, or git history.
+- [x] **owner seed from env**: Verified credentials read from env with no hardcoded password in repo, tests, or git history (commit `7db18a6`).
 - [ ] **LLM budget reconciled**: Provider key endpoint usage vs local counter reconciled; provider cap = 50, budget below it.
