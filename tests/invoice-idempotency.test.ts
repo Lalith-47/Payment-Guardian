@@ -45,7 +45,7 @@ describe("M3-Lite Invoice Execution & Idempotency", () => {
 
     vi.spyOn(paypalClient, "createDraftInvoice").mockImplementation(async (params) => {
       draftCallCount++;
-      capturedDraftRequestId = params.requestId;
+      capturedDraftRequestId = params.requestId || "";
       return {
         id: `INV2-TEST-${testId}`,
         invoiceNumber: `INV-${testId}`,
@@ -62,8 +62,7 @@ describe("M3-Lite Invoice Execution & Idempotency", () => {
       sendCallCount++;
       capturedSendRequestId = reqId || "";
       return {
-        id: invId,
-        status: "SENT",
+        success: true,
         raw: { id: invId, status: "SENT" },
       };
     });
