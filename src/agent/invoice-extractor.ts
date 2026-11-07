@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { defaultOpenRouterCaller, ModelCallerFn } from "./client";
+import { isRealProvider } from "@/lib/llm-budget";
 import { env } from "@/config/env";
 import { createChildLogger } from "@/lib/logger";
 
@@ -52,6 +53,18 @@ export async function extractInvoiceFromText(
   missingFields: string[];
   error?: string;
 }> {
+  const isReal = caller === defaultOpenRouterCaller && isRealProvider();
+  const allowLive = process.env.LLM_ALLOW_LIVE === "true" || env.LLM_ALLOW_LIVE === true;
+  if (isReal && !allowLive) {
+    log.warn("Invoice extraction from real LLM provider blocked by safety gate: LLM_ALLOW_LIVE is false");
+    return {
+      success: false,
+      extracted: null,
+      missingFields: [],
+      error: "Outbound call to real LLM provider blocked by safety gate: LLM_ALLOW_LIVE is false",
+    };
+  }
+
   const userPrompt = `Extract invoice details from this request:\n"""\n${inputText.trim()}\n"""\n\nReturn JSON.`;
 
   try {

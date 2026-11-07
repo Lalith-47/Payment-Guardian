@@ -63,6 +63,11 @@ const envSchema = z.object({
   LLM_API_KEY_2: z.string().optional(),
   LLM_PROVIDER_DAILY_CAP: z.coerce.number().default(100),
   LLM_DAILY_BUDGET: z.coerce.number().default(100),
+  LLM_ALLOW_LIVE: z
+    .string()
+    .optional()
+    .transform((val) => val === "true")
+    .default("false"),
 
   // Auth (better-auth single owner)
   BETTER_AUTH_SECRET: z.string().min(16, "BETTER_AUTH_SECRET must be at least 16 chars"),
@@ -100,6 +105,7 @@ function loadAndValidateEnv(): EnvConfig {
       MODEL_FALLBACKS: [],
       LLM_PROVIDER_DAILY_CAP: 100,
       LLM_DAILY_BUDGET: 100,
+      LLM_ALLOW_LIVE: false,
       BETTER_AUTH_SECRET: "build_dummy_secret_at_least_32_characters_long",
       BETTER_AUTH_URL: "http://localhost:3000",
       OWNER_EMAIL: "owner@build.local",

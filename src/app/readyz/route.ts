@@ -156,6 +156,7 @@ export async function GET() {
   }
 
   const localCountToday = measuredCount + reconstructedCount;
+  const allowLive = process.env.LLM_ALLOW_LIVE === "true" || env.LLM_ALLOW_LIVE === true;
   const providerRequests = (providerUsage as { freeModelDailyRequests?: { used?: number } } | null)
     ?.freeModelDailyRequests;
   const providerUsed = typeof providerRequests?.used === "number" ? providerRequests.used : null;
@@ -165,8 +166,10 @@ export async function GET() {
   const responseBody = {
     status: isReady ? "READY" : "NOT_READY",
     timestamp: new Date().toISOString(),
+    llmAllowLive: allowLive,
     checks,
     llm: {
+      allowLive,
       local: {
         dailyBudget: llmUsage.budget,
         usedToday: llmUsage.used,

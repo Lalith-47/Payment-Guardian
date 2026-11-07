@@ -142,6 +142,15 @@ export async function defaultOpenRouterCaller(
   const attempt = options?.attempt || 1;
 
   const isReal = isRealProvider();
+  const allowLive = process.env.LLM_ALLOW_LIVE === "true" || env.LLM_ALLOW_LIVE === true;
+
+  // Code-level gate: Refuse any request to the real provider before the network call when LLM_ALLOW_LIVE is false
+  if (isReal && !allowLive) {
+    const errorMsg = "Outbound call to real LLM provider blocked by safety gate: LLM_ALLOW_LIVE is false. Refusing before network call.";
+    log.warn({ caller, model, eventId }, errorMsg);
+    throw new Error(errorMsg);
+  }
+
   const startTime = Date.now();
 
   // Increment usage for EVERY outbound HTTP request (retries, repair attempts, fallbacks included)
@@ -282,6 +291,18 @@ export class AgentService {
     // Determine accounting scope: only genuine calls using default caller to real provider touch 'real' namespace
     const isReal = this.caller === defaultOpenRouterCaller && isRealProvider();
     const scope: "real" | "test" = isReal ? "real" : "test";
+
+    // Safety Gate: LLM_ALLOW_LIVE (default false). When false, any request to real provider base URL is refused before network call.
+    const allowLive = process.env.LLM_ALLOW_LIVE === "true" || env.LLM_ALLOW_LIVE === true;
+    if (isReal && !allowLive) {
+      log.warn({ eventId: context.eventId }, "Outbound call to real LLM provider blocked by safety gate: LLM_ALLOW_LIVE is false. Refusing before network call.");
+      return {
+        status: "WAITING_FOR_AI",
+        proposal: null,
+        error: "Outbound call to real LLM provider blocked by safety gate: LLM_ALLOW_LIVE is false. Action held in WAITING_FOR_AI state.",
+        contextSnapshot: context,
+      };
+    }
 
     // 2. Check Daily LLM Budget
     const budgetAvailable = await isLlmBudgetAvailable(scope);

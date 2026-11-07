@@ -46,6 +46,30 @@ All 14 rows were seeded post-facto via an administrative reconciliation SQL scri
 | 13 | 2026-11-07 14:18:06 | worker | nvidia/nemotron-3-ultra-550b-a55b:free | evt_dec_a20f6b38-1f0e-4051-bafd-3620b49876fe | 200 | 1 | NULL | reconstructed | E2E Playwright run against demo stack |
 | 14 | 2026-11-07 14:18:17 | worker | nvidia/nemotron-3-ultra-550b-a55b:free | evt_dec_2b53eda4-e90f-4882-b357-cef03b176f44 | 200 | 1 | NULL | reconstructed | E2E Playwright run against demo stack |
 
+## Live Measured Rows (15–24) Audit
+All calls from row 15 onward were measured in real-time by the instrumented OpenRouter client with millisecond-precision latency tracking (`latency_ms`).
+
+| ID | Timestamp (UTC) | Caller | Model | Event ID | HTTP Status | Attempt | Latency (ms) | Origin | Context / Purpose |
+|---|---|---|---|---|---|---|---|---|---|
+| 15 | 2026-11-07 17:32:06 | invoice-extractor | nvidia/nemotron-3-ultra-550b-a55b:free | | 200 | 1 | 803 | measured | Invoice extraction preflight validation |
+| 16 | 2026-11-07 17:38:27 | agent | nvidia/nemotron-3-ultra-550b-a55b:free | | 200 | 1 | 799 | measured | Agent decision engine reachability test |
+| 17 | 2026-11-07 17:38:58 | invoice-extractor | nvidia/nemotron-3-ultra-550b-a55b:free | | 200 | 1 | 849 | measured | Invoice extraction prompt structure check |
+| 18 | 2026-11-07 17:39:16 | invoice-extractor | nvidia/nemotron-3-ultra-550b-a55b:free | | 200 | 1 | 641 | measured | Live Call 1: Invoice 0050 extraction ($20 Acme Corp) |
+| 19 | 2026-11-07 17:54:27 | invoice-extractor | nvidia/nemotron-3-ultra-550b-a55b:free | | 200 | 1 | 764 | measured | Live Call 2: Invoice 0051 extraction ($750 Beta LLC) |
+| 20 | 2026-11-07 18:30:08 | worker | nvidia/nemotron-3-ultra-550b-a55b:free | evt_dec_d204559e-8cde-4f9b-a51a-6b9027ef887d | 200 | 1 | 629 | measured | Checkout test capture declined attempt 1 (Order 6LC362308L9034703) |
+| 21 | 2026-11-07 18:30:18 | worker | nvidia/nemotron-3-ultra-550b-a55b:free | evt_dec_22f8f066-5cf5-461b-af2e-426ea5b630b6 | 200 | 1 | 531 | measured | Checkout test capture declined attempt 2 (Order 6LC362308L9034703) |
+| 22 | 2026-11-07 18:30:35 | worker | nvidia/nemotron-3-ultra-550b-a55b:free | evt_dec_23aeb8ea-bcdb-4582-b947-5616a7583c98 | 200 | 1 | 535 | measured | Checkout test capture declined attempt 3 (Order 6LC362308L9034703) |
+| 23 | 2026-11-07 18:30:42 | worker | nvidia/nemotron-3-ultra-550b-a55b:free | evt_dec_d0ff95ce-b168-48fd-a940-0de355cdb40c | 200 | 1 | 515 | measured | Checkout test capture declined attempt 4 (Order 6LC362308L9034703) |
+| 24 | 2026-11-07 19:02:47 | worker | nvidia/nemotron-3-ultra-550b-a55b:free | evt_dec_0d4e8ab5-564d-4bce-9876-525c128f0713 | 200 | 1 | 530 | measured | Worker background event evaluation |
+
+## Safety Gate (`LLM_ALLOW_LIVE`)
+To protect budget and strictly prevent accidental live OpenRouter consumption:
+- The runtime enforces `LLM_ALLOW_LIVE` (boolean, default `false`).
+- When `false`, all attempts to make outbound network calls to the real OpenRouter provider (`defaultOpenRouterCaller`, `AgentService.evaluateEvent`, `extractInvoiceFromText`) are refused BEFORE any network request is issued.
+- Events evaluated while `LLM_ALLOW_LIVE=false` transition immediately to `status: WAITING_FOR_AI` with zero outbound network calls and zero `measured` rows written to `llm_requests`.
+- The fake LLM server (`http://localhost:4040` / `isRealProvider() === false`) used by the isolated e2e stack is exempt from this gate.
+- `/readyz` exposes `llmAllowLive: boolean` for end-to-end verification.
+
 ## `/readyz` Mismatch Computation
 `/readyz` tracks both `measuredCount` and `reconstructedCount` separately within the current UTC day (`timestamp >= current UTC midnight`).
 
