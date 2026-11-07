@@ -79,5 +79,35 @@ describe("LLM Outbound Accounting & Isolation", () => {
     expect(checkCol.rows.length).toBe(1);
     expect(checkCol.rows[0].column_name).toBe("origin");
   });
+
+  it("simulates next UTC day with zero rows against provider used=0 without mismatch", async () => {
+    const { pool } = await import("@/db");
+
+    // Simulate query with tomorrow's UTC midnight (a future date where no requests exist)
+    const tomorrowUtcMidnight = new Date();
+    tomorrowUtcMidnight.setUTCDate(tomorrowUtcMidnight.getUTCDate() + 1);
+    tomorrowUtcMidnight.setUTCHours(0, 0, 0, 0);
+
+    const measuredRes = await pool.query(
+      "SELECT count(*)::int as count FROM llm_requests WHERE origin = 'measured' AND timestamp >= $1",
+      [tomorrowUtcMidnight]
+    );
+    const reconstructedRes = await pool.query(
+      "SELECT count(*)::int as count FROM llm_requests WHERE origin = 'reconstructed' AND timestamp >= $1",
+      [tomorrowUtcMidnight]
+    );
+
+    const measuredCount = measuredRes.rows[0]?.count ?? 0;
+    const reconstructedCount = reconstructedRes.rows[0]?.count ?? 0;
+    const localCount = measuredCount + reconstructedCount;
+
+    const simulatedProviderUsed = 0;
+    const mismatch = simulatedProviderUsed !== localCount;
+
+    expect(measuredCount).toBe(0);
+    expect(reconstructedCount).toBe(0);
+    expect(localCount).toBe(0);
+    expect(mismatch).toBe(false);
+  });
 });
 

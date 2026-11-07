@@ -47,9 +47,9 @@ All 14 rows were seeded post-facto via an administrative reconciliation SQL scri
 | 14 | 2026-11-07 14:18:17 | worker | nvidia/nemotron-3-ultra-550b-a55b:free | evt_dec_2b53eda4-e90f-4882-b357-cef03b176f44 | 200 | 1 | NULL | reconstructed | E2E Playwright run against demo stack |
 
 ## `/readyz` Mismatch Computation
-`/readyz` tracks both `measuredCount` and `reconstructedCount` separately.
-- Reconstructed baseline: 14 calls.
-- Expected measured calls from provider: `max(0, providerUsed - reconstructedCount)`.
-- Local measured calls: `SELECT count(*) FROM llm_requests WHERE origin = 'measured'`.
-- `mismatch = expectedMeasured !== null ? expectedMeasured !== measuredCount : false`.
-This ensures historical reconstructed calls do not pollute live call budget accounting or trigger false mismatch alerts, while guaranteeing that any unlogged live request to the real provider triggers an immediate mismatch.
+`/readyz` tracks both `measuredCount` and `reconstructedCount` separately within the current UTC day (`timestamp >= current UTC midnight`).
+- Local counts today: queries rows where `timestamp >= current UTC midnight` for `origin = 'measured'` and `origin = 'reconstructed'`.
+- `localCountToday = measuredCount + reconstructedCount`.
+- Provider counter resets daily at UTC midnight, returning `providerUsed` for the current UTC day.
+- `mismatch = providerUsed !== null ? providerUsed !== localCountToday : false`.
+When the provider counter resets at the next UTC midnight, previous-day rows are excluded from `localCountToday`, preventing any false mismatch tomorrow while ensuring any unlogged live request to the real provider triggers an immediate mismatch.

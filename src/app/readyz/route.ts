@@ -131,17 +131,22 @@ export async function GET() {
     }
   }
 
-  // 6. LLM Budget Check (Local Counter + Provider Data)
+  // 6. LLM Budget Check (Local Counter + Provider Data for Current UTC Day)
   const llmUsage = await getLlmDailyUsage();
+
+  const utcMidnight = new Date();
+  utcMidnight.setUTCHours(0, 0, 0, 0);
 
   let measuredCount = 0;
   let reconstructedCount = 0;
   try {
     const measuredRes = await pool.query(
-      "SELECT count(*)::int as count FROM llm_requests WHERE origin = 'measured'"
+      "SELECT count(*)::int as count FROM llm_requests WHERE origin = 'measured' AND timestamp >= $1",
+      [utcMidnight]
     );
     const reconstructedRes = await pool.query(
-      "SELECT count(*)::int as count FROM llm_requests WHERE origin = 'reconstructed'"
+      "SELECT count(*)::int as count FROM llm_requests WHERE origin = 'reconstructed' AND timestamp >= $1",
+      [utcMidnight]
     );
     measuredCount = measuredRes.rows[0]?.count ?? 0;
     reconstructedCount = reconstructedRes.rows[0]?.count ?? 0;
@@ -150,11 +155,12 @@ export async function GET() {
     reconstructedCount = 0;
   }
 
+  const localCountToday = measuredCount + reconstructedCount;
   const providerRequests = (providerUsage as { freeModelDailyRequests?: { used?: number } } | null)
     ?.freeModelDailyRequests;
   const providerUsed = typeof providerRequests?.used === "number" ? providerRequests.used : null;
-  const expectedMeasured = providerUsed !== null ? Math.max(0, providerUsed - reconstructedCount) : null;
-  const mismatch = expectedMeasured !== null ? expectedMeasured !== measuredCount : false;
+  // Compare ALL llm_requests rows with timestamp >= current UTC midnight against provider's used count
+  const mismatch = providerUsed !== null ? providerUsed !== localCountToday : false;
 
   const responseBody = {
     status: isReady ? "READY" : "NOT_READY",
@@ -169,7 +175,7 @@ export async function GET() {
         exhaustedByCap: llmUsage.exhaustedByCap,
         reprobeInSeconds: llmUsage.reprobeInSeconds ?? null,
       },
-      localCount: measuredCount + reconstructedCount,
+      localCount: localCountToday,
       measuredCount,
       reconstructedCount,
       providerCount: providerUsed,
