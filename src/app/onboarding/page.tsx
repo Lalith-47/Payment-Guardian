@@ -57,20 +57,20 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6 flex items-center justify-center">
-      <div className="max-w-2xl w-full rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-md">
+    <div className="min-h-screen bg-board p-6 flex items-center justify-center">
+      <div className="max-w-2xl w-full rounded-card border border-rule-2 bg-ink-2 p-8 shadow-card">
         <div className="mb-6">
-          <span className="rounded-md bg-blue-950 border border-blue-800 px-2.5 py-1 text-xs font-medium text-blue-300">
+          <span className="rounded-input bg-info/10 border border-info/30 px-2.5 py-1 text-xs font-medium text-info">
             Initial Setup
           </span>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-white">Merchant Guardrail Onboarding</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-board-type">Merchant Guardrail Onboarding</h1>
+          <p className="mt-1 text-sm text-muted">
             Configure your autonomous payment recovery policies. All financial limits are owner-defined and enforced in Postgres.
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-lg bg-red-950/80 border border-red-800 p-3 text-sm text-red-200">
+          <div className="mb-6 rounded-input bg-error/10 border border-error/30 p-3 text-sm text-error">
             {error}
           </div>
         )}
@@ -78,7 +78,7 @@ export default function OnboardingPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-board-type">
                 Policy Name
               </label>
               <input
@@ -86,18 +86,18 @@ export default function OnboardingPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm"
+                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-board-type">
                 Store Currency
               </label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm"
+                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
               >
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
@@ -109,7 +109,7 @@ export default function OnboardingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-board-type">
                 Max Auto-Refund Amount (${currency})
               </label>
               <input
@@ -119,13 +119,13 @@ export default function OnboardingPage() {
                 value={autoRefundMaxAmount}
                 onChange={(e) => setAutoRefundMaxAmount(Number(e.target.value))}
                 required
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm"
+                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
               />
-              <p className="mt-1 text-xs text-slate-500">Refunds above this amount require manual owner approval.</p>
+              <p className="mt-1 text-xs text-muted">Refunds above this amount require manual owner approval.</p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-board-type">
                 Max Automated Retries
               </label>
               <input
@@ -135,15 +135,15 @@ export default function OnboardingPage() {
                 value={autoRetryMaxAttempts}
                 onChange={(e) => setAutoRetryMaxAttempts(Number(e.target.value))}
                 required
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm"
+                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
               />
-              <p className="mt-1 text-xs text-slate-500">Subsequent capture attempts before stopping.</p>
+              <p className="mt-1 text-xs text-muted">Subsequent capture attempts before stopping.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-board-type">
                 AI Confidence Threshold ({Math.round(confidenceThreshold * 100)}%)
               </label>
               <input
@@ -153,13 +153,13 @@ export default function OnboardingPage() {
                 step="0.05"
                 value={confidenceThreshold}
                 onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
-                className="mt-2 block w-full accent-blue-500"
+                className="mt-2 block w-full accent-accent"
               />
-              <p className="mt-1 text-xs text-slate-500">Proposals with confidence below this threshold fail closed.</p>
+              <p className="mt-1 text-xs text-muted">Proposals with confidence below this threshold fail closed.</p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-board-type">
                 Max Offer Discount ({offerDiscountPct}%)
               </label>
               <input
@@ -169,24 +169,24 @@ export default function OnboardingPage() {
                 value={offerDiscountPct}
                 onChange={(e) => setOfferDiscountPct(Number(e.target.value))}
                 required
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm"
+                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
               />
-              <p className="mt-1 text-xs text-slate-500">Maximum discount permitted on alternative offers.</p>
+              <p className="mt-1 text-xs text-muted">Maximum discount permitted on alternative offers.</p>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-2">
+            <label className="block text-xs font-semibold text-board-type mb-2">
               Always Require Approval For:
             </label>
             <div className="flex gap-4">
               {["escalate", "refund", "offer", "retry"].map((act) => (
-                <label key={act} className="inline-flex items-center space-x-2 text-xs text-slate-300 capitalize cursor-pointer">
+                <label key={act} className="inline-flex items-center space-x-2 text-xs text-board-type capitalize cursor-pointer">
                   <input
                     type="checkbox"
                     checked={requireApprovalActions.includes(act)}
                     onChange={() => toggleAction(act)}
-                    className="rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-0"
+                    className="rounded border-rule-2 bg-ink text-accent focus:ring-0"
                   />
                   <span>{act}</span>
                 </label>
@@ -194,11 +194,11 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex justify-end">
+          <div className="pt-4 border-t border-rule-2 flex justify-end">
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 transition-colors"
+              className="rounded-input bg-accent px-5 py-2.5 font-medium text-accent-ink hover:opacity-90 active:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50 transition-colors"
             >
               {loading ? "Saving Guardrails..." : "Save Guardrails & Enter Dashboard"}
             </button>

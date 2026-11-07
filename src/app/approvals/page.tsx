@@ -157,28 +157,28 @@ export default function ApprovalsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <Inbox className="h-5 w-5 text-amber-400" />
+            <h1 className="text-xl font-bold text-board-type flex items-center gap-2">
+              <Inbox className="h-5 w-5 text-warning" />
               <span>Owner Approval Inbox</span>
             </h1>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-muted">
               High-risk actions, policy threshold exceptions, or low-confidence AI proposals requiring explicit human consent.
             </p>
           </div>
           <div className="flex items-center space-x-3">
-            <div className="flex rounded-lg border border-slate-800 bg-slate-900 p-1 text-xs">
+            <div className="flex rounded-card border border-rule-2 bg-ink-2 p-1 text-xs">
               <button
                 onClick={() => setFilter("PENDING")}
-                className={`rounded px-3 py-1 font-medium transition-colors ${
-                  filter === "PENDING" ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
+                className={`rounded-input px-3 py-1 font-medium transition-colors ${
+                  filter === "PENDING" ? "bg-ink text-board-type" : "text-muted hover:text-board-type"
                 }`}
               >
                 Pending Review
               </button>
               <button
                 onClick={() => setFilter("ALL")}
-                className={`rounded px-3 py-1 font-medium transition-colors ${
-                  filter === "ALL" ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
+                className={`rounded-input px-3 py-1 font-medium transition-colors ${
+                  filter === "ALL" ? "bg-ink text-board-type" : "text-muted hover:text-board-type"
                 }`}
               >
                 All History
@@ -187,7 +187,7 @@ export default function ApprovalsPage() {
             <button
               onClick={fetchApprovals}
               disabled={loading}
-              className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-500 active:scale-[0.98]"
+              className="inline-flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink-2 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-focus active:opacity-80"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
               <span>Refresh</span>
@@ -197,16 +197,16 @@ export default function ApprovalsPage() {
 
         {statusMsg && (
           <div
-            className={`rounded-lg p-3 text-xs flex items-center space-x-2 border ${
+            className={`rounded-input p-3 text-xs flex items-center space-x-2 border ${
               statusMsg.type === "success"
-                ? "bg-emerald-950/80 border-emerald-800 text-emerald-200"
-                : "bg-red-950/80 border-red-800 text-red-200"
+                ? "bg-success/15 border-success/30 text-success"
+                : "bg-error/15 border-error/30 text-error"
             }`}
           >
             {statusMsg.type === "success" ? (
-              <CheckCircle className="h-4 w-4 shrink-0 text-emerald-400" />
+              <CheckCircle className="h-4 w-4 shrink-0 text-success" />
             ) : (
-              <AlertTriangle className="h-4 w-4 shrink-0 text-red-400" />
+              <AlertTriangle className="h-4 w-4 shrink-0 text-error" />
             )}
             <span>{statusMsg.text}</span>
           </div>
@@ -215,14 +215,14 @@ export default function ApprovalsPage() {
         {/* Rejection Reason Modal */}
         {rejectingItem && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-md space-y-4">
-              <div className="flex items-center space-x-2 text-red-400">
+            <div className="w-full max-w-md rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
+              <div className="flex items-center space-x-2 text-error">
                 <XCircle className="h-5 w-5" />
-                <h3 className="text-sm font-semibold text-white">Reject Proposed Action</h3>
+                <h3 className="text-sm font-semibold text-board-type">Reject Proposed Action</h3>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted">
                 Provide a justification for rejecting the AI proposal for{" "}
-                <span className="font-mono text-slate-200">{rejectingItem.eventId}</span>. This will be archived in the append-only audit log.
+                <span className="font-mono text-board-type">{rejectingItem.eventId}</span>. This will be archived in the append-only audit log.
               </p>
 
               <form onSubmit={handleRejectSubmit} className="space-y-4">
@@ -232,7 +232,7 @@ export default function ApprovalsPage() {
                   placeholder="e.g. Order was already fulfilled or customer contacted support directly."
                   required
                   rows={3}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-xs text-white placeholder-slate-500 focus:border-red-500 focus:outline-none"
+                  className="w-full rounded-input border border-rule-2 bg-ink p-2.5 text-xs text-board-type placeholder-muted focus:border-error focus:outline-none"
                 />
 
                 <div className="flex justify-end space-x-2">
@@ -242,14 +242,14 @@ export default function ApprovalsPage() {
                       setRejectingItem(null);
                       setRejectReason("");
                     }}
-                    className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700"
+                    className="rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink-2 active:opacity-80"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={actingToken !== null}
-                    className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                    className="rounded-input bg-error px-3 py-1.5 text-xs font-semibold text-board-type hover:opacity-90 active:opacity-100 disabled:opacity-50"
                   >
                     Confirm Rejection
                   </button>
@@ -261,10 +261,10 @@ export default function ApprovalsPage() {
 
         {/* Approvals List */}
         {displayedApprovals.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-12 text-center space-y-2">
-            <ShieldAlert className="h-8 w-8 text-slate-600 mx-auto" />
-            <h3 className="text-sm font-semibold text-slate-300">Approval Inbox Clear</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          <div className="rounded-card border border-dashed border-rule-2 bg-ink-2/40 p-12 text-center space-y-2">
+            <ShieldAlert className="h-8 w-8 text-muted mx-auto" />
+            <h3 className="text-sm font-semibold text-board-type">Approval Inbox Clear</h3>
+            <p className="text-xs text-muted max-w-sm mx-auto">
               There are currently no actions requiring manual owner review. Autonomous policy guardrails are enforcing routine recovery.
             </p>
           </div>
@@ -277,24 +277,24 @@ export default function ApprovalsPage() {
               return (
                 <div
                   key={appr.id}
-                  className="rounded-xl border border-slate-800 bg-slate-900 p-5 shadow-sm space-y-4"
+                  className="rounded-card border border-rule-2 bg-ink-2 p-5 shadow-card space-y-4"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800 pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-rule-2 pb-3">
                     <div className="flex items-center space-x-3">
-                      <span className="font-mono text-xs font-semibold text-amber-400">{appr.id}</span>
+                      <span className="font-mono text-xs font-semibold text-warning">{appr.id}</span>
                       <span
-                        className={`rounded px-2 py-0.5 text-[11px] font-semibold border ${
+                        className={`rounded-pill px-2 py-0.5 text-[11px] font-semibold border ${
                           appr.status === "PENDING"
-                            ? "bg-amber-950 text-amber-300 border-amber-800"
+                            ? "bg-warning/15 text-warning border-warning/30"
                             : appr.status === "APPROVED"
-                            ? "bg-emerald-950 text-emerald-300 border-emerald-800"
-                            : "bg-red-950 text-red-300 border-red-800"
+                            ? "bg-success/15 text-success border-success/30"
+                            : "bg-error/15 text-error border-error/30"
                         }`}
                       >
                         {appr.status}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-3 text-xs text-slate-400">
+                    <div className="flex items-center space-x-3 text-xs text-muted">
                       <span className="flex items-center space-x-1">
                         <Clock className="h-3.5 w-3.5" />
                         <span>Expires: {new Date(appr.expiresAt).toLocaleTimeString()}</span>
@@ -305,8 +305,8 @@ export default function ApprovalsPage() {
 
                   {/* Trigger rule reason */}
                   {appr.triggerRule && (
-                    <div className="rounded-lg border border-amber-800/60 bg-amber-950/30 p-2.5 text-xs text-amber-300 flex items-center space-x-2">
-                      <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
+                    <div className="rounded-input border border-warning/30 bg-warning/15 p-2.5 text-xs text-warning flex items-center space-x-2">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
                       <span>
                         Policy Engine Reason (Authoritative): <strong className="font-mono">{appr.triggerRule}</strong>
                       </span>
@@ -317,52 +317,52 @@ export default function ApprovalsPage() {
                   {appr.proposal ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                       <div className="space-y-1">
-                        <span className="text-slate-400">Proposed Action</span>
-                        <p className="text-sm font-bold text-white capitalize">
+                        <span className="text-muted">Proposed Action</span>
+                        <p className="text-sm font-bold text-board-type capitalize">
                           {appr.proposal.action}{" "}
                           {appr.proposal.amount ? `($${appr.proposal.amount} ${appr.proposal.currency || "USD"})` : ""}
                         </p>
-                        <p className="text-slate-500 text-[11px]">Model: {appr.proposal.modelUsed}</p>
+                        <p className="text-muted text-[11px]">Model: {appr.proposal.modelUsed}</p>
                       </div>
 
                       <div className="md:col-span-2 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">AI note (unverified)</span>
-                          <span className="text-emerald-400 font-medium">
+                          <span className="text-muted">AI note (unverified)</span>
+                          <span className="text-success font-medium">
                             Confidence: {Math.round(parseFloat(appr.proposal.confidence) * 100)}%
                           </span>
                         </div>
-                        <p className="text-slate-300 italic">{appr.proposal.reasoning}</p>
+                        <p className="text-board-type italic">{appr.proposal.reasoning}</p>
                         {appr.proposal.message && (
-                          <div className="rounded bg-slate-800/60 p-2 border border-slate-700/60 mt-1">
-                            <span className="text-slate-400 text-[11px]">Draft Customer Notice (Unsent):</span>
-                            <p className="text-slate-300 text-[11px] mt-0.5">{appr.proposal.message}</p>
+                          <div className="rounded-input bg-ink/60 p-2 border border-rule-2/60 mt-1">
+                            <span className="text-muted text-[11px]">Draft Customer Notice (Unsent):</span>
+                            <p className="text-board-type text-[11px] mt-0.5">{appr.proposal.message}</p>
                           </div>
                         )}
                       </div>
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-500 italic">Proposal details unavailable.</p>
+                    <p className="text-xs text-muted italic">Proposal details unavailable.</p>
                   )}
 
                   {/* Decision summary if already decided */}
                   {!isPending && (
-                    <div className="rounded-lg bg-slate-800/40 p-2.5 text-xs border border-slate-800 text-slate-400">
-                      Decided by <span className="text-slate-200">{appr.decidedBy || "owner"}</span> at{" "}
+                    <div className="rounded-input bg-ink/40 p-2.5 text-xs border border-rule-2 text-muted">
+                      Decided by <span className="text-board-type">{appr.decidedBy || "owner"}</span> at{" "}
                       {appr.decidedAt ? new Date(appr.decidedAt).toLocaleString() : "—"}.
                       {appr.rejectionReason && (
-                        <p className="text-red-300 mt-1">Rejection reason: {appr.rejectionReason}</p>
+                        <p className="text-error mt-1">Rejection reason: {appr.rejectionReason}</p>
                       )}
                     </div>
                   )}
 
                   {/* Actions (Approve / Reject) */}
                   {isPending && (
-                    <div className="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800">
+                    <div className="flex items-center justify-end space-x-3 pt-2 border-t border-rule-2">
                       <button
                         onClick={() => setRejectingItem(appr)}
                         disabled={isActing}
-                        className="inline-flex items-center space-x-1.5 rounded-lg border border-red-800 bg-red-950/60 px-3.5 py-1.5 text-xs font-semibold text-red-200 hover:bg-red-900 hover:text-white disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-red-500 active:scale-[0.98]"
+                        className="inline-flex items-center space-x-1.5 rounded-input border border-error/30 bg-error/15 px-3.5 py-1.5 text-xs font-semibold text-error hover:bg-error/25 disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-error active:opacity-80"
                       >
                         <XCircle className="h-3.5 w-3.5" />
                         <span>Reject</span>
@@ -371,7 +371,7 @@ export default function ApprovalsPage() {
                       <button
                         onClick={() => handleApprove(appr)}
                         disabled={isActing}
-                        className="inline-flex items-center space-x-1.5 rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-emerald-400 active:scale-[0.98]"
+                        className="inline-flex items-center space-x-1.5 rounded-input bg-success px-4 py-1.5 text-xs font-semibold text-board-type hover:opacity-90 disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-success active:opacity-80"
                       >
                         <CheckCircle className="h-3.5 w-3.5" />
                         <span>{isActing ? "Executing..." : "Approve & Execute via Executor"}</span>

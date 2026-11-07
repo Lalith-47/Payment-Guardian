@@ -160,7 +160,7 @@ function EventsContent() {
         headerName: "Event ID",
         width: 170,
         cellRenderer: (params: any) => (
-          <span className="font-mono text-blue-400 font-medium">{params.value}</span>
+          <span className="font-mono text-accent font-medium">{params.value}</span>
         ),
       },
       {
@@ -173,7 +173,7 @@ function EventsContent() {
         headerName: "Source",
         width: 150,
         cellRenderer: (params: any) => (
-          <span className="rounded bg-slate-800 px-2 py-0.5 text-[11px] text-slate-300">
+          <span className="rounded-input bg-ink px-2 py-0.5 text-[11px] text-board-type border border-rule-2">
             {params.value}
           </span>
         ),
@@ -184,18 +184,18 @@ function EventsContent() {
         width: 160,
         cellRenderer: (params: any) => {
           const s = params.value;
-          let badge = "bg-slate-800 text-slate-300 border-slate-700";
+          let badge = "bg-ink text-board-type border-rule-2";
           if (s === "EXECUTED" || s === "COMPLETED" || s === "RECOVERED") {
-            badge = "bg-emerald-950 text-emerald-300 border-emerald-800";
+            badge = "bg-success/15 text-success border-success/30";
           } else if (s === "AWAITING_APPROVAL") {
-            badge = "bg-amber-950 text-amber-300 border-amber-800";
+            badge = "bg-warning/15 text-warning border-warning/30";
           } else if (s === "WAITING_FOR_AI") {
-            badge = "bg-purple-950 text-purple-300 border-purple-800";
+            badge = "bg-info/15 text-info border-info/30";
           } else if (s === "FAILED" || s === "REJECTED") {
-            badge = "bg-red-950 text-red-300 border-red-800";
+            badge = "bg-error/15 text-error border-error/30";
           }
           return (
-            <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${badge}`}>
+            <span className={`inline-flex items-center rounded-pill border px-2 py-0.5 text-xs font-medium ${badge}`}>
               {s}
             </span>
           );
@@ -212,7 +212,7 @@ function EventsContent() {
         width: 130,
         valueGetter: (params) => params.data?.proposal?.action || "—",
         cellRenderer: (params: any) => (
-          <span className="capitalize font-medium text-slate-200">{params.value}</span>
+          <span className="capitalize font-medium text-board-type">{params.value}</span>
         ),
       },
       {
@@ -253,7 +253,7 @@ function EventsContent() {
           <button
             onClick={fetchEvents}
             disabled={loading}
-            className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-500 active:scale-[0.98]"
+            className="inline-flex items-center space-x-1.5 rounded-input border border-ink/40 bg-ink-2/60 px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink-2 hover:text-board-type transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent active:scale-[0.98]"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
             <span>Refresh Events</span>
@@ -264,16 +264,16 @@ function EventsContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* AG Grid Table */}
           <div className={selectedEventId ? "lg:col-span-7" : "lg:col-span-12"}>
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 shadow-sm space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-slate-800">
+            <div className="rounded-card border border-ink/40 bg-board p-4 shadow-card space-y-3">
+              <div className="flex items-center justify-between text-xs text-muted pb-2 border-b border-ink/30">
                 <span>{events.length} Events Ingested</span>
                 <span>Click a row to inspect end-to-end proposal and execution trail</span>
               </div>
-              <div className="ag-theme-quartz-dark w-full h-[520px] rounded-lg overflow-hidden">
+              <div className="ag-theme-quartz-dark w-full h-[520px] rounded-input overflow-hidden">
                 <AgGridReact<EventItem>
                   rowData={events}
                   columnDefs={columnDefs}
-                  rowSelection="single"
+                  rowSelection={"single"}
                   onRowClicked={onRowClicked}
                   pagination={true}
                   paginationPageSize={15}
@@ -285,97 +285,97 @@ function EventsContent() {
 
           {/* Side Detail Panel */}
           {selectedEventId && (
-            <div className="lg:col-span-5 rounded-xl border border-slate-800 bg-slate-900 p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="lg:col-span-5 rounded-card border border-ink/40 bg-board p-5 shadow-card space-y-4">
+              <div className="flex items-center justify-between border-b border-ink/30 pb-3">
                 <div className="flex items-center space-x-2">
-                  <ShieldAlert className="h-4 w-4 text-blue-400" />
-                  <h2 className="text-sm font-semibold text-white">Event Resolution Detail</h2>
+                  <ShieldAlert className="h-4 w-4 text-accent" />
+                  <h2 className="text-sm font-semibold text-board-type">Event Resolution Detail</h2>
                 </div>
                 <button
                   onClick={() => setSelectedEventId(null)}
-                  className="text-slate-400 hover:text-slate-200 p-1 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-500 rounded active:scale-[0.98]"
+                  className="text-muted hover:text-board-type p-1 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent rounded-input active:scale-[0.98]"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               {loadingDetail ? (
-                <div className="p-8 text-center text-xs text-slate-400">Loading pipeline trail…</div>
+                <div className="p-8 text-center text-xs text-muted">Loading pipeline trail…</div>
               ) : !detail ? (
-                <div className="p-8 text-center text-xs text-slate-400">Event not found.</div>
+                <div className="p-8 text-center text-xs text-muted">Event not found.</div>
               ) : (
                 <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 text-xs">
                   {/* Event summary */}
-                  <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-3 space-y-1.5">
+                  <div className="rounded-input border border-ink/30 bg-ink-2/40 p-3 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-blue-400 font-semibold">{detail.event.id}</span>
-                      <span className="rounded bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-300">
+                      <span className="font-mono text-accent font-semibold">{detail.event.id}</span>
+                      <span className="rounded-input bg-ink-2 px-2 py-0.5 text-[11px] font-medium text-board-type">
                         {detail.event.status}
                       </span>
                     </div>
-                    <p className="text-slate-400">
-                      External Order: <span className="text-slate-200 font-mono">{detail.event.externalId || "—"}</span>
+                    <p className="text-muted">
+                      External Order: <span className="text-board-type font-mono">{detail.event.externalId || "—"}</span>
                     </p>
-                    <p className="text-slate-400">
-                      Ingested: <span className="text-slate-300">{new Date(detail.event.createdAt).toLocaleString()}</span>
+                    <p className="text-muted">
+                      Ingested: <span className="text-board-type">{new Date(detail.event.createdAt).toLocaleString()}</span>
                     </p>
                     {detail.event.errorMessage && (
-                      <p className="text-red-400 font-mono text-[11px] pt-1">Error: {detail.event.errorMessage}</p>
+                      <p className="text-error font-mono text-[11px] pt-1">Error: {detail.event.errorMessage}</p>
                     )}
                   </div>
 
                   {/* Retry Action button */}
                   {isRetryEligible && (
-                    <div className="rounded-lg border border-purple-800/60 bg-purple-950/40 p-3 space-y-2">
+                    <div className="rounded-input border border-warning/30 bg-warning/10 p-3 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-purple-200">Incident Recovery Available</span>
+                        <span className="font-medium text-warning">Incident Recovery Available</span>
                         <button
                           onClick={handleRetry}
                           disabled={retrying}
-                          className="inline-flex items-center space-x-1.5 rounded-md bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-purple-400 active:scale-[0.98]"
+                          className="inline-flex items-center space-x-1.5 rounded-input bg-warning px-3 py-1.5 text-xs font-semibold text-accent-ink hover:opacity-90 disabled:opacity-50 transition-opacity focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent active:scale-[0.98]"
                         >
                           <RotateCcw className={`h-3 w-3 ${retrying ? "motion-safe:animate-spin" : ""}`} />
                           <span>{retrying ? "Retrying..." : "Retry Recovery"}</span>
                         </button>
                       </div>
-                      <p className="text-[11px] text-purple-300">
+                      <p className="text-[11px] text-muted">
                         Verifies LLM budget availability and re-enqueues for safe, idempotent re-triage.
                       </p>
-                      {retryResult && <p className="text-[11px] text-emerald-300 pt-1">{retryResult}</p>}
+                      {retryResult && <p className="text-[11px] text-success pt-1">{retryResult}</p>}
                     </div>
                   )}
 
                   {/* Proposals / Reasoning */}
                   <div>
-                    <h3 className="font-semibold text-slate-200 mb-2">AI Proposals & Reasoning</h3>
+                    <h3 className="font-semibold text-board-type mb-2">AI Proposals & Reasoning</h3>
                     {detail.proposals.length === 0 ? (
-                      <p className="text-slate-500 italic">No proposal generated (e.g. WAITING_FOR_AI or fail-safe).</p>
+                      <p className="text-muted italic">No proposal generated (e.g. WAITING_FOR_AI or fail-safe).</p>
                     ) : (
                       <div className="space-y-3">
                         {detail.proposals.map((p) => (
-                          <div key={p.id} className="rounded-lg border border-slate-800 bg-slate-800/30 p-3 space-y-2">
+                          <div key={p.id} className="rounded-input border border-ink/30 bg-ink-2/30 p-3 space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="font-semibold text-emerald-400 capitalize">Action: {p.action}</span>
-                              <span className="text-slate-400">Confidence: {Math.round(parseFloat(p.confidence) * 100)}%</span>
+                              <span className="font-semibold text-success capitalize">Action: {p.action}</span>
+                              <span className="text-muted">Confidence: {Math.round(parseFloat(p.confidence) * 100)}%</span>
                             </div>
                             <div>
-                              <span className="text-slate-400 text-[11px]">Model:</span>
-                              <span className="text-slate-300 text-[11px] font-mono ml-1.5">{p.modelUsed}</span>
+                              <span className="text-muted text-[11px]">Model:</span>
+                              <span className="text-board-type text-[11px] font-mono ml-1.5">{p.modelUsed}</span>
                             </div>
                             <div>
-                              <span className="text-slate-400">AI note (unverified):</span>
-                              <p className="text-slate-300 mt-0.5 italic">{p.reasoning}</p>
+                              <span className="text-muted">AI note (unverified):</span>
+                              <p className="text-board-type mt-0.5 italic">{p.reasoning}</p>
                             </div>
                             {p.message && (
-                              <div className="rounded bg-slate-900/80 p-2 border border-slate-800">
-                                <span className="text-slate-400 text-[11px]">Draft Customer Notice (Not Sent):</span>
-                                <p className="text-slate-300 mt-0.5">{p.message}</p>
+                              <div className="rounded-input bg-ink/80 p-2 border border-ink/30">
+                                <span className="text-muted text-[11px]">Draft Customer Notice (Not Sent):</span>
+                                <p className="text-board-type mt-0.5">{p.message}</p>
                               </div>
                             )}
                             {p.contextSnapshot && (
                               <div>
-                                <span className="text-slate-400 text-[11px]">Grounded DB Context Snapshot:</span>
-                                <pre className="mt-1 max-h-24 overflow-y-auto rounded bg-slate-950 p-2 font-mono text-[10px] text-slate-400">
+                                <span className="text-muted text-[11px]">Grounded DB Context Snapshot:</span>
+                                <pre className="mt-1 max-h-24 overflow-y-auto rounded-input bg-ink p-2 font-mono text-[10px] text-muted">
                                   {JSON.stringify(p.contextSnapshot, null, 2)}
                                 </pre>
                               </div>
@@ -388,29 +388,29 @@ function EventsContent() {
 
                   {/* Action Executor Executions */}
                   <div>
-                    <h3 className="font-semibold text-slate-200 mb-2">Action Executor Dispatches</h3>
+                    <h3 className="font-semibold text-board-type mb-2">Action Executor Dispatches</h3>
                     {detail.actions.length === 0 ? (
-                      <p className="text-slate-500 italic">No mutating actions executed yet.</p>
+                      <p className="text-muted italic">No mutating actions executed yet.</p>
                     ) : (
                       <div className="space-y-2">
                         {detail.actions.map((act) => (
-                          <div key={act.id} className="rounded-lg border border-slate-800 bg-slate-800/30 p-3 space-y-1">
+                          <div key={act.id} className="rounded-input border border-ink/30 bg-ink-2/30 p-3 space-y-1">
                             <div className="flex items-center justify-between">
-                              <span className="font-medium text-slate-200">{act.actionType}</span>
+                              <span className="font-medium text-board-type">{act.actionType}</span>
                               <span
-                                className={`rounded px-1.5 py-0.5 text-[11px] font-semibold ${
+                                className={`rounded-input px-1.5 py-0.5 text-[11px] font-semibold ${
                                   act.status === "SUCCESS"
-                                    ? "bg-emerald-950 text-emerald-300"
+                                    ? "bg-success/20 text-success border border-success/30"
                                     : act.status === "DEAD_LETTER"
-                                    ? "bg-red-950 text-red-300"
-                                    : "bg-slate-800 text-slate-300"
+                                    ? "bg-error/20 text-error border border-error/30"
+                                    : "bg-ink-2 text-board-type"
                                 }`}
                               >
                                 {act.status}
                               </span>
                             </div>
-                            <p className="font-mono text-[11px] text-slate-400 truncate">Idempotency: {act.idempotencyKey}</p>
-                            <p className="text-slate-400">
+                            <p className="font-mono text-[11px] text-muted truncate">Idempotency: {act.idempotencyKey}</p>
+                            <p className="text-muted">
                               {act.paypalMethod} {act.paypalEndpoint} ({act.statusCode || "—"})
                             </p>
                           </div>
@@ -421,15 +421,15 @@ function EventsContent() {
 
                   {/* Audit Trail */}
                   <div>
-                    <h3 className="font-semibold text-slate-200 mb-2">Event Audit Trail</h3>
+                    <h3 className="font-semibold text-board-type mb-2">Event Audit Trail</h3>
                     <div className="space-y-1.5">
                       {detail.auditTrail.map((log) => (
-                        <div key={log.id} className="flex items-baseline space-x-2 text-[11px] text-slate-400">
-                          <span className="text-slate-500 shrink-0">
+                        <div key={log.id} className="flex items-baseline space-x-2 text-[11px] text-muted">
+                          <span className="text-muted shrink-0">
                             {new Date(log.timestamp).toLocaleTimeString()}
                           </span>
-                          <span className="text-blue-400 font-medium">[{log.actor}]</span>
-                          <span className="text-slate-300">{log.action}</span>
+                          <span className="text-accent font-medium">[{log.actor}]</span>
+                          <span className="text-board-type">{log.action}</span>
                         </div>
                       ))}
                     </div>
@@ -446,7 +446,7 @@ function EventsContent() {
 
 export default function EventsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading events...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-muted">Loading events...</div>}>
       <EventsContent />
     </Suspense>
   );

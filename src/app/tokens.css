@@ -34,6 +34,8 @@
   --color-board: oklch(22% 0.011 40);
   --color-board-type: oklch(96.5% 0.006 70);
   --color-paid: oklch(55.5% 0.15 33);
+  --color-warning: oklch(75% 0.16 65);
+  --color-info: oklch(68% 0.14 240);
   --font-display: "General Sans", ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-display);
   --font-outlier: "Geist Mono", ui-monospace, monospace;

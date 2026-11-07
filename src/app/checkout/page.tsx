@@ -130,34 +130,34 @@ export default function CheckoutTestPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-blue-400" />
+            <h1 className="text-xl font-bold text-board-type flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-accent" />
               <span>Merchant Checkout Simulation</span>
             </h1>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-muted">
               Create real PayPal sandbox orders and test negative payment responses to trigger agent triage.
             </p>
           </div>
-          <span className="inline-flex items-center space-x-1.5 rounded-lg border border-amber-800 bg-amber-950/80 px-3 py-1.5 text-xs font-medium text-amber-300">
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+          <span className="inline-flex items-center space-x-1.5 rounded-input border border-warning/30 bg-warning/15 px-3 py-1.5 text-xs font-medium text-warning">
+            <AlertTriangle className="h-3.5 w-3.5 text-warning" />
             <span>Sandbox Negative Testing Active</span>
           </span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Step 1: Create Order */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-sm space-y-4">
-            <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+          <div className="rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
+            <div className="flex items-center space-x-2 border-b border-rule-2 pb-3">
+              <span className="flex h-6 w-6 items-center justify-center rounded-pill bg-accent text-xs font-bold text-accent-ink">
                 1
               </span>
-              <h2 className="text-sm font-semibold text-white">Create Sandbox Order</h2>
+              <h2 className="text-sm font-semibold text-board-type">Create Sandbox Order</h2>
             </div>
 
             <form onSubmit={handleCreateOrder} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">Amount</label>
+                  <label className="block text-xs font-medium text-board-type">Amount</label>
                   <input
                     type="number"
                     step="0.01"
@@ -165,15 +165,15 @@ export default function CheckoutTestPage() {
                     value={createAmount}
                     onChange={(e) => setCreateAmount(e.target.value)}
                     required
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">Currency</label>
+                  <label className="block text-xs font-medium text-board-type">Currency</label>
                   <select
                     value={createCurrency}
                     onChange={(e) => setCreateCurrency(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -183,43 +183,43 @@ export default function CheckoutTestPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300">Item Description</label>
+                <label className="block text-xs font-medium text-board-type">Item Description</label>
                 <input
                   type="text"
                   value={createDesc}
                   onChange={(e) => setCreateDesc(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full inline-flex items-center justify-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                className="w-full inline-flex items-center justify-center space-x-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:opacity-100 disabled:opacity-50 transition-colors"
               >
                 <span>{creating ? "Generating Order..." : "Create PayPal Sandbox Order"}</span>
               </button>
             </form>
 
             {createdOrder && (
-              <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-4 space-y-3 text-xs">
+              <div className="rounded-input border border-rule-2 bg-ink/40 p-4 space-y-3 text-xs">
                 <div>
-                  <span className="text-slate-400">Order ID:</span>
-                  <p className="font-mono font-medium text-emerald-400 mt-0.5">{createdOrder.orderId}</p>
+                  <span className="text-muted">Order ID:</span>
+                  <p className="font-mono font-medium text-success mt-0.5">{createdOrder.orderId}</p>
                 </div>
                 {createdOrder.approvalLink && (
                   <div>
-                    <span className="text-slate-400">Payer Approval Link:</span>
+                    <span className="text-muted">Payer Approval Link:</span>
                     <a
                       href={createdOrder.approvalLink}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 flex items-center space-x-1.5 text-blue-400 hover:text-blue-300 underline font-medium break-all"
+                      className="mt-1 flex items-center space-x-1.5 text-accent hover:underline font-medium break-all"
                     >
                       <span>Open PayPal Sandbox Approval Page</span>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     </a>
-                    <p className="text-[11px] text-slate-500 mt-1">
+                    <p className="text-[11px] text-muted mt-1">
                       (Optional in negative testing: you can proceed to capture directly to simulate decline)
                     </p>
                   </div>
@@ -229,38 +229,38 @@ export default function CheckoutTestPage() {
           </div>
 
           {/* Step 2: Capture Order & Negative Testing */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-sm space-y-4">
-            <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+          <div className="rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
+            <div className="flex items-center space-x-2 border-b border-rule-2 pb-3">
+              <span className="flex h-6 w-6 items-center justify-center rounded-pill bg-accent text-xs font-bold text-accent-ink">
                 2
               </span>
-              <h2 className="text-sm font-semibold text-white">Capture Order & Decline Injection</h2>
+              <h2 className="text-sm font-semibold text-board-type">Capture Order & Decline Injection</h2>
             </div>
 
             <form onSubmit={handleCapture} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300">PayPal Order ID</label>
+                <label className="block text-xs font-medium text-board-type">PayPal Order ID</label>
                 <input
                   type="text"
                   value={captureOrderId}
                   onChange={(e) => setCaptureOrderId(e.target.value)}
                   placeholder="e.g. 5C384813XW744883S"
                   required
-                  className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-mono text-white focus:border-blue-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs font-mono text-board-type focus:border-focus focus:outline-none"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-medium text-slate-300">
+                  <label className="block text-xs font-medium text-board-type">
                     Negative Testing Scenario
                   </label>
-                  <span className="text-[11px] text-amber-400">Sandbox Header Injected</span>
+                  <span className="text-[11px] text-warning">Sandbox Header Injected</span>
                 </div>
                 <select
                   value={mockCode}
                   onChange={(e) => setMockCode(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                 >
                   <option value="INSTRUMENT_DECLINED">
                     INSTRUMENT_DECLINED (Card / Instrument declined by bank)
@@ -270,7 +270,7 @@ export default function CheckoutTestPage() {
                   </option>
                   <option value="NONE">None (Attempt normal capture)</option>
                 </select>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted">
                   Transmits PayPal-Mock-Response header to sandbox API to force realistic error code.
                 </p>
               </div>
@@ -278,7 +278,7 @@ export default function CheckoutTestPage() {
               <button
                 type="submit"
                 disabled={capturing || !captureOrderId}
-                className="w-full inline-flex items-center justify-center space-x-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                className="w-full inline-flex items-center justify-center space-x-2 rounded-input bg-success px-4 py-2 text-xs font-semibold text-board-type hover:opacity-90 active:opacity-100 disabled:opacity-50 transition-colors"
               >
                 <span>{capturing ? "Capturing Order..." : "Capture PayPal Order"}</span>
               </button>
@@ -286,34 +286,34 @@ export default function CheckoutTestPage() {
 
             {captureResult && (
               <div
-                className={`rounded-lg border p-4 space-y-3 text-xs ${
+                className={`rounded-input border p-4 space-y-3 text-xs ${
                   captureResult.status === "SUCCESS"
-                    ? "border-emerald-800 bg-emerald-950/60 text-emerald-200"
+                    ? "border-success/30 bg-success/15 text-success"
                     : captureResult.status === "DECLINED"
-                    ? "border-amber-800 bg-amber-950/60 text-amber-200"
-                    : "border-red-800 bg-red-950/60 text-red-200"
+                    ? "border-warning/30 bg-warning/15 text-warning"
+                    : "border-error/30 bg-error/15 text-error"
                 }`}
               >
                 <div className="flex items-center space-x-2">
                   {captureResult.status === "SUCCESS" ? (
-                    <CheckCircle className="h-4 w-4 text-emerald-400" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                   ) : captureResult.status === "DECLINED" ? (
-                    <ShieldAlert className="h-4 w-4 text-amber-400" />
+                    <ShieldAlert className="h-4 w-4 text-warning" />
                   ) : (
-                    <XCircle className="h-4 w-4 text-red-400" />
+                    <XCircle className="h-4 w-4 text-error" />
                   )}
                   <span className="font-semibold">{captureResult.message}</span>
                 </div>
 
                 {captureResult.eventId && (
-                  <div className="pt-2 border-t border-amber-800/60 space-y-2">
-                    <p className="text-slate-300">
+                  <div className="pt-2 border-t border-warning/30 space-y-2">
+                    <p className="text-board-type">
                       Resulting Event ID:{" "}
-                      <span className="font-mono text-white font-medium">{captureResult.eventId}</span>
+                      <span className="font-mono text-board-type font-medium">{captureResult.eventId}</span>
                     </p>
                     <Link
                       href={`/events?id=${captureResult.eventId}`}
-                      className="inline-flex items-center space-x-1.5 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 transition-colors"
+                      className="inline-flex items-center space-x-1.5 rounded-input bg-warning px-3 py-1.5 text-xs font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors"
                     >
                       <span>Inspect Event in Triage Grid</span>
                       <ArrowRight className="h-3.5 w-3.5" />

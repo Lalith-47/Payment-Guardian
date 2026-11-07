@@ -134,17 +134,17 @@ export default function PoliciesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <Sliders className="h-5 w-5 text-blue-400" />
+            <h1 className="text-xl font-bold text-board-type flex items-center gap-2">
+              <Sliders className="h-5 w-5 text-accent" />
               <span>Guardrails & Policies Editor</span>
             </h1>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-muted">
               Manage financial thresholds, retry cadences, and approval requirements. All limits live in PostgreSQL.
             </p>
           </div>
           <Link
             href="/dashboard"
-            className="inline-flex items-center space-x-1.5 text-xs text-slate-400 hover:text-slate-200"
+            className="inline-flex items-center space-x-1.5 text-xs text-muted hover:text-board-type"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Dashboard</span>
@@ -153,16 +153,16 @@ export default function PoliciesPage() {
 
         {statusMsg && (
           <div
-            className={`rounded-lg p-3 text-xs flex items-center space-x-2 border ${
+            className={`rounded-input p-3 text-xs flex items-center space-x-2 border ${
               statusMsg.type === "success"
-                ? "bg-emerald-950/80 border-emerald-800 text-emerald-200"
-                : "bg-red-950/80 border-red-800 text-red-200"
+                ? "bg-success/15 border-success/30 text-success"
+                : "bg-error/15 border-error/30 text-error"
             }`}
           >
             {statusMsg.type === "success" ? (
-              <Check className="h-4 w-4 shrink-0 text-emerald-400" />
+              <Check className="h-4 w-4 shrink-0 text-success" />
             ) : (
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+              <AlertCircle className="h-4 w-4 shrink-0 text-error" />
             )}
             <span>{statusMsg.text}</span>
           </div>
@@ -170,28 +170,28 @@ export default function PoliciesPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Policy Form */}
-          <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-white mb-4">Active Guardrail Parameters</h2>
+          <div className="lg:col-span-2 rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card">
+            <h2 className="text-sm font-semibold text-board-type mb-4">Active Guardrail Parameters</h2>
 
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">Policy Name</label>
+                  <label className="block text-xs font-medium text-board-type">Policy Name</label>
                   <input
                     type="text"
                     value={policy.name}
                     onChange={(e) => setPolicy({ ...policy, name: e.target.value })}
                     required
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type placeholder-muted focus:border-focus focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">Store Currency</label>
+                  <label className="block text-xs font-medium text-board-type">Store Currency</label>
                   <select
                     value={policy.currency}
                     onChange={(e) => setPolicy({ ...policy, currency: e.target.value })}
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -203,7 +203,7 @@ export default function PoliciesPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">
+                  <label className="block text-xs font-medium text-board-type">
                     Max Auto-Refund Amount ({policy.currency})
                   </label>
                   <input
@@ -213,13 +213,13 @@ export default function PoliciesPage() {
                     value={policy.autoRefundMaxAmount}
                     onChange={(e) => setPolicy({ ...policy, autoRefundMaxAmount: parseFloat(e.target.value) || 0 })}
                     required
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   />
-                  <p className="mt-1 text-xs text-slate-500">Refunds exceeding this require owner approval.</p>
+                  <p className="mt-1 text-xs text-muted">Refunds exceeding this require owner approval.</p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">
+                  <label className="block text-xs font-medium text-board-type">
                     AI Confidence Threshold ({Math.round(policy.confidenceThreshold * 100)}%)
                   </label>
                   <input
@@ -229,15 +229,15 @@ export default function PoliciesPage() {
                     step="0.05"
                     value={policy.confidenceThreshold}
                     onChange={(e) => setPolicy({ ...policy, confidenceThreshold: parseFloat(e.target.value) })}
-                    className="mt-2 block w-full accent-blue-500"
+                    className="mt-2 block w-full accent-accent"
                   />
-                  <p className="mt-1 text-xs text-slate-500">Proposals below threshold fail-closed to manual review.</p>
+                  <p className="mt-1 text-xs text-muted">Proposals below threshold fail-closed to manual review.</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">Max Automated Retries</label>
+                  <label className="block text-xs font-medium text-board-type">Max Automated Retries</label>
                   <input
                     type="number"
                     min="0"
@@ -245,13 +245,13 @@ export default function PoliciesPage() {
                     value={policy.autoRetryMaxAttempts}
                     onChange={(e) => setPolicy({ ...policy, autoRetryMaxAttempts: parseInt(e.target.value, 10) || 0 })}
                     required
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   />
-                  <p className="mt-1 text-xs text-slate-500">Maximum re-attempts per failed capture.</p>
+                  <p className="mt-1 text-xs text-muted">Maximum re-attempts per failed capture.</p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">Retry Cadence Interval (hours)</label>
+                  <label className="block text-xs font-medium text-board-type">Retry Cadence Interval (hours)</label>
                   <input
                     type="number"
                     min="1"
@@ -261,15 +261,15 @@ export default function PoliciesPage() {
                       setPolicy({ ...policy, autoRetryMinIntervalHours: parseInt(e.target.value, 10) || 1 })
                     }
                     required
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   />
-                  <p className="mt-1 text-xs text-slate-500">Minimum spacing between automatic retry runs.</p>
+                  <p className="mt-1 text-xs text-muted">Minimum spacing between automatic retry runs.</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">Max Offer Discount (%)</label>
+                  <label className="block text-xs font-medium text-board-type">Max Offer Discount (%)</label>
                   <input
                     type="number"
                     min="0"
@@ -279,16 +279,16 @@ export default function PoliciesPage() {
                       setPolicy({ ...policy, offerAlternativeMaxDiscountPct: parseInt(e.target.value, 10) || 0 })
                     }
                     required
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">Customer Tone</label>
+                  <label className="block text-xs font-medium text-board-type">Customer Tone</label>
                   <select
                     value={policy.tone}
                     onChange={(e) => setPolicy({ ...policy, tone: e.target.value as any })}
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   >
                     <option value="empathetic">Empathetic</option>
                     <option value="professional">Professional</option>
@@ -297,7 +297,7 @@ export default function PoliciesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300">Reminder Cadence (hours)</label>
+                  <label className="block text-xs font-medium text-board-type">Reminder Cadence (hours)</label>
                   <input
                     type="number"
                     min="1"
@@ -305,26 +305,26 @@ export default function PoliciesPage() {
                     value={policy.reminderCadenceHours}
                     onChange={(e) => setPolicy({ ...policy, reminderCadenceHours: parseInt(e.target.value, 10) || 24 })}
                     required
-                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-2">
+                <label className="block text-xs font-medium text-board-type mb-2">
                   Always Require Approval For:
                 </label>
                 <div className="flex flex-wrap gap-4">
                   {["escalate", "refund", "offer", "retry"].map((act) => (
                     <label
                       key={act}
-                      className="inline-flex items-center space-x-2 text-xs text-slate-300 capitalize cursor-pointer"
+                      className="inline-flex items-center space-x-2 text-xs text-board-type capitalize cursor-pointer"
                     >
                       <input
                         type="checkbox"
                         checked={policy.requireApprovalForActions.includes(act)}
                         onChange={() => toggleApprovalAction(act)}
-                        className="rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-0"
+                        className="rounded border-rule-2 bg-ink text-accent focus:ring-0"
                       />
                       <span>{act}</span>
                     </label>
@@ -332,8 +332,8 @@ export default function PoliciesPage() {
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800">
-                <label className="block text-xs font-medium text-slate-300">
+              <div className="pt-2 border-t border-rule-2">
+                <label className="block text-xs font-medium text-board-type">
                   Reason for Change (Archived in Version History)
                 </label>
                 <input
@@ -341,7 +341,7 @@ export default function PoliciesPage() {
                   value={changeReason}
                   onChange={(e) => setChangeReason(e.target.value)}
                   placeholder="e.g. Lowered auto-refund threshold ahead of holiday rush"
-                  className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type placeholder-muted focus:border-focus focus:outline-none"
                 />
               </div>
 
@@ -349,7 +349,7 @@ export default function PoliciesPage() {
                 <button
                   type="submit"
                   disabled={saving || loading}
-                  className="inline-flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center space-x-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:opacity-100 disabled:opacity-50 transition-colors"
                 >
                   <Save className="h-3.5 w-3.5" />
                   <span>{saving ? "Saving Changes..." : "Save Guardrail Policy"}</span>
@@ -359,27 +359,27 @@ export default function PoliciesPage() {
           </div>
 
           {/* Version History Sidebar */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-sm space-y-4">
+          <div className="rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
-                <History className="h-4 w-4 text-slate-400" />
+              <h2 className="text-sm font-semibold text-board-type flex items-center gap-1.5">
+                <History className="h-4 w-4 text-muted" />
                 <span>Versioned History</span>
               </h2>
-              <span className="text-xs text-slate-500">{versions.length} revisions</span>
+              <span className="text-xs text-muted">{versions.length} revisions</span>
             </div>
 
             {versions.length === 0 ? (
-              <p className="text-xs text-slate-500">No revisions recorded yet.</p>
+              <p className="text-xs text-muted">No revisions recorded yet.</p>
             ) : (
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                 {versions.map((ver) => (
-                  <div key={ver.id} className="rounded-lg border border-slate-800 bg-slate-800/40 p-3 space-y-1 text-xs">
+                  <div key={ver.id} className="rounded-input border border-rule-2 bg-ink/40 p-3 space-y-1 text-xs">
                     <div className="flex items-center justify-between font-medium">
-                      <span className="text-blue-400">v{ver.version}</span>
-                      <span className="text-slate-500">{new Date(ver.createdAt).toLocaleDateString()}</span>
+                      <span className="text-accent">v{ver.version}</span>
+                      <span className="text-muted">{new Date(ver.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-slate-300 italic">{ver.changeReason || "No description provided"}</p>
-                    <div className="text-[11px] text-slate-400 pt-1 flex justify-between">
+                    <p className="text-board-type italic">{ver.changeReason || "No description provided"}</p>
+                    <div className="text-[11px] text-muted pt-1 flex justify-between">
                       <span>By: {ver.changedBy}</span>
                       <span>Refund: ${ver.snapshot?.autoRefundMaxAmount || 25}</span>
                     </div>
