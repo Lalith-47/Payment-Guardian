@@ -11,7 +11,7 @@
 - [ ] **C3 retry bound**: Repeated declines capped at policy max -> escalate to approval; unique idempotency key; no duplicate captures.
 - [ ] **C4 policy-claim grounding**: Model prompt receives no policy details; validator downgrades reasoning claiming external policies/facts; UI marks "AI note (unverified)".
 - [ ] **C5 consistent drafts**: Retry draft is a courtesy notice ("we are retrying your payment"), not customer instruction; documented in `docs/progress.md`.
-- [ ] **forged-cookie test on every route**: Forged `better-auth.session_token=forged` returns 401 across all protected routes under `src/app/api`; session validated against DB/store.
+- [x] **forged-cookie test on every route**: Forged `better-auth.session_token=forged` returns 401 across all protected routes under `src/app/api`; session validated against DB/store (commit `c0db4dc`).
 - [ ] **clean Docker rebuild + green Playwright**: `docker compose build --no-cache web worker && docker compose up -d`, unmodified stack with fake LLM worker overrides, Playwright e2e green.
 - [ ] **owner seed from env**: Verified credentials read from env with no hardcoded password in repo, tests, or git history.
 - [ ] **LLM budget reconciled**: Provider key endpoint usage vs local counter reconciled; provider cap = 50, budget below it.
