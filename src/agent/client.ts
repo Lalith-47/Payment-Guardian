@@ -36,14 +36,16 @@ export function validateGrounding(
     /\bpolicy\s+rule\s+(allows|permits|requires|triggered)\b/i,
   ];
 
+  const flaggedPolicy: string[] = [];
   for (const pattern of forbiddenPolicyPatterns) {
     const match = reasoning.match(pattern);
     if (match) {
-      flaggedPhrases.push(match[0]);
+      flaggedPolicy.push(match[0]);
     }
   }
 
   // Check 2: Customer history claims without DB context
+  const flaggedHistory: string[] = [];
   const hasCustomerHistory = Boolean(
     context.customerHistory &&
       context.customerHistory.trim().length > 0 &&
@@ -69,16 +71,25 @@ export function validateGrounding(
     for (const pattern of forbiddenHistoryPatterns) {
       const match = reasoning.match(pattern);
       if (match) {
-        flaggedPhrases.push(match[0]);
+        flaggedHistory.push(match[0]);
       }
     }
   }
 
-  if (flaggedPhrases.length > 0) {
+  const allFlagged = [...flaggedPolicy, ...flaggedHistory];
+  if (allFlagged.length > 0) {
+    let reason = "";
+    if (flaggedHistory.length > 0 && flaggedPolicy.length > 0) {
+      reason = `Reasoning claims customer history (${flaggedHistory.join(", ")}) and policy thresholds/limits (${flaggedPolicy.join(", ")}) not in context`;
+    } else if (flaggedHistory.length > 0) {
+      reason = `Reasoning claims customer history (${flaggedHistory.join(", ")}) that was not provided in the DB context object`;
+    } else {
+      reason = `Reasoning claims policy thresholds or limits (${flaggedPolicy.join(", ")}) not provided in context`;
+    }
     return {
       isGrounded: false,
-      flaggedPhrases,
-      reason: `Reasoning claims policy thresholds, limits, rules, or customer history (${flaggedPhrases.join(", ")}) that are not in the structured context`,
+      flaggedPhrases: allFlagged,
+      reason,
     };
   }
 
