@@ -98,11 +98,16 @@ export async function POST(
         message: prop.message,
         confidence: parseFloat(prop.confidence),
         reasoning: prop.reasoning,
-      },
+        customerName: (prop.contextSnapshot as Record<string, unknown>)?.customerName as string,
+        customerEmail: (prop.contextSnapshot as Record<string, unknown>)?.customerEmail as string,
+        dueDays: (prop.contextSnapshot as Record<string, unknown>)?.dueDays as number,
+        lineItems: (prop.contextSnapshot as Record<string, unknown>)?.lineItems as any,
+        metadata: prop.contextSnapshot as Record<string, unknown>,
+      } as any,
       policyDecision: "NEEDS_APPROVAL",
       approvalToken: token,
       approvedBy: ownerEmail,
-      targetId: ev.externalId || "unknown",
+      targetId: ev.externalId || "new_invoice",
     });
 
     await appendAuditLog({

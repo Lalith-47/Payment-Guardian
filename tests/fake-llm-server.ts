@@ -51,7 +51,28 @@ export function createFakeLlmServer(config: FakeLlmServerConfig = {}) {
 
         let proposalContent: Record<string, unknown>;
 
-        if (currentMode === "over_limit_refund") {
+        if (body.includes("Extract invoice details from") || body.includes("INVOICE_EXTRACTOR")) {
+          let amount = 400.0;
+          if (body.includes("750") || body.includes("800") || body.includes("over_limit")) {
+            amount = 750.0;
+          }
+          let customerEmail: string | null = "client@example.com";
+          if (body.includes("without email") || body.includes("missing email")) {
+            customerEmail = null;
+          }
+
+          proposalContent = {
+            customerName: "Acme Corp",
+            customerEmail,
+            amount,
+            currency: "USD",
+            dueDays: 15,
+            note: "Logo design and branding",
+            lineItems: [{ description: "Logo design and branding", quantity: 1, unitPrice: amount }],
+            confidence: 0.95,
+            reasoning: "Extracted invoice details from customer request without external assumptions.",
+          };
+        } else if (currentMode === "over_limit_refund") {
           proposalContent = {
             action: "refund",
             amount: 75.0,

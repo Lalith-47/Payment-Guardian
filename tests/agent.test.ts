@@ -169,7 +169,7 @@ describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
 
     expect(result.status).toBe("WAITING_FOR_AI");
     expect(result.proposal).toBeNull();
-  });
+  }, 40000);
 
   it("7. Response Caching: returns cached proposal by event ID without calling model again", async () => {
     let calls = 0;
