@@ -253,9 +253,9 @@ function EventsContent() {
           <button
             onClick={fetchEvents}
             disabled={loading}
-            className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+            className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-500 active:scale-[0.98]"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
             <span>Refresh Events</span>
           </button>
         </div>
@@ -293,7 +293,7 @@ function EventsContent() {
                 </div>
                 <button
                   onClick={() => setSelectedEventId(null)}
-                  className="text-slate-400 hover:text-slate-200 p-1"
+                  className="text-slate-400 hover:text-slate-200 p-1 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-500 rounded active:scale-[0.98]"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -332,9 +332,9 @@ function EventsContent() {
                         <button
                           onClick={handleRetry}
                           disabled={retrying}
-                          className="inline-flex items-center space-x-1.5 rounded-md bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
+                          className="inline-flex items-center space-x-1.5 rounded-md bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-purple-400 active:scale-[0.98]"
                         >
-                          <RotateCcw className={`h-3 w-3 ${retrying ? "animate-spin" : ""}`} />
+                          <RotateCcw className={`h-3 w-3 ${retrying ? "motion-safe:animate-spin" : ""}`} />
                           <span>{retrying ? "Retrying..." : "Retry Recovery"}</span>
                         </button>
                       </div>

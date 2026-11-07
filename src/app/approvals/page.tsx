@@ -187,9 +187,9 @@ export default function ApprovalsPage() {
             <button
               onClick={fetchApprovals}
               disabled={loading}
-              className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+              className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-blue-500 active:scale-[0.98]"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
               <span>Refresh</span>
             </button>
           </div>
@@ -362,7 +362,7 @@ export default function ApprovalsPage() {
                       <button
                         onClick={() => setRejectingItem(appr)}
                         disabled={isActing}
-                        className="inline-flex items-center space-x-1.5 rounded-lg border border-red-800 bg-red-950/60 px-3.5 py-1.5 text-xs font-semibold text-red-200 hover:bg-red-900 hover:text-white disabled:opacity-50 transition-colors"
+                        className="inline-flex items-center space-x-1.5 rounded-lg border border-red-800 bg-red-950/60 px-3.5 py-1.5 text-xs font-semibold text-red-200 hover:bg-red-900 hover:text-white disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-red-500 active:scale-[0.98]"
                       >
                         <XCircle className="h-3.5 w-3.5" />
                         <span>Reject</span>
@@ -371,7 +371,7 @@ export default function ApprovalsPage() {
                       <button
                         onClick={() => handleApprove(appr)}
                         disabled={isActing}
-                        className="inline-flex items-center space-x-1.5 rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                        className="inline-flex items-center space-x-1.5 rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-emerald-400 active:scale-[0.98]"
                       >
                         <CheckCircle className="h-3.5 w-3.5" />
                         <span>{isActing ? "Executing..." : "Approve & Execute via Executor"}</span>
