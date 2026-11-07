@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { paypalInvoices, events, proposals, approvals } from "@/db/schema";
 import { getActivePolicy } from "@/db/queries/policies";
 import { appendAuditLog } from "@/db/queries/audit";
+import { createApproval } from "@/db/queries/approvals";
 import { requireOwnerSession } from "@/lib/api-auth";
 import { extractInvoiceFromText } from "@/agent/invoice-extractor";
 import { evaluateInvoicePolicy } from "@/policy/engine";
@@ -76,6 +77,17 @@ export async function POST(req: NextRequest) {
 
     extractedData = extractionResult.extracted;
     missingFields = extractionResult.missingFields;
+
+    if (body.extractOnly) {
+      return NextResponse.json(
+        {
+          status: missingFields.length > 0 ? "INCOMPLETE" : "EXTRACTED",
+          extracted: extractedData,
+          missingFields,
+        },
+        { status: 200 }
+      );
+    }
   } else {
     // 2. Direct structured fields provided
     extractedData = {
@@ -223,22 +235,10 @@ export async function POST(req: NextRequest) {
 
   // 7. Branch: NEEDS_APPROVAL -> Create single-use token in approvals inbox
   log.info({ eventId, proposalId, rule: policyResult.ruleTriggered }, "Invoice requires owner approval");
-  const approvalId = `appr_${crypto.randomUUID()}`;
-  const approvalToken = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-  await db.insert(approvals).values({
-    id: approvalId,
-    eventId,
-    proposalId,
-    token: approvalToken,
-    action: "invoice",
-    amount: extractedData.amount?.toString() || "0.00",
-    currency: extractedData.currency || "USD",
-    triggerRule: policyResult.ruleTriggered,
-    status: "PENDING",
-    expiresAt,
-  });
+  const approval = await createApproval(eventId, proposalId, 24 * 60, policyResult.ruleTriggered);
+  const approvalId = approval.id;
+  const approvalToken = approval.token;
+  const expiresAt = approval.expiresAt;
 
   await appendAuditLog({
     source: "policy_engine",

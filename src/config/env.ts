@@ -33,6 +33,7 @@ const envSchema = z.object({
       }
     ),
   PAYPAL_BUSINESS_EMAIL: z.string().email().optional(),
+  SANDBOX_PERSONAL_EMAIL: z.string().optional(),
   PAYPAL_WEBHOOK_ID: z.string().optional(),
   PAYPAL_WEBHOOK_TOLERANCE_SECONDS: z.coerce.number().default(300),
   RECONCILER_TIMEOUT_MINUTES: z.coerce.number().default(5),

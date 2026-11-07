@@ -32,6 +32,7 @@ export async function GET(
     .where(
       or(
         sql`${auditLog.details}->>'invoiceId' = ${id}`,
+        sql`${auditLog.details}->'result'->>'invoiceId' = ${id}`,
         sql`${auditLog.eventId} LIKE ${`%${id}%`}`
       )
     )

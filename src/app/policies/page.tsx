@@ -11,6 +11,9 @@ interface PolicyData {
   description?: string;
   currency: string;
   autoRefundMaxAmount: number;
+  maxAutoInvoiceAmount: number;
+  allowedCurrencies: string[];
+  defaultDueDays: number;
   confidenceThreshold: number;
   autoRetryMaxAttempts: number;
   autoRetryMinIntervalHours: number;
@@ -34,6 +37,9 @@ export default function PoliciesPage() {
     name: "Default Guardrails",
     currency: "USD",
     autoRefundMaxAmount: 25.0,
+    maxAutoInvoiceAmount: 500.0,
+    allowedCurrencies: ["USD", "CAD", "EUR", "GBP"],
+    defaultDueDays: 15,
     confidenceThreshold: 0.8,
     autoRetryMaxAttempts: 2,
     autoRetryMinIntervalHours: 4,
@@ -59,6 +65,9 @@ export default function PoliciesPage() {
           setPolicy({
             ...data.policy,
             autoRefundMaxAmount: parseFloat(data.policy.autoRefundMaxAmount),
+            maxAutoInvoiceAmount: data.policy.maxAutoInvoiceAmount ? parseFloat(data.policy.maxAutoInvoiceAmount) : 500.0,
+            allowedCurrencies: Array.isArray(data.policy.allowedCurrencies) ? data.policy.allowedCurrencies : ["USD", "CAD", "EUR", "GBP"],
+            defaultDueDays: data.policy.defaultDueDays ?? 15,
             confidenceThreshold: parseFloat(data.policy.confidenceThreshold),
             autoRetryMaxAttempts: data.policy.autoRetryMaxAttempts ?? 2,
             autoRetryMinIntervalHours: data.policy.autoRetryMinIntervalHours ?? 4,
@@ -307,6 +316,75 @@ export default function PoliciesPage() {
                     required
                     className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
                   />
+                </div>
+              </div>
+
+              {/* Invoicing Guardrails (M3-Lite) */}
+              <div className="pt-4 border-t border-rule-2 space-y-4">
+                <h3 className="text-xs font-semibold text-board-type">Invoice Automation Guardrails</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-board-type">
+                      Max Auto-Send Amount ({policy.currency})
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      value={policy.maxAutoInvoiceAmount}
+                      onChange={(e) => setPolicy({ ...policy, maxAutoInvoiceAmount: parseFloat(e.target.value) || 0 })}
+                      required
+                      className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    />
+                    <p className="mt-1 text-xs text-muted">Invoices above this threshold require owner approval.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-board-type">
+                      Default Payment Due Days
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={policy.defaultDueDays}
+                      onChange={(e) => setPolicy({ ...policy, defaultDueDays: parseInt(e.target.value, 10) || 15 })}
+                      required
+                      className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    />
+                    <p className="mt-1 text-xs text-muted">Fallback due window if omitted in natural language prompt.</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-board-type mb-2">
+                    Allowed Auto-Send Currencies
+                  </label>
+                  <div className="flex flex-wrap gap-4">
+                    {["USD", "EUR", "GBP", "CAD"].map((curr) => (
+                      <label
+                        key={curr}
+                        className="inline-flex items-center space-x-2 text-xs text-board-type cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={policy.allowedCurrencies.includes(curr)}
+                          onChange={() => {
+                            setPolicy((prev) => {
+                              const exists = prev.allowedCurrencies.includes(curr);
+                              const updated = exists
+                                ? prev.allowedCurrencies.filter((c) => c !== curr)
+                                : [...prev.allowedCurrencies, curr];
+                              return { ...prev, allowedCurrencies: updated.length ? updated : ["USD"] };
+                            });
+                          }}
+                          className="rounded border-rule-2 bg-ink text-accent focus:ring-0"
+                        />
+                        <span>{curr}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-xs text-muted">Unlisted currencies will always trigger approval.</p>
                 </div>
               </div>
 

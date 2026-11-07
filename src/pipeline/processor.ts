@@ -3,7 +3,7 @@ import { getActivePolicy } from "@/db/queries/policies";
 import { createProposal } from "@/db/queries/proposals";
 import { createApproval } from "@/db/queries/approvals";
 import { appendAuditLog } from "@/db/queries/audit";
-import { getPayPalOrder, upsertPayPalOrder, upsertPayPalInvoice } from "@/db/queries/paypal-entities";
+import { getPayPalOrder, upsertPayPalOrder, upsertPayPalInvoice, getPayPalInvoice } from "@/db/queries/paypal-entities";
 import { agentService, AgentService } from "@/agent/client";
 import { AgentContextSnapshot } from "@/agent/schema";
 import { evaluatePolicy } from "@/policy/engine";

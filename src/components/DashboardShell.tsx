@@ -13,6 +13,7 @@ import {
   Activity,
   LogOut,
   RefreshCw,
+  Receipt,
 } from "lucide-react";
 
 interface ReadyzData {
@@ -80,6 +81,7 @@ export function DashboardShell({
 
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: Activity },
+    { href: "/invoices", label: "Invoices", icon: Receipt },
     { href: "/policies", label: "Policies", icon: Sliders },
     { href: "/checkout", label: "Checkout Test", icon: CreditCard },
     { href: "/events", label: "Events", icon: ListOrdered },
