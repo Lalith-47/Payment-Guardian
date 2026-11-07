@@ -39,6 +39,7 @@ const envSchema = z.object({
   RECONCILER_TIMEOUT_MINUTES: z.coerce.number().default(5),
 
   // Negative Testing Control
+  STACK_ROLE: z.enum(["demo", "e2e"]).default("demo"),
   SANDBOX_NEGATIVE_TESTING: z
     .enum(["true", "false"])
     .default("false")
@@ -83,6 +84,7 @@ function loadAndValidateEnv(): EnvConfig {
   if (process.env.SKIP_ENV_VALIDATION === "1" || process.env.NEXT_PHASE === "phase-production-build") {
     return {
       NODE_ENV: "production",
+      STACK_ROLE: "demo",
       PORT: 3000,
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/revenue_guardian",
       REDIS_URL: "redis://localhost:6379",

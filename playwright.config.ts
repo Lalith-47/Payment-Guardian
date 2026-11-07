@@ -8,6 +8,7 @@ if (process.env.DATABASE_URL || process.env.TEST_DATABASE_URL) {
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 60000,
   expect: {
     timeout: 10000,
