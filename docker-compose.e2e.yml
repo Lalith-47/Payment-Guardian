@@ -74,6 +74,8 @@ services:
       - OPENROUTER_BASE_URL=http://fake-llm:4040/v1
       - OPENROUTER_API_KEY=mock-fake-e2e-key
       - APP_URL=http://localhost:3001
+      - LLM_DAILY_BUDGET=1000
+      - LLM_PROVIDER_DAILY_CAP=1000
     ports:
       - "3001:3000"
     depends_on:
@@ -111,6 +113,8 @@ services:
       - OPENROUTER_BASE_URL=http://fake-llm:4040/v1
       - OPENROUTER_API_KEY=mock-fake-e2e-key
       - APP_URL=http://localhost:3001
+      - LLM_DAILY_BUDGET=1000
+      - LLM_PROVIDER_DAILY_CAP=1000
     depends_on:
       db:
         condition: service_healthy
