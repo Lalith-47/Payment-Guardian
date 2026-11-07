@@ -228,6 +228,7 @@ export async function POST(req: NextRequest) {
         actionId: execResult.actionId,
         invoiceId: (execResult.details as Record<string, unknown>)?.invoiceId,
         invoiceNumber: (execResult.details as Record<string, unknown>)?.invoiceNumber,
+        payerViewUrl: (execResult.details as Record<string, unknown>)?.payerViewUrl,
       },
       { status: 201 }
     );

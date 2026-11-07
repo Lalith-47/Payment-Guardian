@@ -335,6 +335,19 @@ export class ActionExecutor {
         const sendRes = await paypalClient.sendInvoice(draftRes.id, sendRequestId);
 
         // 3. Upsert into paypal_invoices table
+        let payerViewUrl: string | null =
+          (draftRes.raw as { detail?: { metadata?: { payer_view_url?: string } } })?.detail?.metadata?.payer_view_url || null;
+        if (!payerViewUrl) {
+          try {
+            const freshInv = await paypalClient.getInvoice(draftRes.id);
+            if (freshInv.payerViewUrl) {
+              payerViewUrl = freshInv.payerViewUrl;
+            }
+          } catch {
+            // fallback if fresh retrieval fails
+          }
+        }
+
         await upsertPayPalInvoice({
           id: draftRes.id,
           status: "SENT",
@@ -348,7 +361,7 @@ export class ActionExecutor {
           note,
           draftMessage: note, // stored as DRAFT only
           confirmationSource: "executor",
-          payerViewUrl: (draftRes.raw as { detail?: { metadata?: { payer_view_url?: string } } })?.detail?.metadata?.payer_view_url || null,
+          payerViewUrl,
           rawPayload: { draft: draftRes.raw, send: sendRes.raw },
         });
 
@@ -361,6 +374,7 @@ export class ActionExecutor {
           amount,
           currency,
           draftCustomerMessage: note,
+          payerViewUrl,
           statusCode: 200,
         };
       }
