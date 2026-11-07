@@ -43,8 +43,8 @@ async function main() {
     console.log("\n==================================================");
     console.log("[LIVE MODEL CALL ANNOUNCEMENT]");
     console.log("Initiating 1 live model call to OpenRouter for recovery triage of order " + orderId);
-    console.log("Model: Primary (nvidia/nemotron-3-nano-omni-30b-a3b:free via OpenRouter)");
-    console.log("Budget: Call 2 of M2 (within remaining budget)");
+    console.log(`Model: Primary (${env.MODEL_PRIMARY} via OpenRouter)`);
+    console.log(`Current Budget Usage: ${beforeUsage.used} / ${beforeUsage.budget}`);
     console.log("==================================================\n");
 
     // 3. Call real capture route with mockCode: INSTRUMENT_DECLINED
@@ -103,52 +103,79 @@ async function main() {
 
   console.log(`\nExecutor retry succeeded without mock header! Action ID: ${finalAction.id}`);
   const captureResultSummary = finalAction.response_summary;
-  const paypalCaptureId = captureResultSummary?.captureId || `CAP_${crypto.randomUUID().slice(0, 8)}`;
+  const paypalCaptureId = captureResultSummary?.captureId || null;
   console.log(`PayPal Capture ID: ${paypalCaptureId}`);
+  const actionCompletedAt = new Date(finalAction.completed_at || finalAction.executed_at || Date.now());
 
-  // 5. Deliver PAYMENT.CAPTURE.COMPLETED webhook event to BullMQ to link back
-  console.log("\nStep 4: Linking back PAYMENT.CAPTURE.COMPLETED webhook to recovery event...");
-  const whDeliveryId = `wh_evt_${crypto.randomUUID()}`;
-  await eventsQueue.add("PAYMENT.CAPTURE.COMPLETED", {
-    eventId: whDeliveryId,
-    type: "PAYMENT.CAPTURE.COMPLETED",
-    source: "paypal_webhook",
-    orderId,
-    payload: {
-      id: `WH-${crypto.randomUUID()}`,
-      event_type: "PAYMENT.CAPTURE.COMPLETED",
-      resource: {
-        id: paypalCaptureId,
-        status: "COMPLETED",
-        amount: { value: "25.00", currency_code: "USD" },
-        supplementary_data: {
-          related_ids: { order_id: orderId },
-        },
-      },
-    },
-    timestamp: new Date().toISOString(),
-  });
+  // 5. Check real PayPal Order status via API
+  console.log("\nStep 4: Checking real PayPal sandbox order status via API...");
+  const { paypalClient } = await import("@/paypal/client");
+  const remoteOrder = await paypalClient.getOrder(orderId);
+  console.log(`Remote PayPal Order Status: ${remoteOrder.status}`);
 
-  // 6. Wait for event status to become RECOVERED
-  console.log("Waiting for event to transition to RECOVERED...");
-  let recoveredEvent: any = null;
-  let recAttempt = 0;
-  while (recAttempt < 15) {
-    await new Promise((r) => setTimeout(r, 1500));
-    recAttempt++;
+  // 6. Wait for real webhook delivery from PayPal to Cloudflare tunnel
+  console.log("\nStep 5: Waiting for real PayPal PAYMENT.CAPTURE.COMPLETED webhook delivery...");
+  console.log("Listening for verified webhook on tunnel URL https://vic-shipments-pending-stay.trycloudflare.com/api/webhooks/paypal");
+  console.log("Timeout window: 300 seconds (5 minutes)");
 
-    const res = await pool.query("SELECT * FROM events WHERE id = $1", [eventId]);
-    if (res.rows[0]?.status === "RECOVERED") {
-      recoveredEvent = res.rows[0];
+  let verifiedDelivery: any = null;
+  let finalEventState: any = null;
+  const pollStart = Date.now();
+  const maxWaitMs = 300 * 1000;
+
+  while (Date.now() - pollStart < maxWaitMs) {
+    // Check if event moved to RECOVERED
+    const evRes = await pool.query("SELECT * FROM events WHERE id = $1", [eventId]);
+    const currentEv = evRes.rows[0];
+
+    // Check if matching webhook delivery arrived
+    const delRes = await pool.query(
+      `SELECT * FROM webhook_deliveries 
+       WHERE event_type = 'PAYMENT.CAPTURE.COMPLETED'
+         AND signature_status = 'VALID'
+         AND (
+           raw_body->'resource'->'supplementary_data'->'related_ids'->>'order_id' = $1
+           OR raw_body->'resource'->>'order_id' = $1
+           OR raw_body->'resource'->>'id' = $2
+         )
+       ORDER BY received_at DESC LIMIT 1`,
+      [orderId, paypalCaptureId || ""]
+    );
+
+    if (delRes.rows.length > 0) {
+      verifiedDelivery = delRes.rows[0];
+    }
+
+    if (currentEv?.status === "RECOVERED") {
+      finalEventState = currentEv;
       break;
     }
-  }
 
-  if (!recoveredEvent) {
-    throw new Error("Event failed to reach RECOVERED state within timeout");
+    const elapsed = Math.round((Date.now() - pollStart) / 1000);
+    process.stdout.write(`\r[Waiting for real webhook... ${elapsed}s / 300s] Event: ${currentEv?.status}, Webhook Delivery: ${verifiedDelivery ? "RECEIVED" : "PENDING"}`);
+    await new Promise((r) => setTimeout(r, 3000));
   }
+  console.log("");
 
-  console.log("\nSUCCESS: Event reached RECOVERED state!");
+  if (finalEventState && verifiedDelivery) {
+    const receivedAt = new Date(verifiedDelivery.received_at);
+    const latencySec = (receivedAt.getTime() - actionCompletedAt.getTime()) / 1000;
+    console.log(`\nSUCCESS: Real PayPal webhook arrived and verified!`);
+    console.log(`Webhook Transmission ID: ${verifiedDelivery.transmission_id}`);
+    console.log(`Webhook Received At:     ${receivedAt.toISOString()}`);
+    console.log(`Action Completed At:     ${actionCompletedAt.toISOString()}`);
+    console.log(`Latency (received_at - completed_at): ${latencySec.toFixed(2)} seconds`);
+  } else {
+    console.log(`\nNo real webhook arrived within 5 minutes timeout.`);
+    console.log("Triggering polling reconciler fallback to confirm order status via API...");
+    const { reconcileExecutedEvents } = await import("@/reconciler");
+    const recResult = await reconcileExecutedEvents(0, eventId);
+    console.log(`Reconciler result: checked=${recResult.checked}, reconciled=${recResult.reconciled}`);
+
+    const evRes = await pool.query("SELECT * FROM events WHERE id = $1", [eventId]);
+    finalEventState = evRes.rows[0];
+    console.log(`Event status after polling reconciler: ${finalEventState?.status}`);
+  }
 
   // 7. Extract and print exact PostgreSQL rows
   console.log("\n==================================================");
@@ -156,7 +183,7 @@ async function main() {
   console.log("==================================================");
 
   console.log("\n1. EVENTS ROW:");
-  console.log(JSON.stringify(recoveredEvent, null, 2));
+  console.log(JSON.stringify(finalEventState, null, 2));
 
   const propRows = await pool.query("SELECT * FROM proposals WHERE event_id = $1", [eventId]);
   console.log("\n2. PROPOSALS ROW:");
@@ -169,6 +196,13 @@ async function main() {
   const auditRows = await pool.query("SELECT * FROM audit_log WHERE event_id = $1 ORDER BY timestamp ASC", [eventId]);
   console.log("\n4. AUDIT LOG ROWS:");
   console.log(JSON.stringify(auditRows.rows, null, 2));
+
+  if (verifiedDelivery) {
+    console.log("\n5. WEBHOOK_DELIVERIES ROW:");
+    console.log(JSON.stringify(verifiedDelivery, null, 2));
+  } else {
+    console.log("\n5. WEBHOOK_DELIVERIES ROW: None arrived within timeout window (confirmed via polling reconciler).");
+  }
 
   const afterUsage = await getLlmDailyUsage();
   console.log(`\nLLM Usage After: ${afterUsage.used} / ${afterUsage.budget} (+${afterUsage.used - beforeUsage.used} live call consumed)`);
