@@ -194,10 +194,14 @@ export class AgentService {
       log.warn({ err }, "Redis cache lookup failed; proceeding with model call");
     }
 
+    // Determine accounting scope: only genuine calls using default caller to real provider touch 'real' namespace
+    const isReal = this.caller === defaultOpenRouterCaller && isRealProvider();
+    const scope: "real" | "test" = isReal ? "real" : "test";
+
     // 2. Check Daily LLM Budget
-    const budgetAvailable = await isLlmBudgetAvailable();
+    const budgetAvailable = await isLlmBudgetAvailable(scope);
     if (!budgetAvailable) {
-      log.warn({ eventId: context.eventId }, "Daily LLM budget exhausted. Transitioning to WAITING_FOR_AI");
+      log.warn({ eventId: context.eventId, scope }, "Daily LLM budget exhausted. Transitioning to WAITING_FOR_AI");
       return {
         status: "WAITING_FOR_AI",
         proposal: null,
@@ -225,7 +229,7 @@ export class AgentService {
 
         totalAttempts++;
         try {
-          const { allowed } = await incrementLlmUsage();
+          const { allowed } = await incrementLlmUsage(scope);
           if (!allowed) {
             return {
               status: "WAITING_FOR_AI",
