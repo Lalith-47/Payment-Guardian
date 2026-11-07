@@ -14,4 +14,4 @@
 - [x] **forged-cookie test on every route**: Forged `better-auth.session_token=forged` returns 401 across all protected routes under `src/app/api`; session validated against DB/store (commit `c0db4dc`).
 - [ ] **clean Docker rebuild + green Playwright**: `docker compose build --no-cache web worker && docker compose up -d`, unmodified stack with fake LLM worker overrides, Playwright e2e green.
 - [x] **owner seed from env**: Verified credentials read from env with no hardcoded password in repo, tests, or git history (commit `7db18a6`).
-- [ ] **LLM budget reconciled**: Provider key endpoint usage vs local counter reconciled; provider cap = 50, budget below it.
+- [x] **LLM budget reconciled**: Provider key endpoint usage (0 used, 50 cap) vs local counter reconciled; provider cap = 50, budget = 40 (below cap).
