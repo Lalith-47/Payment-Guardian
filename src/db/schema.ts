@@ -74,6 +74,9 @@ export const policies = pgTable("policies", {
   autoRetryMaxAttempts: integer("auto_retry_max_attempts").notNull().default(2),
   autoRetryMinIntervalHours: integer("auto_retry_min_interval_hours").notNull().default(4),
   autoRefundMaxAmount: numeric("auto_refund_max_amount", { precision: 10, scale: 2 }).notNull().default("25.00"),
+  maxAutoInvoiceAmount: numeric("max_auto_invoice_amount", { precision: 10, scale: 2 }).notNull().default("500.00"),
+  allowedCurrencies: jsonb("allowed_currencies").notNull().default(["USD", "CAD", "EUR", "GBP"]),
+  defaultDueDays: integer("default_due_days").notNull().default(15),
   offerAlternativeMaxDiscountPct: integer("offer_alternative_max_discount_pct").notNull().default(10),
   confidenceThreshold: numeric("confidence_threshold", { precision: 3, scale: 2 }).notNull().default("0.80"),
   reminderCadenceHours: integer("reminder_cadence_hours").notNull().default(24),
@@ -233,11 +236,17 @@ export const paypalOrders = pgTable("paypal_orders", {
 // ==========================================
 export const paypalInvoices = pgTable("paypal_invoices", {
   id: text("id").primaryKey(), // PayPal Invoice ID
-  status: text("status").notNull(), // 'DRAFT', 'SENT', 'SCHEDULED', 'PAID', 'MARKED_AS_PAID', 'CANCELLED', 'REFUNDED', 'PARTIALLY_PAID', 'PAYMENT_PENDING'
+  status: text("status").notNull(), // 'DRAFT', 'SENT', 'SCHEDULED', 'PAID', 'PAID_CONFIRMED_BY_POLLING', 'MARKED_AS_PAID', 'CANCELLED', 'REFUNDED'
   invoiceNumber: text("invoice_number"),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
   currency: text("currency").notNull(),
   recipientEmail: text("recipient_email").notNull(),
+  customerName: text("customer_name"),
+  dueDays: integer("due_days").default(15),
+  items: jsonb("items"),
+  note: text("note"),
+  draftMessage: text("draft_message"), // customer-facing text stored as a DRAFT only
+  confirmationSource: text("confirmation_source"), // 'webhook' | 'polling' | 'executor'
   payerViewUrl: text("payer_view_url"),
   rawPayload: jsonb("raw_payload").notNull(),
   lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }).notNull().defaultNow(),
