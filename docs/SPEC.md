@@ -88,7 +88,7 @@ docker-compose: web, worker (same image, different command), db (Postgres 16, vo
 
 # MILESTONES (stop at each gate and report; do not continue if a gate fails)
 M0 DONE: feasibility. M0.5 DONE: negative testing, signature verification, model checks.
-M1 Spine: schema, PayPal client, webhooks + verification, reconciler, agent, policy engine, executor, audit log, Docker, tests (see M1.md).
+M1 Spine: schema, PayPal client, webhooks + verification, reconciler, agent, policy engine, executor, audit log, Docker, tests (see docs/M1.md).
 M2 Recover flow in UI + Guardrails (policy editor) + approval inbox.
 M3 Collect (invoices + reminders) + security-audit run #1 (guidance mode) and fixes.
 M4 Refund triage + Reconcile.
