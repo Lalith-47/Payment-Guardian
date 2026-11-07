@@ -5,6 +5,9 @@ import { AgentService, ModelCallerFn, isDailyQuotaError } from "@/agent/client";
 import { redis } from "@/lib/redis";
 import { checkClientRateLimit, getLlmDailyUsage, incrementLlmUsage } from "@/lib/llm-budget";
 
+// Inject short backoff via env so retry and fail-safe tests run in milliseconds instead of 28s
+process.env.AGENT_RETRY_BACKOFF_MS = "5";
+
 describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
   beforeEach(async () => {
     // Clear test namespace keys and exhaustion flag; never touch production counter
@@ -169,7 +172,7 @@ describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
 
     expect(result.status).toBe("WAITING_FOR_AI");
     expect(result.proposal).toBeNull();
-  }, 40000);
+  });
 
   it("7. Response Caching: returns cached proposal by event ID without calling model again", async () => {
     let calls = 0;

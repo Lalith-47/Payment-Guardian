@@ -309,7 +309,10 @@ export class AgentService {
         const rateLimit = await checkClientRateLimit(15);
         if (!rateLimit.allowed) {
           log.warn({ retryAfterMs: rateLimit.retryAfterMs }, "Rate limit (15 RPM) exceeded, waiting...");
-          await new Promise((r) => setTimeout(r, Math.min(rateLimit.retryAfterMs, 4000)));
+          const sleepMs = process.env.AGENT_RETRY_BACKOFF_MS
+            ? parseInt(process.env.AGENT_RETRY_BACKOFF_MS, 10)
+            : Math.min(rateLimit.retryAfterMs, 4000);
+          await new Promise((r) => setTimeout(r, sleepMs));
         }
 
         totalAttempts++;
@@ -426,16 +429,22 @@ export class AgentService {
 
           // 2. CLASSIFY 429: Per-minute rate limit -> backoff with jitter
           if (errorObj.status === 429) {
-            const retryDelay = errorObj.retryAfterSeconds
+            const defaultDelay = errorObj.retryAfterSeconds
               ? errorObj.retryAfterSeconds * 1000
               : Math.pow(2, modelAttempt) * 1000 + Math.random() * 500;
+            const retryDelay = process.env.AGENT_RETRY_BACKOFF_MS
+              ? parseInt(process.env.AGENT_RETRY_BACKOFF_MS, 10)
+              : Math.min(defaultDelay, 5000);
             log.info({ retryDelay }, "Per-minute rate limit hit; backing off with jitter");
-            await new Promise((r) => setTimeout(r, Math.min(retryDelay, 5000)));
+            await new Promise((r) => setTimeout(r, retryDelay));
             continue;
           }
 
           // Generic backoff + jitter for transient network / 5xx errors
-          const backoffMs = Math.pow(2, modelAttempt) * 300 + Math.random() * 200;
+          const defaultBackoff = Math.pow(2, modelAttempt) * 300 + Math.random() * 200;
+          const backoffMs = process.env.AGENT_RETRY_BACKOFF_MS
+            ? parseInt(process.env.AGENT_RETRY_BACKOFF_MS, 10)
+            : defaultBackoff;
           await new Promise((r) => setTimeout(r, backoffMs));
         }
       }
