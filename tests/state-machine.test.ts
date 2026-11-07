@@ -68,7 +68,7 @@ describe("F2 Event State Machine & Concrete Action Execution", () => {
         currency: "USD",
         message: "Payment declined by bank. Re-attempting transaction.",
         confidence: 0.90,
-        reasoning: "Soft decline on payment instrument. Re-attempting capture per policy.",
+        reasoning: "Soft decline on payment instrument. Re-attempting capture.",
       }),
     });
 
@@ -269,7 +269,7 @@ describe("F2 Event State Machine & Concrete Action Execution", () => {
         currency: "USD",
         message: "Your payment instrument was declined. We are retrying your payment.",
         confidence: 0.90,
-        reasoning: "Soft decline; retry per policy.",
+        reasoning: "Soft decline; retry payment.",
       }),
     });
     const agent = new AgentService(caller);

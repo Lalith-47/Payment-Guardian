@@ -36,6 +36,7 @@ describe("Fail-Safe Verification: All-Models-Fail -> WAITING_FOR_AI with Zero Mu
 
   beforeEach(async () => {
     // Clear exhaustion flag before each test
+    await redis.del("rg:test:llm_daily_cap_exhausted");
     await redis.del("rg:llm_daily_cap_exhausted");
 
     // Spy on mutating PayPal methods to ensure zero calls
@@ -184,6 +185,7 @@ describe("Fail-Safe Verification: All-Models-Fail -> WAITING_FOR_AI with Zero Mu
   });
 
   afterAll(async () => {
+    await redis.del("rg:test:llm_daily_cap_exhausted");
     await redis.del("rg:llm_daily_cap_exhausted");
   });
 });

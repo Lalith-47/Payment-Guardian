@@ -115,7 +115,7 @@ test.describe("M2 End-to-End Suite: Dashboard, Policies, Checkout, Events, Appro
     await page.screenshot({ path: "docs/screenshots/05-approvals.png" });
 
     // Verify Pending Approval is rendered with policy trigger rule
-    const approvalCard = page.locator('.rounded-xl:has-text("AMOUNT_EXCEEDS_AUTO_REFUND_LIMIT")').first();
+    const approvalCard = page.locator(':is(.rounded-card, .rounded-xl):has-text("AMOUNT_EXCEEDS_AUTO_REFUND_LIMIT")').first();
     await expect(approvalCard).toBeVisible({ timeout: 20000 });
     await expect(approvalCard.locator("text=Proposed Action")).toBeVisible();
 
