@@ -11,8 +11,8 @@ async function main() {
     amount: "25.00",
     currency: "USD",
     description: "Revenue Guardian M1 Verification Order",
-    returnUrl: "https://acrylic-engaging-dock-indexed.trycloudflare.com/dashboard",
-    cancelUrl: "https://acrylic-engaging-dock-indexed.trycloudflare.com/dashboard",
+    returnUrl: "https://vic-shipments-pending-stay.trycloudflare.com/dashboard",
+    cancelUrl: "https://vic-shipments-pending-stay.trycloudflare.com/dashboard",
   });
 
   console.log(`Order ID:      ${order.id}`);
