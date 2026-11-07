@@ -1,6 +1,7 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { db, pool } from "./index";
 import { createChildLogger } from "@/lib/logger";
+import { seedOwner } from "./seed-owner";
 import path from "path";
 
 const log = createChildLogger("migration");
@@ -11,6 +12,9 @@ export async function runMigrations() {
     const migrationsFolder = path.resolve(process.cwd(), "src/db/migrations");
     await migrate(db, { migrationsFolder });
     log.info("Database migrations applied successfully.");
+
+    // Seed store owner from environment variables if not already present
+    await seedOwner();
   } catch (err) {
     log.error({ err }, "Database migration failed");
     throw err;
