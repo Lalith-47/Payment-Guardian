@@ -18,6 +18,7 @@ export interface PayPalCaptureSuccess {
   orderId: string;
   captureId: string;
   status: string;
+  statusCode?: number;
   amount: { currency_code: string; value: string };
   raw: Record<string, unknown>;
 }
@@ -26,6 +27,7 @@ export interface PayPalCaptureDecline {
   success: false;
   declined: true;
   orderId: string;
+  statusCode?: number;
   issue: "INSTRUMENT_DECLINED" | "TRANSACTION_REFUSED" | string;
   description: string;
   debugId: string | null;
@@ -294,6 +296,7 @@ export class PayPalClient {
         success: false,
         declined: true,
         orderId: params.orderId,
+        statusCode: res.status,
         issue: primaryIssue.issue,
         description: primaryIssue.description,
         debugId: res.headers.get("paypal-debug-id"),
@@ -317,6 +320,7 @@ export class PayPalClient {
       orderId: params.orderId,
       captureId: (firstCapture.id as string) || (data.id as string),
       status: (data.status as string) || "COMPLETED",
+      statusCode: res.status,
       amount: (firstCapture.amount as { currency_code: string; value: string }) || {
         currency_code: "USD",
         value: "0.00",

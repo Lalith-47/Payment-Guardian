@@ -117,9 +117,10 @@ export class ActionExecutor {
     // 4. Perform PayPal mutation
     try {
       const execResult = await this.performMutation(req, idempotencyKey);
+      const statusCode = (execResult as any)?.statusCode || 200;
 
       await updateActionStatus(actionId, "SUCCESS", {
-        statusCode: 200,
+        statusCode,
         responseSummary: execResult,
       });
 
