@@ -1,6 +1,6 @@
 # Revenue Guardian — Milestone 2 Checklist
 
-- [x] **Checkpoint commits**: Hygiene committed in `23b6153`. WIP M2 committed.
+- [x] **Checkpoint commits**: Hygiene committed in `23b6153`. WIP M2 committed in `649fe54`.
 - [x] **scripts/ credential check**: Verified zero hardcoded credentials in `scripts/`.
 - [x] **gitleaks clean**: Gitleaks pre-commit scanned with 0 leaks found; working tree scanned.
 - [x] **test edits reviewed**: Verified 6 test files for strict assertions; zero .skip/.only/fixme, no loosened matchers.
