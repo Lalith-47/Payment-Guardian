@@ -17,8 +17,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
 RUN pnpm build
 
-# 3. Production runner
-FROM base AS runner
+# 3. Base runtime files (production only - NO tests or fake servers)
+FROM base AS runtime-base
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -29,7 +29,7 @@ ENV PORT=3000
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy runtime files
+# Copy runtime files (production only - NO tests or fake servers)
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
@@ -40,14 +40,26 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder /app/tests ./tests
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN chown -R nextjs:nodejs /app
+
+# 4. E2E target (isolated test stack only - contains tests and fake llm)
+FROM runtime-base AS e2e
+USER root
+COPY --from=builder /app/tests ./tests
+RUN chown -R nextjs:nodejs /app/tests
 USER nextjs
 
 EXPOSE 3000
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["pnpm", "start"]
 
+# 5. Production runner (DEFAULT TARGET - must NOT contain /app/tests)
+FROM runtime-base AS runner
+USER nextjs
+
+EXPOSE 3000
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["pnpm", "start"]
 

@@ -34,9 +34,11 @@ services:
       start_period: 3s
 
   fake-llm:
+    image: revenue-guardian-e2e:latest
     build:
       context: .
       dockerfile: Dockerfile
+      target: e2e
     container_name: rg-e2e-fake-llm
     restart: always
     command: ["pnpm", "exec", "tsx", "tests/fake-llm-server.ts"]
@@ -53,9 +55,11 @@ services:
       start_period: 3s
 
   web:
+    image: revenue-guardian-e2e:latest
     build:
       context: .
       dockerfile: Dockerfile
+      target: e2e
     container_name: rg-e2e-web
     restart: always
     env_file:
@@ -84,9 +88,11 @@ services:
       start_period: 10s
 
   worker:
+    image: revenue-guardian-e2e:latest
     build:
       context: .
       dockerfile: Dockerfile
+      target: e2e
     container_name: rg-e2e-worker
     restart: always
     command: ["pnpm", "worker"]
