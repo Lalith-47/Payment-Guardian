@@ -70,6 +70,8 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/revenue_guardian_test
       - REDIS_URL=redis://redis:6379/1
       - LLM_BASE_URL=http://fake-llm:4040/v1
+      - OPENROUTER_BASE_URL=http://fake-llm:4040/v1
+      - OPENROUTER_API_KEY=mock-fake-e2e-key
       - APP_URL=http://localhost:3001
     ports:
       - "3001:3000"
@@ -104,6 +106,8 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/revenue_guardian_test
       - REDIS_URL=redis://redis:6379/1
       - LLM_BASE_URL=http://fake-llm:4040/v1
+      - OPENROUTER_BASE_URL=http://fake-llm:4040/v1
+      - OPENROUTER_API_KEY=mock-fake-e2e-key
       - APP_URL=http://localhost:3001
     depends_on:
       db:

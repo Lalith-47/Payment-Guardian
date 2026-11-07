@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { resolveAndGuardTestDatabaseUrl } from "./src/lib/db-guard.ts";
+import { resolveAndGuardTestDatabaseUrl } from "./src/lib/db-guard";
 
 // If DATABASE_URL or TEST_DATABASE_URL is provided in Playwright environment, guard that it targets _test
 if (process.env.DATABASE_URL || process.env.TEST_DATABASE_URL) {

@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
-import { resolveAndGuardTestDatabaseUrl } from "./src/lib/db-guard.ts";
+import { resolveAndGuardTestDatabaseUrl } from "./src/lib/db-guard";
 
 // Parse DATABASE_URL with new URL(), enforce _test suffix, refuse to start otherwise, and print redacted URL
 process.env.DATABASE_URL = resolveAndGuardTestDatabaseUrl();
