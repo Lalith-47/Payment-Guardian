@@ -177,6 +177,9 @@ export async function POST(req: NextRequest) {
       customerEmail: extractedData.customerEmail,
       amount: extractedData.amount,
       currency: extractedData.currency,
+      dueDays: extractedData.dueDays,
+      lineItems: extractedData.lineItems,
+      note: extractedData.note,
     },
   });
 
@@ -193,6 +196,9 @@ export async function POST(req: NextRequest) {
       ruleTriggered: policyResult.ruleTriggered,
       amount: extractedData.amount,
       currency: extractedData.currency,
+      dueDays: extractedData.dueDays,
+      lineItems: extractedData.lineItems,
+      note: extractedData.note,
     },
   });
 

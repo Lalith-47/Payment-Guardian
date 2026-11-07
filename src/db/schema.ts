@@ -243,6 +243,8 @@ export const paypalInvoices = pgTable("paypal_invoices", {
   recipientEmail: text("recipient_email").notNull(),
   customerName: text("customer_name"),
   dueDays: integer("due_days").default(15),
+  paymentTerm: text("payment_term"),
+  dueDate: text("due_date"),
   items: jsonb("items"),
   note: text("note"),
   draftMessage: text("draft_message"), // customer-facing text stored as a DRAFT only

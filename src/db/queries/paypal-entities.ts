@@ -60,6 +60,8 @@ export async function upsertPayPalInvoice(data: {
   recipientEmail: string;
   customerName?: string | null;
   dueDays?: number | null;
+  paymentTerm?: string | null;
+  dueDate?: string | null;
   items?: unknown;
   note?: string | null;
   draftMessage?: string | null;
@@ -83,6 +85,8 @@ export async function upsertPayPalInvoice(data: {
         recipientEmail: data.recipientEmail,
         customerName: data.customerName,
         dueDays: data.dueDays,
+        paymentTerm: data.paymentTerm !== undefined ? data.paymentTerm : undefined,
+        dueDate: data.dueDate !== undefined ? data.dueDate : undefined,
         items: data.items,
         note: data.note,
         draftMessage: data.draftMessage,

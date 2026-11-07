@@ -36,6 +36,30 @@ export interface PayPalCaptureDecline {
 
 export type PayPalCaptureResult = PayPalCaptureSuccess | PayPalCaptureDecline;
 
+export function buildPaymentTerm(
+  dueDays: number | null | undefined,
+  defaultDueDays: number = 15,
+  baseDate: Date = new Date()
+): { term_type: string; due_date?: string } {
+  const days = dueDays !== null && dueDays !== undefined ? dueDays : defaultDueDays;
+
+  if (days === 0) {
+    return { term_type: "DUE_ON_RECEIPT" };
+  }
+
+  const standardNetDays = [10, 15, 30, 45, 60, 90];
+  if (standardNetDays.includes(days)) {
+    return { term_type: `NET_${days}` };
+  }
+
+  const dueDateObj = new Date(baseDate.getTime() + days * 86400000);
+  const dueDateStr = dueDateObj.toISOString().split("T")[0];
+  return {
+    term_type: "DUE_ON_DATE_SPECIFIED",
+    due_date: dueDateStr,
+  };
+}
+
 export class PayPalClient {
   private readonly baseUrl: string;
   private readonly clientId: string;
@@ -359,6 +383,9 @@ export class PayPalClient {
     itemName?: string;
     note?: string;
     requestId?: string;
+    dueDays?: number | null;
+    defaultDueDays?: number;
+    paymentTerm?: { term_type: string; due_date?: string };
   }): Promise<{ id: string; invoiceNumber: string; status: string; raw: Record<string, unknown> }> {
     const isE2E = process.env.STACK_ROLE === "e2e" || env.STACK_ROLE === "e2e";
     const requestId = params.requestId || crypto.randomUUID();
@@ -366,6 +393,9 @@ export class PayPalClient {
     const invoiceNumber = isE2E ? `E2E-${rawNumber}` : rawNumber;
     const businessEmail = env.PAYPAL_BUSINESS_EMAIL || "merchant@example.com";
     const todayStr = new Date().toISOString().split("T")[0];
+    const paymentTerm =
+      params.paymentTerm ||
+      buildPaymentTerm(params.dueDays, params.defaultDueDays ?? 15);
 
     const payload = {
       detail: {
@@ -373,7 +403,7 @@ export class PayPalClient {
         invoice_date: todayStr,
         currency_code: params.currency,
         note: params.note || "Revenue Guardian Invoice",
-        payment_term: { term_type: "DUE_ON_RECEIPT" },
+        payment_term: paymentTerm,
       },
       invoicer: {
         name: { given_name: "Revenue", surname: "Guardian" },

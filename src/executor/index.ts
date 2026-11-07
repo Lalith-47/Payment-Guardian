@@ -1,10 +1,11 @@
 import crypto from "crypto";
-import { paypalClient } from "@/paypal/client";
+import { paypalClient, buildPaymentTerm } from "@/paypal/client";
 import { createAction, getActionByIdempotencyKey, updateActionStatus } from "@/db/queries/actions";
 import { appendAuditLog } from "@/db/queries/audit";
 import { updateEventStatus } from "@/db/queries/events";
 import { getApprovalByToken, decideApproval } from "@/db/queries/approvals";
 import { upsertPayPalInvoice } from "@/db/queries/paypal-entities";
+import { getActivePolicy } from "@/db/queries/policies";
 import { env } from "@/config/env";
 import { createChildLogger } from "@/lib/logger";
 import { AgentProposal } from "@/agent/schema";
@@ -15,7 +16,13 @@ const log = createChildLogger("executor");
 export interface ExecutionRequest {
   eventId: string;
   proposalId?: string;
-  proposal: AgentProposal;
+  proposal: AgentProposal & {
+    customerEmail?: string | null;
+    customerName?: string | null;
+    dueDays?: number | null;
+    lineItems?: Array<{ description: string; quantity: number; unitPrice: number }>;
+    metadata?: Record<string, unknown>;
+  };
   policyDecision: PolicyDecision;
   approvalToken?: string;
   approvedBy?: string;
@@ -98,6 +105,19 @@ export class ActionExecutor {
     const actionId = `act_${crypto.randomUUID()}`;
     const initialEndpoint = this.getEndpointForAction(req.proposal.action, req.targetId);
 
+    let sentPaymentTerm: { term_type: string; due_date?: string } | undefined = undefined;
+    let effectiveDueDays: number | null = null;
+    if (req.proposal.action === "invoice") {
+      const activePolicy = await getActivePolicy().catch(() => null);
+      const defaultDueDays = activePolicy?.defaultDueDays ?? 15;
+      const propAny = req.proposal as any;
+      effectiveDueDays =
+        propAny.dueDays !== undefined && propAny.dueDays !== null
+          ? propAny.dueDays
+          : (propAny.metadata?.dueDays ?? null);
+      sentPaymentTerm = buildPaymentTerm(effectiveDueDays, defaultDueDays);
+    }
+
     const actionRecord = await createAction({
       id: actionId,
       eventId: req.eventId,
@@ -112,6 +132,7 @@ export class ActionExecutor {
         targetId: req.targetId,
         amount: req.proposal.amount,
         currency: req.proposal.currency,
+        ...(sentPaymentTerm ? { paymentTerm: sentPaymentTerm, dueDays: effectiveDueDays } : {}),
       },
       status: "PENDING",
     });
@@ -312,10 +333,15 @@ export class ActionExecutor {
         const amount = req.proposal.amount ? req.proposal.amount.toFixed(2) : "10.00";
         const currency = req.proposal.currency || "USD";
         const note = req.proposal.message || "Invoice for services rendered";
-        const dueDays =
-          (metadata?.dueDays as number) ||
-          (propAny?.dueDays as number) ||
-          15;
+        const activePolicy = await getActivePolicy().catch(() => null);
+        const defaultDueDays = activePolicy?.defaultDueDays ?? 15;
+        const parsedDueDays =
+          req.proposal.dueDays !== undefined && req.proposal.dueDays !== null
+            ? req.proposal.dueDays
+            : (metadata?.dueDays !== undefined && metadata.dueDays !== null
+            ? (metadata.dueDays as number)
+            : (propAny?.dueDays !== undefined && propAny.dueDays !== null ? (propAny.dueDays as number) : null));
+        const paymentTerm = buildPaymentTerm(parsedDueDays, defaultDueDays);
         const lineItems = (metadata?.lineItems || propAny?.lineItems) as
           | Array<{ description: string; quantity: number; unitPrice: number }>
           | undefined;
@@ -328,25 +354,28 @@ export class ActionExecutor {
           itemName: lineItems?.[0]?.description || note || "Invoice Item",
           note,
           requestId: idempotencyKey,
+          paymentTerm,
         });
 
         // 2. Send invoice (executor-only, idempotent via PayPal-Request-Id)
         const sendRequestId = `send_${idempotencyKey}`;
         const sendRes = await paypalClient.sendInvoice(draftRes.id, sendRequestId);
 
-        // 3. Upsert into paypal_invoices table
-        let payerViewUrl: string | null =
-          (draftRes.raw as { detail?: { metadata?: { payer_view_url?: string } } })?.detail?.metadata?.payer_view_url || null;
-        if (!payerViewUrl) {
-          try {
-            const freshInv = await paypalClient.getInvoice(draftRes.id);
-            if (freshInv.payerViewUrl) {
-              payerViewUrl = freshInv.payerViewUrl;
-            }
-          } catch {
-            // fallback if fresh retrieval fails
-          }
-        }
+        // 3. GET fresh invoice details directly from PayPal to capture reported terms and due date
+        const freshInv = await paypalClient.getInvoice(draftRes.id);
+        const paypalReportedTerm = (freshInv.raw as any)?.detail?.payment_term;
+        const termReported = paypalReportedTerm?.term_type || null;
+        const dueDateReported = paypalReportedTerm?.due_date || null;
+        const payerViewUrl =
+          freshInv.payerViewUrl ||
+          (draftRes.raw as { detail?: { metadata?: { payer_view_url?: string } } })?.detail?.metadata?.payer_view_url ||
+          null;
+
+        const effectiveDays = termReported?.startsWith("NET_")
+          ? parseInt(termReported.replace("NET_", ""), 10)
+          : parsedDueDays !== null && parsedDueDays !== undefined
+          ? parsedDueDays
+          : defaultDueDays;
 
         await upsertPayPalInvoice({
           id: draftRes.id,
@@ -356,13 +385,15 @@ export class ActionExecutor {
           currency,
           recipientEmail,
           customerName,
-          dueDays,
+          dueDays: effectiveDays,
+          paymentTerm: termReported,
+          dueDate: dueDateReported,
           items: lineItems || [{ description: note, quantity: 1, unitPrice: parseFloat(amount) }],
           note,
           draftMessage: note, // stored as DRAFT only
           confirmationSource: "executor",
           payerViewUrl,
-          rawPayload: { draft: draftRes.raw, send: sendRes.raw },
+          rawPayload: { draft: draftRes.raw, send: sendRes.raw, paypalGet: freshInv.raw },
         });
 
         return {
@@ -373,6 +404,8 @@ export class ActionExecutor {
           customerName,
           amount,
           currency,
+          paymentTerm: termReported,
+          dueDate: dueDateReported,
           draftCustomerMessage: note,
           payerViewUrl,
           statusCode: 200,

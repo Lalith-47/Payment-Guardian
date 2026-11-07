@@ -48,6 +48,14 @@ All 14 rows were seeded post-facto via an administrative reconciliation SQL scri
 
 ## `/readyz` Mismatch Computation
 `/readyz` tracks both `measuredCount` and `reconstructedCount` separately within the current UTC day (`timestamp >= current UTC midnight`).
+
+## Known Pre-Fix Invoice Records (Invoices 0050 & 0051)
+Prior to commit addressing Item 1 (invoice due terms bug):
+- **Invoice 0050 (`INV2-WM7Y-KVGX-2XA4-8G3W`)**: Created via Live Call 1 ($20.00 to Acme Corp, net 15 prompt). Due to a hardcoded `{ term_type: "DUE_ON_RECEIPT" }` payload in `paypalClient.createDraftInvoice`, PayPal reported `term_type = "DUE_ON_RECEIPT"` and `due_date = "2026-11-07"`. Subsequently paid in sandbox and reconciled to `PAID_CONFIRMED_BY_POLLING`.
+- **Invoice 0051 (`INV2-KBEJ-EYQW-7ATK-W7JQ`)**: Created via Live Call 2 ($750.00 to Beta LLC, net 30 prompt, over-limit human approval). Although the proposal stated `dueDays: 30`, `createDraftInvoice` omitted the term payload, resulting in PayPal recording `term_type = "DUE_ON_RECEIPT"` and `due_date = "2026-11-07"`, while `paypal_invoices.due_days` defaulted to `15`.
+- Both records (0050 and 0051) are preserved unmodified as historical pre-fix records.
+- Invoices created post-fix (e.g. 0060 `INV2-F4LY-K7PW-F7E2-SSZS` with Net 30 -> `NET_30` / `2026-12-07`, and 0061 `INV2-S5Z6-JVQ7-R9ZK-7QAC` with custom 20 days -> `DUE_ON_DATE_SPECIFIED` / `2026-11-27`) correctly reflect parsed due terms and store the exact terms reported back by PayPal on GET.
+
 - Local counts today: queries rows where `timestamp >= current UTC midnight` for `origin = 'measured'` and `origin = 'reconstructed'`.
 - `localCountToday = measuredCount + reconstructedCount`.
 - Provider counter resets daily at UTC midnight, returning `providerUsed` for the current UTC day.
