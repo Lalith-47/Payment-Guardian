@@ -3,6 +3,19 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db, schema } from "@/db";
 import { env } from "@/config/env";
 
+const origins: string[] = [];
+
+if (env.APP_URL) {
+  origins.push(env.APP_URL);
+}
+if (env.BETTER_AUTH_URL) {
+  origins.push(env.BETTER_AUTH_URL);
+}
+
+if (env.NODE_ENV !== "production") {
+  origins.push("http://localhost:3000", "http://127.0.0.1:3000");
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -14,12 +27,8 @@ export const auth = betterAuth({
     },
   }),
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL,
-  trustedOrigins: [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://vic-shipments-pending-stay.trycloudflare.com",
-  ],
+  baseURL: env.APP_URL || env.BETTER_AUTH_URL,
+  trustedOrigins: Array.from(new Set(origins)),
   emailAndPassword: {
     enabled: true,
   },

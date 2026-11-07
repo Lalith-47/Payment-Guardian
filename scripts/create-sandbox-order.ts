@@ -1,18 +1,27 @@
 import { paypalClient } from "@/paypal/client";
 import { upsertPayPalOrder } from "@/db/queries/paypal-entities";
 import { appendAuditLog } from "@/db/queries/audit";
+import { env } from "@/config/env";
 
 async function main() {
   console.log("==================================================");
   console.log("CREATING PAYPAL SANDBOX ORDER FOR LIVE VERIFICATION");
   console.log("==================================================");
 
+  if (!env.APP_URL) {
+    throw new Error(
+      "Missing required environment variable APP_URL. Please set APP_URL (e.g. in .env) to configure order returnUrl and cancelUrl."
+    );
+  }
+
+  const baseUrl = env.APP_URL.replace(/\/+$/, "");
+
   const order = await paypalClient.createOrder({
     amount: "25.00",
     currency: "USD",
     description: "Revenue Guardian M1 Verification Order",
-    returnUrl: "https://vic-shipments-pending-stay.trycloudflare.com/dashboard",
-    cancelUrl: "https://vic-shipments-pending-stay.trycloudflare.com/dashboard",
+    returnUrl: `${baseUrl}/dashboard`,
+    cancelUrl: `${baseUrl}/dashboard`,
   });
 
   console.log(`Order ID:      ${order.id}`);

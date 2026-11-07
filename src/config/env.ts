@@ -7,6 +7,7 @@ dotenv.config();
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(3000),
+  APP_URL: z.string().url("APP_URL must be a valid URL").optional(),
 
   // Database & Redis
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid postgres URL"),

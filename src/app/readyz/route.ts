@@ -105,7 +105,33 @@ export async function GET() {
     };
   }
 
-  // 5. LLM Budget Check (Local Counter + Provider Data)
+  // 5. Registered PayPal Webhook Verification
+  if (env.PAYPAL_WEBHOOK_ID) {
+    const whStart = Date.now();
+    try {
+      const webhooks = await paypalClient.listWebhooks();
+      const isRegistered = webhooks.some((w) => w.id === env.PAYPAL_WEBHOOK_ID);
+      if (isRegistered) {
+        checks.paypalWebhook = { status: "UP", latencyMs: Date.now() - whStart };
+      } else {
+        isReady = false;
+        checks.paypalWebhook = {
+          status: "DOWN",
+          latencyMs: Date.now() - whStart,
+          error: `Configured PAYPAL_WEBHOOK_ID '${env.PAYPAL_WEBHOOK_ID}' is NOT among registered sandbox webhooks.`,
+        };
+      }
+    } catch (err) {
+      isReady = false;
+      checks.paypalWebhook = {
+        status: "DOWN",
+        latencyMs: Date.now() - whStart,
+        error: (err as Error).message,
+      };
+    }
+  }
+
+  // 6. LLM Budget Check (Local Counter + Provider Data)
   const llmUsage = await getLlmDailyUsage();
 
   const responseBody = {
