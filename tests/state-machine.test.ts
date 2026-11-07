@@ -230,5 +230,118 @@ describe("F2 Event State Machine & Concrete Action Execution", () => {
     createDraftSpy.mockRestore();
     sendInvoiceSpy.mockRestore();
   });
+
+  it("4. C3 Retry Bound: repeated declines stop at policy max (2), escalate to approval, unique idempotency key per attempt, no double captures", async () => {
+    const boundRunId = crypto.randomUUID().slice(0, 8);
+    const orderId = `ORD_RETRY_BOUND_${boundRunId}`;
+
+    // Policy with autoRetryMaxAttempts: 2
+    await createPolicy({
+      id: `pol_c3_${boundRunId}`,
+      name: "C3 Retry Bound Policy",
+      currency: "USD",
+      autoRetryMaxAttempts: 2,
+      autoRefundMaxAmount: "100.00",
+      confidenceThreshold: "0.80",
+      offerAlternativeMaxDiscountPct: 20,
+      requireApprovalForActions: ["refund", "escalate"],
+      isActive: true,
+    });
+
+    let captureCallCount = 0;
+    const captureSpy = vi.spyOn(paypalClient, "captureOrder").mockImplementation(async () => {
+      captureCallCount++;
+      return {
+        success: true,
+        declined: false,
+        orderId,
+        captureId: `CAP_BOUND_${boundRunId}_${captureCallCount}`,
+        status: "COMPLETED",
+        amount: { value: "40.00", currency_code: "USD" },
+        raw: {},
+      };
+    });
+
+    const caller: ModelCallerFn = async () => ({
+      content: JSON.stringify({
+        action: "retry",
+        amount: null,
+        currency: "USD",
+        message: "Your payment instrument was declined. We are retrying your payment.",
+        confidence: 0.90,
+        reasoning: "Soft decline; retry per policy.",
+      }),
+    });
+    const agent = new AgentService(caller);
+
+    // Attempt 1: retryCount 0 -> under max (0 < 2) -> AUTO -> EXECUTED
+    const eventId1 = `evt_bound_1_${boundRunId}`;
+    await createEvent({
+      id: eventId1,
+      type: "payment.capture_declined",
+      source: "sandbox_negative_testing",
+      externalId: orderId,
+      status: "RECEIVED",
+      payload: { issue: "INSTRUMENT_DECLINED", retryCount: 0 },
+    });
+    await processEventPipeline(
+      { eventId: eventId1, type: "payment.capture_declined", source: "sandbox_negative_testing", orderId, payload: { retryCount: 0 } },
+      agent
+    );
+    const ev1 = await getEventById(eventId1);
+    expect(ev1?.status).toBe("EXECUTED");
+    const actions1 = await getActionsByEventId(eventId1);
+    expect(actions1.length).toBe(1);
+
+    // Attempt 2: retryCount 1 -> under max (1 < 2) -> AUTO -> EXECUTED
+    const eventId2 = `evt_bound_2_${boundRunId}`;
+    await createEvent({
+      id: eventId2,
+      type: "payment.capture_declined",
+      source: "sandbox_negative_testing",
+      externalId: orderId,
+      status: "RECEIVED",
+      payload: { issue: "INSTRUMENT_DECLINED", retryCount: 1 },
+    });
+    await processEventPipeline(
+      { eventId: eventId2, type: "payment.capture_declined", source: "sandbox_negative_testing", orderId, payload: { retryCount: 1 } },
+      agent
+    );
+    const ev2 = await getEventById(eventId2);
+    expect(ev2?.status).toBe("EXECUTED");
+    const actions2 = await getActionsByEventId(eventId2);
+    expect(actions2.length).toBe(1);
+
+    // Assert unique idempotency key between attempt 1 and 2
+    expect(actions1[0].idempotencyKey).not.toBe(actions2[0].idempotencyKey);
+    expect(actions1[0].idempotencyKey).toMatch(/^req_/);
+    expect(actions2[0].idempotencyKey).toMatch(/^req_/);
+
+    // Attempt 3: retryCount 2 -> reaches max (2 >= 2) -> NEEDS_APPROVAL -> AWAITING_APPROVAL
+    const eventId3 = `evt_bound_3_${boundRunId}`;
+    await createEvent({
+      id: eventId3,
+      type: "payment.capture_declined",
+      source: "sandbox_negative_testing",
+      externalId: orderId,
+      status: "RECEIVED",
+      payload: { issue: "INSTRUMENT_DECLINED", retryCount: 2 },
+    });
+    await processEventPipeline(
+      { eventId: eventId3, type: "payment.capture_declined", source: "sandbox_negative_testing", orderId, payload: { retryCount: 2 } },
+      agent
+    );
+    const ev3 = await getEventById(eventId3);
+    expect(ev3?.status).toBe("AWAITING_APPROVAL");
+
+    // Assert NO action was executed for attempt 3 (no double capture)
+    const actions3 = await getActionsByEventId(eventId3);
+    expect(actions3.length).toBe(0);
+
+    // Overall captureOrder was called exactly 2 times (only for attempts 1 & 2), never for attempt 3
+    expect(captureCallCount).toBe(2);
+
+    captureSpy.mockRestore();
+  });
 });
 

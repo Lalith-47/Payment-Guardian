@@ -174,7 +174,18 @@ export async function processEventPipeline(
     });
 
     // Step 3: Policy Engine Evaluation (Deterministic, Fail Closed)
-    const policyResult = evaluatePolicy(policy, proposal);
+    const policyResult = evaluatePolicy(policy, proposal, {
+      currentRetryCount: retryCount,
+      originalAmount: amount ?? undefined,
+      originalCurrency: currency,
+      eventSource: jobData.source,
+    });
+
+    // If automated retry reaches max retries, escalate to manual approval per M2 spec
+    if (policyResult.decision === "BLOCKED" && policyResult.ruleTriggered === "MAX_RETRIES_EXCEEDED") {
+      log.info({ eventId: jobData.eventId }, "Max retries reached; escalating to manual owner approval");
+      policyResult.decision = "NEEDS_APPROVAL";
+    }
     log.info(
       { eventId: jobData.eventId, decision: policyResult.decision, rule: policyResult.ruleTriggered },
       "Policy engine evaluated agent proposal"
