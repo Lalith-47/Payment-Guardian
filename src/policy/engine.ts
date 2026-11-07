@@ -186,3 +186,94 @@ export function evaluatePolicy(
   }
 }
 
+export interface InvoicePolicyEvaluationInput {
+  amount: number | null;
+  currency: string | null;
+  confidence: number;
+  customerEmail: string | null;
+  customerName?: string | null;
+  dueDays?: number | null;
+  missingFields?: string[];
+}
+
+/**
+ * M3-Lite: Pure evaluation of policy rules for Invoicing
+ */
+export function evaluateInvoicePolicy(
+  policy: Pick<
+    Policy,
+    | "maxAutoInvoiceAmount"
+    | "allowedCurrencies"
+    | "defaultDueDays"
+    | "confidenceThreshold"
+    | "isActive"
+  >,
+  input: InvoicePolicyEvaluationInput
+): PolicyEvaluationResult {
+  // 1. Inactive policy -> NEEDS_APPROVAL
+  if (policy.isActive === false) {
+    return {
+      decision: "NEEDS_APPROVAL",
+      reason: "Store policy is currently inactive.",
+      ruleTriggered: "POLICY_INACTIVE",
+    };
+  }
+
+  // 2. Missing required fields or invalid input -> NEEDS_APPROVAL
+  if (input.missingFields && input.missingFields.length > 0) {
+    return {
+      decision: "NEEDS_APPROVAL",
+      reason: `Invoice has missing required fields: ${input.missingFields.join(", ")}`,
+      ruleTriggered: "MISSING_REQUIRED_FIELDS",
+    };
+  }
+
+  if (!input.amount || input.amount <= 0 || !input.currency || !input.customerEmail) {
+    return {
+      decision: "NEEDS_APPROVAL",
+      reason: "Incomplete invoice data (missing amount, currency, or email).",
+      ruleTriggered: "INCOMPLETE_INVOICE_DATA",
+    };
+  }
+
+  // 3. Low confidence below threshold -> NEEDS_APPROVAL
+  const confidenceThreshold = parseFloat(policy.confidenceThreshold?.toString() || "0.80");
+  if (input.confidence < confidenceThreshold) {
+    return {
+      decision: "NEEDS_APPROVAL",
+      reason: `Confidence ${input.confidence.toFixed(2)} is below threshold ${confidenceThreshold.toFixed(2)}.`,
+      ruleTriggered: "CONFIDENCE_BELOW_THRESHOLD",
+    };
+  }
+
+  // 4. Currency mismatch against allowedCurrencies
+  const allowed = Array.isArray(policy.allowedCurrencies)
+    ? (policy.allowedCurrencies as string[]).map((c) => c.toUpperCase())
+    : ["USD", "CAD", "EUR", "GBP"];
+
+  if (!allowed.includes(input.currency.toUpperCase())) {
+    return {
+      decision: "NEEDS_APPROVAL",
+      reason: `Currency '${input.currency}' is not among allowed currencies: ${allowed.join(", ")}`,
+      ruleTriggered: "CURRENCY_MISMATCH",
+    };
+  }
+
+  // 5. Amount exceeds max auto-send amount
+  const maxAutoAmount = parseFloat(policy.maxAutoInvoiceAmount?.toString() || "500.00");
+  if (input.amount > maxAutoAmount) {
+    return {
+      decision: "NEEDS_APPROVAL",
+      reason: `Invoice amount (${input.amount.toFixed(2)}) exceeds maximum auto-send threshold (${maxAutoAmount.toFixed(2)}).`,
+      ruleTriggered: "AMOUNT_EXCEEDS_AUTO_INVOICE_LIMIT",
+    };
+  }
+
+  // 6. Within limit and allowed currency -> AUTO
+  return {
+    decision: "AUTO",
+    reason: `Invoice amount ${input.amount.toFixed(2)} ${input.currency} is within auto-send threshold ${maxAutoAmount.toFixed(2)} and currency is allowed.`,
+    ruleTriggered: "AUTO_INVOICE_ALLOWED",
+  };
+}
+
