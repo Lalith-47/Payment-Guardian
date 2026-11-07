@@ -10,7 +10,7 @@
 - [x] **C2 no mock on retry**: Assert executor-initiated retries never send mockCode or PayPal-Mock-Response header (tested in `tests/executor-mock-guard.test.ts`, commit `beffb63`).
 - [x] **C3 retry bound**: Repeated declines capped at policy max -> escalate to approval; unique idempotency key; no duplicate captures (commit `aca1a6d`).
 - [x] **C4 policy-claim grounding**: Model prompt receives no policy details; validator downgrades reasoning claiming external policies/facts; UI marks "AI note (unverified)" (commit `e7bd782`).
-- [ ] **C5 consistent drafts**: Retry draft is a courtesy notice ("we are retrying your payment"), not customer instruction; documented in `docs/progress.md`.
+- [x] **C5 consistent drafts**: Retry draft is a courtesy notice ("we are retrying your payment"), not customer instruction; documented in `docs/progress.md` (commit `007830e`).
 - [x] **forged-cookie test on every route**: Forged `better-auth.session_token=forged` returns 401 across all protected routes under `src/app/api`; session validated against DB/store (commit `c0db4dc`).
 - [ ] **clean Docker rebuild + green Playwright**: `docker compose build --no-cache web worker && docker compose up -d`, unmodified stack with fake LLM worker overrides, Playwright e2e green.
 - [ ] **owner seed from env**: Verified credentials read from env with no hardcoded password in repo, tests, or git history.
