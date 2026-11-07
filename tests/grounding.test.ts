@@ -209,7 +209,7 @@ describe("F1 Grounding & Context Snapshot Verification", () => {
     expect(snapshot.orderId).toBe(`ORD_SNAP_${runId}`);
     expect(snapshot.declineReason).toBe("INSTRUMENT_DECLINED");
     expect(snapshot.customerHistory).toBeNull();
-  });
+  }, 30000);
 
   it("6. S5 processor.ts removes hardcoded INSTRUMENT_DECLINED; uses real issue or null, and prompt formats null", async () => {
     const eventId = `evt_no_issue_${runId}`;

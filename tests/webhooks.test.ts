@@ -28,6 +28,8 @@ describe("Webhook Processing: Unknown Event Types (* subscription)", () => {
     const verifySpy = vi.spyOn(verifier, "verifyPayPalWebhookSignature").mockResolvedValue({
       valid: true,
       status: "VALID",
+      signingString: "mock_signing_string",
+      crc: 12345678,
     });
 
     const req = new Request("http://localhost:3000/api/webhooks/paypal", {
