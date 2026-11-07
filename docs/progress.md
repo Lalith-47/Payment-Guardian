@@ -249,3 +249,18 @@
   }
 ]
 ```
+
+
+---
+
+## Step 1: Safe Checkpoint & Repo Hygiene Verification
+- **Session Timestamp**: 2026-11-07T10:57:30+05:30
+- **Part 0 Hygiene Commit**: `23b6153` (`chore(repo): repo hygiene - move specs to docs/, update .gitignore and .dockerignore, allow scripts tracking`)
+- **M2 WIP Commit**: `649fe54` (`wip(m2): dashboard screens, APIs, migrations, e2e scaffolding (unverified)`)
+- **Untracked / Modified Files**: Clean working directory (`git status --short` is completely empty).
+- **Scripts Credential Audit**: Verified all files under `scripts/` (`create-sandbox-order.ts`, `verify-all-models-fail.ts`, `verify-live-decline-flow.ts`, `verify-webhooks.ts`). Confirmed zero hardcoded secrets or API keys.
+- **Gitleaks Scan**: Pre-commit diff scan reported `no leaks found`.
+- **Test Integrity Audit**: Verified 6 test files (`tests/api-auth.test.ts`, `tests/capture-abuse.test.ts`, `tests/capture-route-security.test.ts`, `tests/executor-mock-guard.test.ts`, `tests/grounding.test.ts`, `tests/state-machine.test.ts`). Zero `.skip`, `.only`, or `.fixme`. Zero removed or loosened assertions.
+- **Screenshots Directory Size**: 548 KB (well within the 5 MB limit).
+- **Environment Base URL**: `src/config/env.ts` defaults `OPENROUTER_BASE_URL` to `"https://openrouter.ai/api/v1"`.
+- **Checklist**: Initialized `docs/checklist.md`.
