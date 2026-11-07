@@ -232,12 +232,18 @@ describe("Webhook Processing: Unknown Event Types (* subscription)", () => {
     getOrderSpy.mockRestore();
   });
 
-  it("filters out e2e test webhooks (E2E- invoice or e2e_ custom_id) on demo stack before recording", async () => {
+  it("signature verification runs BEFORE any filtering; invalid signature rejected even if e2e-tagged", async () => {
     const prevRole = process.env.STACK_ROLE;
     process.env.STACK_ROLE = "demo";
 
-    const e2eTransmissionId = `trans_e2e_${Date.now()}`;
-    const e2eEventId = `WH-E2E-${Date.now()}`;
+    const verifySpy = vi.spyOn(verifier, "verifyPayPalWebhookSignature").mockResolvedValueOnce({
+      valid: false,
+      status: "INVALID",
+      error: "Signature verification failed",
+    });
+
+    const e2eTransmissionId = `trans_sig_first_${Date.now()}`;
+    const e2eEventId = `WH-E2E-SIG-${Date.now()}`;
     const payload = {
       id: e2eEventId,
       event_type: "INVOICING.INVOICE.PAID",
@@ -255,7 +261,57 @@ describe("Webhook Processing: Unknown Event Types (* subscription)", () => {
         "paypal-transmission-time": new Date().toISOString(),
         "paypal-cert-url": "https://api.sandbox.paypal.com/v1/notifications/certs/CERT-123",
         "paypal-auth-algo": "SHA256withRSA",
-        "paypal-transmission-sig": "mock_sig",
+        "paypal-transmission-sig": "mock_invalid_sig",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toBe("Signature verification failed");
+
+    // Stored as rejected delivery in webhook_deliveries with signature_status = 'INVALID'
+    const checkDelivery = await pool.query(
+      "SELECT * FROM webhook_deliveries WHERE transmission_id = $1",
+      [e2eTransmissionId]
+    );
+    expect(checkDelivery.rows.length).toBe(1);
+    expect(checkDelivery.rows[0].signature_status).toBe("INVALID");
+
+    verifySpy.mockRestore();
+    process.env.STACK_ROLE = prevRole;
+  });
+
+  it("filters out e2e test webhooks on demo stack after valid signature and stores skipped delivery with reason", async () => {
+    const prevRole = process.env.STACK_ROLE;
+    process.env.STACK_ROLE = "demo";
+
+    const verifySpy = vi.spyOn(verifier, "verifyPayPalWebhookSignature").mockResolvedValueOnce({
+      valid: true,
+      status: "VALID",
+    });
+
+    const e2eTransmissionId = `trans_e2e_valid_${Date.now()}`;
+    const e2eEventId = `WH-E2E-VALID-${Date.now()}`;
+    const payload = {
+      id: e2eEventId,
+      event_type: "INVOICING.INVOICE.PAID",
+      resource: {
+        id: "INV2-TEST-E2E",
+        detail: { invoice_number: "E2E-INV-999" },
+      },
+    };
+
+    const req = new Request("http://localhost:3000/api/webhooks/paypal", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "paypal-transmission-id": e2eTransmissionId,
+        "paypal-transmission-time": new Date().toISOString(),
+        "paypal-cert-url": "https://api.sandbox.paypal.com/v1/notifications/certs/CERT-123",
+        "paypal-auth-algo": "SHA256withRSA",
+        "paypal-transmission-sig": "mock_valid_sig",
       },
       body: JSON.stringify(payload),
     });
@@ -263,15 +319,70 @@ describe("Webhook Processing: Unknown Event Types (* subscription)", () => {
     const res = await POST(req as any);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.status).toBe("IGNORED_E2E");
+    expect(body.status).toBe("SKIPPED_E2E");
+    expect(body.reason).toContain("SKIPPED_E2E");
 
-    // Assert it was NOT recorded in webhook_deliveries
+    // Stored in webhook_deliveries with reason and signature_status = 'VALID'
     const checkDelivery = await pool.query(
       "SELECT * FROM webhook_deliveries WHERE transmission_id = $1",
       [e2eTransmissionId]
     );
-    expect(checkDelivery.rows.length).toBe(0);
+    expect(checkDelivery.rows.length).toBe(1);
+    expect(checkDelivery.rows[0].signature_status).toBe("VALID");
+    expect(checkDelivery.rows[0].summary).toContain("SKIPPED_E2E");
 
+    verifySpy.mockRestore();
+    process.env.STACK_ROLE = prevRole;
+  });
+
+  it("never rejects or skips untagged real events on demo stack", async () => {
+    const prevRole = process.env.STACK_ROLE;
+    process.env.STACK_ROLE = "demo";
+
+    const verifySpy = vi.spyOn(verifier, "verifyPayPalWebhookSignature").mockResolvedValueOnce({
+      valid: true,
+      status: "VALID",
+    });
+
+    const realTransmissionId = `trans_real_${Date.now()}`;
+    const realEventId = `WH-REAL-${Date.now()}`;
+    const payload = {
+      id: realEventId,
+      event_type: "PAYMENT.CAPTURE.COMPLETED",
+      summary: "Payment completed for live order",
+      resource: {
+        id: "CAP-REAL-123",
+        amount: { value: "50.00", currency_code: "USD" },
+      },
+    };
+
+    const req = new Request("http://localhost:3000/api/webhooks/paypal", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "paypal-transmission-id": realTransmissionId,
+        "paypal-transmission-time": new Date().toISOString(),
+        "paypal-cert-url": "https://api.sandbox.paypal.com/v1/notifications/certs/CERT-123",
+        "paypal-auth-algo": "SHA256withRSA",
+        "paypal-transmission-sig": "mock_valid_sig",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("RECEIVED");
+
+    const checkDelivery = await pool.query(
+      "SELECT * FROM webhook_deliveries WHERE transmission_id = $1",
+      [realTransmissionId]
+    );
+    expect(checkDelivery.rows.length).toBe(1);
+    expect(checkDelivery.rows[0].signature_status).toBe("VALID");
+    expect(checkDelivery.rows[0].summary).toBe("Payment completed for live order");
+
+    verifySpy.mockRestore();
     process.env.STACK_ROLE = prevRole;
   });
 });

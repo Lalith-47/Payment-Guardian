@@ -197,7 +197,7 @@ export class PayPalClient {
     cancelUrl?: string;
     requestId?: string;
   }): Promise<{ id: string; status: string; approveLink: string | null; raw: Record<string, unknown> }> {
-    const isE2E = process.env.STACK_ROLE === "e2e" || env.STACK_ROLE === "e2e";
+    const isE2E = (process.env.STACK_ROLE === "e2e" || env.STACK_ROLE === "e2e") && process.env.STACK_ROLE !== "demo";
     const requestId = params.requestId || crypto.randomUUID();
     const endpoint = `${this.baseUrl}/v2/checkout/orders`;
 
@@ -387,7 +387,7 @@ export class PayPalClient {
     defaultDueDays?: number;
     paymentTerm?: { term_type: string; due_date?: string };
   }): Promise<{ id: string; invoiceNumber: string; status: string; raw: Record<string, unknown> }> {
-    const isE2E = process.env.STACK_ROLE === "e2e" || env.STACK_ROLE === "e2e";
+    const isE2E = (process.env.STACK_ROLE === "e2e" || env.STACK_ROLE === "e2e") && process.env.STACK_ROLE !== "demo";
     const requestId = params.requestId || crypto.randomUUID();
     const rawNumber = await this.generateNextInvoiceNumber();
     const invoiceNumber = isE2E ? `E2E-${rawNumber}` : rawNumber;

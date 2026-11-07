@@ -34,20 +34,6 @@ export async function POST(req: NextRequest) {
   const eventId = eventPayload.id || `unknown_${Date.now()}`;
   const eventType = eventPayload.event_type || "UNKNOWN";
 
-  // Stack isolation: if running on demo stack, filter out any webhook belonging to the E2E test stack
-  const isDemo = (process.env.STACK_ROLE || env.STACK_ROLE || "demo") === "demo";
-  const resource = (eventPayload.resource || {}) as Record<string, any>;
-  const detail = resource.detail as Record<string, any> | undefined;
-  const invoiceNum = (detail?.invoice_number as string) || (resource.invoice_number as string) || "";
-  const customId = (resource.custom_id as string) || "";
-  const supplementaryData = resource.supplementary_data as Record<string, any> | undefined;
-  const relatedCustomId = (supplementaryData?.related_ids?.custom_id as string) || "";
-
-  if (isDemo && (invoiceNum.startsWith("E2E-") || customId.startsWith("e2e_") || relatedCustomId.startsWith("e2e_"))) {
-    log.info({ transmissionId, eventId, eventType, invoiceNum, customId }, "Ignoring E2E stack webhook on demo endpoint to preserve demo stack isolation");
-    return NextResponse.json({ status: "IGNORED_E2E", transmissionId, eventId }, { status: 200 });
-  }
-
   // 1. Redis Deduplication Check
   const dedupKey = `rg:wh_dedup:${transmissionId}:${eventId}`;
   const isRedisDup = await redis.get(dedupKey);
@@ -58,7 +44,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "DEDUPED", transmissionId, eventId }, { status: 200 });
   }
 
-  // 2. Local Cryptographic Signature Verification
+  // 2. Local Cryptographic Signature Verification MUST run BEFORE any filtering
   const webhookId = env.PAYPAL_WEBHOOK_ID || "MOCK_WEBHOOK_ID";
   const verification = await verifyPayPalWebhookSignature({
     transmissionId,
@@ -70,13 +56,32 @@ export async function POST(req: NextRequest) {
     rawBody,
   });
 
-  // 3. Record in webhook_deliveries table
+  // Check if resource carries an E2E test stack tag
+  const isDemo = (process.env.STACK_ROLE || env.STACK_ROLE || "demo") === "demo";
+  const resource = (eventPayload.resource || {}) as Record<string, any>;
+  const detail = resource.detail as Record<string, any> | undefined;
+  const invoiceNum = (detail?.invoice_number as string) || (resource.invoice_number as string) || "";
+  const customId = (resource.custom_id as string) || "";
+  const supplementaryData = resource.supplementary_data as Record<string, any> | undefined;
+  const relatedCustomId = (supplementaryData?.related_ids?.custom_id as string) || "";
+
+  const isE2ETagged =
+    invoiceNum.startsWith("E2E-") ||
+    customId.startsWith("e2e_") ||
+    relatedCustomId.startsWith("e2e_");
+
+  const skipReason =
+    isDemo && isE2ETagged
+      ? "SKIPPED_E2E: Object carries e2e tag, filtered on demo stack"
+      : null;
+
+  // 3. Record in webhook_deliveries table (records both valid and rejected/skipped deliveries with reason)
   try {
     await recordWebhookDelivery({
       transmissionId,
       eventId,
       eventType,
-      summary: eventPayload.summary || null,
+      summary: skipReason || eventPayload.summary || null,
       resourceType: eventPayload.resource_type || null,
       rawBody,
       headers: {
@@ -84,6 +89,7 @@ export async function POST(req: NextRequest) {
         "paypal-transmission-time": transmissionTime,
         "paypal-cert-url": certUrl,
         "paypal-auth-algo": authAlgo,
+        ...(skipReason ? { "x-rg-skip-reason": skipReason } : {}),
       },
       signatureStatus: verification.status,
     });
@@ -120,7 +126,19 @@ export async function POST(req: NextRequest) {
   // Set Redis Deduplication TTL (24 hours)
   await redis.set(dedupKey, "1", "EX", 60 * 60 * 24);
 
-  // 4. Enqueue to BullMQ for asynchronous processing
+  // 4. Filtering: only skip BullMQ processing for objects carrying the e2e tag; never reject untagged real events
+  if (skipReason) {
+    log.info(
+      { transmissionId, eventId, eventType, invoiceNum, customId },
+      "Skipping BullMQ enqueue for E2E tagged webhook on demo stack"
+    );
+    return NextResponse.json(
+      { status: "SKIPPED_E2E", reason: skipReason, transmissionId, eventId },
+      { status: 200 }
+    );
+  }
+
+  // 5. Enqueue untagged verified webhook to BullMQ for asynchronous processing
   await eventsQueue.add(eventType, {
     eventId,
     type: eventType,

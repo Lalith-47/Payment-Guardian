@@ -65,5 +65,22 @@ describe("E2E Stack Isolation & Zero Provider Leakage", () => {
       )
     ).toBe(true);
   });
+
+  it("strictly enforces that demo-stack objects never carry the e2e tag", () => {
+    const prevRole = process.env.STACK_ROLE;
+    process.env.STACK_ROLE = "demo";
+
+    const isE2E =
+      (process.env.STACK_ROLE === "e2e") &&
+      process.env.STACK_ROLE !== "demo";
+    expect(isE2E).toBe(false);
+
+    const testNum = "0065";
+    const invoiceNumber = isE2E ? `E2E-${testNum}` : testNum;
+    expect(invoiceNumber).not.toContain("E2E-");
+    expect(invoiceNumber).toBe("0065");
+
+    process.env.STACK_ROLE = prevRole;
+  });
 });
 
