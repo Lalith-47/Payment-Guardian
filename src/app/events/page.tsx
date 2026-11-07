@@ -245,10 +245,10 @@ function EventsContent() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <ListOrdered className="h-5 w-5 text-blue-400" />
+              <ListOrdered className="h-5 w-5 text-info" />
               <span>Payment Recovery Events</span>
             </h1>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-muted">
               Interactive triage grid showing end-to-end event resolution from ingest to automated execution.
             </p>
           </div>
