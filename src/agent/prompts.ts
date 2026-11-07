@@ -35,7 +35,7 @@ The output JSON must strictly follow this schema:
   "amount": number | null,
   "currency": string | null,
   "message": "Polite, clear, and professional customer-facing explanation or next step",
-  "confidence": number between 0.0 and 1.0,
+  "confidence": number between 0.0 and 1.0 (for clear soft declines with 0 retries, standard confidence is >= 0.85),
   "reasoning": "Short internal audit explanation (1-2 sentences) strictly grounded in provided context without invented history"
 }`;
 
