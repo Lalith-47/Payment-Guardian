@@ -81,5 +81,43 @@ describe("S1 Architecture Audit: API Route Authentication Enforcement", () => {
     expect(isAllowlistedPath("/api/events")).toBe(false);
     expect(isAllowlistedPath("/api/approvals")).toBe(false);
   });
+
+  it("forged better-auth.session_token=forged cookie gets 401 on every protected route (DB session validation)", async () => {
+    const apiDir = path.resolve(process.cwd(), "src/app/api");
+    const allRoutes = findApiRoutes(apiDir);
+
+    for (const file of allRoutes) {
+      const relPath = path.normalize(path.relative(process.cwd(), file));
+      if (allowlistedRoutes.has(relPath)) {
+        continue;
+      }
+
+      // Dynamically import the route handler
+      const mod = await import(path.resolve(file));
+      const methods = ["GET", "POST", "PUT", "PATCH", "DELETE"];
+
+      for (const method of methods) {
+        if (typeof mod[method] === "function") {
+          const forgedReq = new Request(`http://localhost:3000/${relPath.replace("src/app/", "").replace("/route.ts", "")}`, {
+            method,
+            headers: {
+              "Content-Type": "application/json",
+              cookie: "better-auth.session_token=forged",
+            },
+            body: method !== "GET" ? JSON.stringify({ test: "forged" }) : undefined,
+          });
+
+          // Some route handlers take a second context argument (e.g. params: Promise<{ id: string }>)
+          const res = await mod[method](forgedReq, {
+            params: Promise.resolve({ id: "test_id", token: "test_token" }),
+          });
+
+          expect(res.status, `Route ${relPath} [${method}] must return 401 for forged session cookie`).toBe(401);
+          const body = await res.json();
+          expect(body.error).toMatch(/Unauthorized/i);
+        }
+      }
+    }
+  });
 });
 
