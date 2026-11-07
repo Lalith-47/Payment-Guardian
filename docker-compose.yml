@@ -50,6 +50,9 @@ services:
       - APP_URL=${APP_URL}
     ports:
       - "3000:3000"
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     depends_on:
       db:
         condition: service_healthy
@@ -78,6 +81,9 @@ services:
       - REDIS_URL=redis://redis:6379
       - PAYPAL_WEBHOOK_ID=${PAYPAL_WEBHOOK_ID}
       - APP_URL=${APP_URL}
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     depends_on:
       db:
         condition: service_healthy

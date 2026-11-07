@@ -322,7 +322,9 @@ function EventsContent() {
                       Ingested: <span className="text-board-type">{new Date(detail.event.createdAt).toLocaleString()}</span>
                     </p>
                     {detail.event.errorMessage && (
-                      <p className="text-error font-mono text-[11px] pt-1">Error: {detail.event.errorMessage}</p>
+                      <p className="text-error text-[11px] pt-1">
+                        Error: <span className="font-mono">{detail.event.errorMessage}</span>
+                      </p>
                     )}
                   </div>
 
@@ -411,7 +413,9 @@ function EventsContent() {
                                 {act.status}
                               </span>
                             </div>
-                            <p className="font-mono text-[11px] text-muted truncate">Idempotency: {act.idempotencyKey}</p>
+                            <p className="text-[11px] text-muted truncate">
+                              Idempotency: <span className="font-mono">{act.idempotencyKey}</span>
+                            </p>
                             <p className="text-muted">
                               {act.paypalMethod} {act.paypalEndpoint} ({act.statusCode || "—"})
                             </p>
