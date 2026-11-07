@@ -1,12 +1,9 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
+import { resolveAndGuardTestDatabaseUrl } from "./src/lib/db-guard.ts";
 
-// Isolate tests to test database
-process.env.DATABASE_URL =
-  process.env.TEST_DATABASE_URL ||
-  (process.env.DATABASE_URL
-    ? process.env.DATABASE_URL.replace(/\/revenue_guardian(?:\?|$)/, "/revenue_guardian_test$1")
-    : "postgresql://postgres:postgres@localhost:5433/revenue_guardian_test");
+// Parse DATABASE_URL with new URL(), enforce _test suffix, refuse to start otherwise, and print redacted URL
+process.env.DATABASE_URL = resolveAndGuardTestDatabaseUrl();
 (process.env as Record<string, string | undefined>).NODE_ENV = "test";
 
 export default defineConfig({
