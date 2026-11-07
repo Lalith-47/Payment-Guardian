@@ -134,10 +134,18 @@ export async function GET() {
   // 6. LLM Budget Check (Local Counter + Provider Data)
   const llmUsage = await getLlmDailyUsage();
 
+  let localRequestCount = 0;
+  try {
+    const res = await pool.query("SELECT count(*)::int as count FROM llm_requests");
+    localRequestCount = res.rows[0]?.count ?? 0;
+  } catch {
+    localRequestCount = llmUsage.used;
+  }
+
   const providerRequests = (providerUsage as { freeModelDailyRequests?: { used?: number } } | null)
     ?.freeModelDailyRequests;
   const providerUsed = typeof providerRequests?.used === "number" ? providerRequests.used : null;
-  const mismatch = providerUsed !== null ? providerUsed !== llmUsage.used : false;
+  const mismatch = providerUsed !== null ? providerUsed !== localRequestCount : false;
 
   const responseBody = {
     status: isReady ? "READY" : "NOT_READY",
@@ -152,6 +160,8 @@ export async function GET() {
         exhaustedByCap: llmUsage.exhaustedByCap,
         reprobeInSeconds: llmUsage.reprobeInSeconds ?? null,
       },
+      localCount: localRequestCount,
+      providerCount: providerUsed,
       provider: providerUsage,
       mismatch,
       // Backward-compatible top-level fields
