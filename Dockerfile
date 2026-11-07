@@ -40,6 +40,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/tests ./tests
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN chown -R nextjs:nodejs /app

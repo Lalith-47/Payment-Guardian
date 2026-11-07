@@ -13,6 +13,26 @@ export function createFakeLlmServer(config: FakeLlmServerConfig = {}) {
   const server = http.createServer((req, res) => {
     const url = req.url || "";
 
+    if (req.method === "POST" && url === "/mode") {
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk;
+      });
+      req.on("end", () => {
+        try {
+          const parsed = JSON.parse(body);
+          currentMode = parsed.mode || "auto_retry";
+          customProposal = parsed.custom;
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ status: "OK", mode: currentMode }));
+        } catch {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+        }
+      });
+      return;
+    }
+
     if (req.method === "POST" && (url.includes("/chat/completions") || url.endsWith("/completions"))) {
       let body = "";
       req.on("data", (chunk) => {
@@ -37,7 +57,7 @@ export function createFakeLlmServer(config: FakeLlmServerConfig = {}) {
             amount: 75.0,
             currency: "USD",
             confidence: 0.95,
-            reasoning: "Substantial charge decline requires owner review per store policy.",
+            reasoning: "Substantial charge decline of 75.00 for order with instrument failure.",
             message: "We are processing a refund for your order.",
           };
         } else if (currentMode === "custom" && customProposal) {
@@ -76,10 +96,11 @@ export function createFakeLlmServer(config: FakeLlmServerConfig = {}) {
     }
 
     // Health probe / key probe
-    if (url.includes("/key") || url.includes("/models")) {
+    if (url.includes("/key") || url.includes("/models") || url.includes("/health") || url.includes("/ready")) {
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(
         JSON.stringify({
+          status: "OK",
           data: {
             limit: 100,
             usage: 2,
@@ -96,12 +117,30 @@ export function createFakeLlmServer(config: FakeLlmServerConfig = {}) {
 
   return {
     server,
-    setMode: (mode: FakeLlmServerConfig["mode"], custom?: Record<string, unknown>) => {
+    setMode: async (mode: FakeLlmServerConfig["mode"], custom?: Record<string, unknown>) => {
       currentMode = mode || "auto_retry";
       customProposal = custom;
+      const fakeUrl = process.env.FAKE_LLM_URL || "http://localhost:4040";
+      try {
+        await fetch(`${fakeUrl}/mode`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode, custom }),
+        }).catch(() => {});
+      } catch {
+        // ignore
+      }
     },
     listen: (port = config.port || 4040): Promise<number> => {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
+        server.on("error", (err: unknown) => {
+          if ((err as { code?: string })?.code === "EADDRINUSE") {
+            // Already running externally (e.g. in docker-compose.e2e.yml)
+            resolve(port);
+          } else {
+            reject(err);
+          }
+        });
         server.listen(port, () => {
           const addr = server.address();
           const actualPort = typeof addr === "object" && addr ? addr.port : port;
@@ -111,6 +150,10 @@ export function createFakeLlmServer(config: FakeLlmServerConfig = {}) {
     },
     close: (): Promise<void> => {
       return new Promise((resolve) => {
+        if (!server.listening) {
+          resolve();
+          return;
+        }
         server.close(() => resolve());
       });
     },
@@ -118,9 +161,10 @@ export function createFakeLlmServer(config: FakeLlmServerConfig = {}) {
 }
 
 if (process.argv[1]?.endsWith("fake-llm-server.ts")) {
-  const server = createFakeLlmServer();
-  server.listen(4040).then((port) => {
-    console.log(`Fake OpenAI-compatible LLM server running on http://localhost:${port}`);
+  const port = parseInt(process.env.PORT || "4040", 10);
+  const server = createFakeLlmServer({ port });
+  server.listen(port).then((p) => {
+    console.log(`Fake OpenAI-compatible LLM server running on port ${p}`);
   });
 }
 

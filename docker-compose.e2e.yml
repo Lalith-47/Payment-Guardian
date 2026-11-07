@@ -1,0 +1,113 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rg-e2e-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: revenue_guardian_test
+    ports:
+      - "5435:5432"
+    volumes:
+      - rg_e2e_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d revenue_guardian_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  redis:
+    image: redis:7-alpine
+    container_name: rg-e2e-redis
+    restart: always
+    ports:
+      - "6380:6379"
+    volumes:
+      - rg_e2e_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  fake-llm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rg-e2e-fake-llm
+    restart: always
+    command: ["pnpm", "exec", "tsx", "tests/fake-llm-server.ts"]
+    environment:
+      - PORT=4040
+      - NODE_ENV=development
+    ports:
+      - "4040:4040"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:4040/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rg-e2e-web
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - RUN_MIGRATIONS=true
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/revenue_guardian_test
+      - REDIS_URL=redis://redis:6379/1
+      - LLM_BASE_URL=http://fake-llm:4040/v1
+      - APP_URL=http://localhost:3001
+    ports:
+      - "3001:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      fake-llm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rg-e2e-worker
+    restart: always
+    command: ["pnpm", "worker"]
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - RUN_MIGRATIONS=false
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/revenue_guardian_test
+      - REDIS_URL=redis://redis:6379/1
+      - LLM_BASE_URL=http://fake-llm:4040/v1
+      - APP_URL=http://localhost:3001
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      fake-llm:
+        condition: service_healthy
+
+volumes:
+  rg_e2e_postgres_data:
+  rg_e2e_redis_data:
+
