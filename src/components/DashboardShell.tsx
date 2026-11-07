@@ -89,15 +89,24 @@ export function DashboardShell({
     { href: "/audit", label: "Audit Log", icon: FileText },
   ];
 
-  const pgOk = readyz?.checks?.postgres ?? false;
-  const redisOk = readyz?.checks?.redis ?? false;
-  const ppOk = readyz?.checks?.paypal?.authReachable ?? false;
+  const checksAny = readyz?.checks as Record<string, any> | undefined;
+  const pgOk =
+    checksAny?.postgres === true ||
+    checksAny?.postgres?.status === "UP";
+  const redisOk =
+    checksAny?.redis === true ||
+    checksAny?.redis?.status === "UP";
+  const ppOk =
+    checksAny?.paypal?.authReachable === true ||
+    checksAny?.paypalAuth?.status === "UP";
   const modelsOk =
-    (readyz?.checks?.models?.primaryReachable || readyz?.checks?.models?.fallbackReachable) ??
-    false;
+    checksAny?.models?.primaryReachable === true ||
+    checksAny?.models?.fallbackReachable === true ||
+    checksAny?.modelReachability?.status === "UP";
+  const llmAny = (readyz as Record<string, any>)?.llm;
   const quota = readyz?.checks?.llmQuota;
-  const budgetUsed = quota?.budgetUsedToday ?? 0;
-  const dailyBudget = quota?.dailyBudget ?? 50;
+  const budgetUsed = llmAny?.providerCount ?? llmAny?.local?.usedToday ?? quota?.budgetUsedToday ?? 0;
+  const dailyBudget = llmAny?.local?.dailyBudget ?? quota?.dailyBudget ?? 50;
   const quotaPct = Math.min(100, Math.round((budgetUsed / Math.max(1, dailyBudget)) * 100));
 
   return (

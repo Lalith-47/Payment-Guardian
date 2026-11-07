@@ -57,12 +57,19 @@ export default function ApprovalsPage() {
     try {
       setLoading(true);
       const res = await fetch("/api/approvals");
+      if (res.status === 401) {
+        window.location.href = "/login?redirect=/approvals";
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setApprovals(data.approvals || []);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setStatusMsg({ type: "error", text: errData.error || "Failed to load approvals" });
       }
-    } catch {
-      // keep existing
+    } catch (err) {
+      setStatusMsg({ type: "error", text: (err as Error).message });
     } finally {
       setLoading(false);
     }
