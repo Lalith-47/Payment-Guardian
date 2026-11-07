@@ -51,15 +51,18 @@ export function evaluatePolicy(
     };
   }
 
-  // Fail closed rule: Ungrounded claims in reasoning (F1 Grounding)
+  // Fail closed rule: Ungrounded claims in reasoning (F1 Grounding & C4 Policy Grounding)
   if (
     proposal.reasoning.includes("[UNGROUNDED CLAIM") ||
     proposal.reasoning.includes("UNGROUNDED_CUSTOMER_HISTORY")
   ) {
+    const isPolicy = proposal.reasoning.includes("policy thresholds or limits") || proposal.reasoning.includes("policy rules");
     return {
       decision: "NEEDS_APPROVAL",
-      reason: "Proposal reasoning claims customer history that was not provided in the DB context object.",
-      ruleTriggered: "UNGROUNDED_CUSTOMER_HISTORY",
+      reason: isPolicy
+        ? "Proposal reasoning claims ungrounded policy limits or rules not provided in context."
+        : "Proposal reasoning claims customer history that was not provided in the DB context object.",
+      ruleTriggered: isPolicy ? "UNGROUNDED_POLICY_CLAIM" : "UNGROUNDED_CUSTOMER_HISTORY",
     };
   }
 

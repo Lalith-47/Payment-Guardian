@@ -95,7 +95,7 @@ describe("F1 Grounding & Context Snapshot Verification", () => {
     };
 
     const strictlyGroundedReasoning =
-      "Payment failed with INSTRUMENT_DECLINED. No customer history available. Re-attempt capture per retry policy.";
+      "Payment failed with INSTRUMENT_DECLINED. No customer history available. Re-attempt capture.";
 
     const result = validateGrounding(strictlyGroundedReasoning, contextWithoutHistory);
     expect(result.isGrounded).toBe(true);
@@ -184,7 +184,7 @@ describe("F1 Grounding & Context Snapshot Verification", () => {
         currency: "USD",
         message: "Please retry with valid card.",
         confidence: 0.85,
-        reasoning: "Payment instrument declined. Re-attempting per standard policy.",
+        reasoning: "Payment instrument declined. Re-attempting capture.",
       }),
     });
 
@@ -298,20 +298,92 @@ describe("F1 Grounding & Context Snapshot Verification", () => {
       customerHistory: null,
     };
 
-    // Case A: Model claims "auto-retry threshold"
-    const validation1 = validateGrounding("Order amount is within the auto-retry threshold of the store.", context);
+    // Case A: Model claims "threshold"
+    const validation1 = validateGrounding("Order amount is below the retry threshold.", context);
     expect(validation1.isGrounded).toBe(false);
-    expect(validation1.flaggedPhrases).toContain("auto-retry threshold");
+    expect(validation1.flaggedPhrases).toContain("threshold");
 
-    // Case B: Model claims "per store policy"
-    const validation2 = validateGrounding("Re-attempting capture per store policy limits.", context);
+    // Case B: Model claims "per policy"
+    const validation2 = validateGrounding("Re-attempting capture per policy.", context);
     expect(validation2.isGrounded).toBe(false);
-    expect(validation2.flaggedPhrases.length).toBeGreaterThan(0);
+    expect(validation2.flaggedPhrases).toContain("per policy");
 
-    // Case C: Pure grounded factual reasoning
-    const validation3 = validateGrounding("Payment instrument was declined. Customer note is not provided.", context);
-    expect(validation3.isGrounded).toBe(true);
-    expect(validation3.flaggedPhrases.length).toBe(0);
+    // Case C: Model claims "within limits"
+    const validation3 = validateGrounding("Capture amount is within limits.", context);
+    expect(validation3.isGrounded).toBe(false);
+    expect(validation3.flaggedPhrases).toContain("within limits");
+
+    // Case D: Model claims "allowed"
+    const validation4 = validateGrounding("A courtesy retry is allowed for this transaction.", context);
+    expect(validation4.isGrounded).toBe(false);
+    expect(validation4.flaggedPhrases.length).toBeGreaterThan(0);
+
+    // Case E: Model claims "policy allows"
+    const validation5 = validateGrounding("Store policy allows automatic re-attempt.", context);
+    expect(validation5.isGrounded).toBe(false);
+    expect(validation5.flaggedPhrases).toContain("policy allows");
+
+    // Case F: Pure grounded factual reasoning
+    const validation6 = validateGrounding("Payment instrument was declined. Customer note is not provided.", context);
+    expect(validation6.isGrounded).toBe(true);
+    expect(validation6.flaggedPhrases.length).toBe(0);
+  });
+
+  it("8. Policy Grounding in AgentService: automatically downgrades confidence to <= 0.40 and forces NEEDS_APPROVAL", async () => {
+    const eventId = `evt_policy_claim_${runId}`;
+
+    // Fake model caller that hallucinates policy rules and limits
+    const policyClaimCaller: ModelCallerFn = async () => ({
+      content: JSON.stringify({
+        action: "retry",
+        amount: null,
+        currency: "USD",
+        message: "Please retry your payment.",
+        confidence: 0.95,
+        reasoning: "Retrying payment per policy because the amount is within limits and allowed under threshold.",
+      }),
+    });
+
+    const service = new AgentService(policyClaimCaller);
+    const result = await service.evaluateEvent({
+      eventId,
+      eventType: "payment.capture_declined",
+      source: "sandbox_negative_testing",
+      orderId: "ORD_POL_1",
+      amount: 25.0,
+      currency: "USD",
+      retryCount: 0,
+      declineReason: "INSTRUMENT_DECLINED",
+      customerHistory: "1 successful past transaction",
+    });
+
+    expect(result.status).toBe("SUCCESS");
+    if (result.status === "SUCCESS") {
+      // Confidence downgraded from 0.95 to <= 0.40 due to ungrounded policy claims
+      expect(result.proposal.confidence).toBeLessThanOrEqual(0.40);
+      expect(result.proposal.reasoning).toContain("[UNGROUNDED CLAIM:");
+      expect(result.groundingValidation.isGrounded).toBe(false);
+
+      // Policy engine evaluation MUST fail-close to NEEDS_APPROVAL
+      const policyDecision = evaluatePolicy(
+        {
+          currency: "USD",
+          confidenceThreshold: "0.80",
+          autoRefundMaxAmount: "50.00",
+          autoRetryMaxAttempts: 3,
+          offerAlternativeMaxDiscountPct: 10,
+          requireApprovalForActions: [],
+          isActive: true,
+        },
+        result.proposal
+      );
+
+      expect(policyDecision.decision).toBe("NEEDS_APPROVAL");
+      expect(
+        policyDecision.ruleTriggered === "UNGROUNDED_POLICY_CLAIM" ||
+          policyDecision.ruleTriggered === "CONFIDENCE_BELOW_THRESHOLD"
+      ).toBe(true);
+    }
   });
 });
 

@@ -27,13 +27,14 @@ export function validateGrounding(
 
   // Check 1: External policy / threshold / limit / rule claims (model has no policy context)
   const forbiddenPolicyPatterns = [
-    /\b(auto-?retry|refund|approval|discount)\s+threshold\b/i,
-    /\bwithin\s+(the\s+)?(policy|store|system)\s+limits?\b/i,
-    /\bunder\s+(the\s+)?(policy|store|auto-?refund)\s+limits?\b/i,
-    /\bexceeds?\s+(the\s+)?(policy|store)\s+limits?\b/i,
-    /\bper\s+(the\s+)?(store|merchant|configured)\s+policy\b/i,
-    /\b(store|merchant|system)\s+policy\s+(allows|permits|requires|mandates)\b/i,
-    /\bpolicy\s+rule\s+(allows|permits|requires|triggered)\b/i,
+    /\bper\s+([a-z-]+\s+)?policy\b/i,
+    /\bwithin\s+([a-z-]+\s+)?limits?\b/i,
+    /\bunder\s+([a-z-]+\s+)?limits?\b/i,
+    /\bexceeds?\s+([a-z-]+\s+)?limits?\b/i,
+    /\bthresholds?\b/i,
+    /\b(is\s+)?allowed\b/i,
+    /\bpolicy\s+(allows?|permits?|requires?|mandates?)\b/i,
+    /\bpolicy\s+rules?\b/i,
   ];
 
   const flaggedPolicy: string[] = [];
