@@ -3,15 +3,15 @@ import { AgentProposalSchema, AgentContext } from "@/agent/schema";
 import { buildAgentPrompt, buildRepairPrompt } from "@/agent/prompts";
 import { AgentService, ModelCallerFn, isDailyQuotaError } from "@/agent/client";
 import { redis } from "@/lib/redis";
-import { checkClientRateLimit, getLlmDailyUsage } from "@/lib/llm-budget";
+import { checkClientRateLimit, getLlmDailyUsage, incrementLlmUsage } from "@/lib/llm-budget";
 
 describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
   beforeEach(async () => {
-    // Clear any test cache keys, usage counters, and exhaustion flag
-    await redis.del("rg:llm_daily_cap_exhausted");
-    const keys = await redis.keys("rg:llm_*");
-    if (keys.length > 0) {
-      await redis.del(...keys);
+    // Clear test namespace keys and exhaustion flag; never touch production counter
+    await redis.del("rg:test:llm_daily_cap_exhausted");
+    const testKeys = await redis.keys("rg:test:llm_*");
+    if (testKeys.length > 0) {
+      await redis.del(...testKeys);
     }
   });
 
@@ -266,8 +266,37 @@ describe("Agent Module & Prompt Defenses (Deliverable 5)", () => {
     await redis.del(key);
   });
 
+  it("11. LLM Counter Namespace: fake server, unit test, and non-provider traffic increments test namespace and preserves production counter", async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const prodKey = `rg:llm_usage:${today}`;
+    const testKey = `rg:test:llm_usage:${today}`;
+
+    // Seed production counter with known value (3 from real provider)
+    await redis.set(prodKey, "3");
+    await redis.del(testKey);
+
+    // Call incrementLlmUsage in unit test context (isRealProvider() is false)
+    const { used, allowed } = await incrementLlmUsage();
+    expect(allowed).toBe(true);
+    expect(used).toBe(1);
+
+    // Production counter must be untouched at 3
+    const prodVal = await redis.get(prodKey);
+    expect(prodVal).toBe("3");
+
+    // Test counter must be 1
+    const testVal = await redis.get(testKey);
+    expect(testVal).toBe("1");
+
+    // Explicit scope calls
+    await incrementLlmUsage("test");
+    const testVal2 = await redis.get(testKey);
+    expect(testVal2).toBe("2");
+    expect(await redis.get(prodKey)).toBe("3");
+  });
+
   afterAll(async () => {
-    await redis.del("rg:llm_daily_cap_exhausted");
+    await redis.del("rg:test:llm_daily_cap_exhausted");
   });
 });
 
