@@ -308,7 +308,7 @@ export default function ApprovalsPage() {
                     <div className="rounded-lg border border-amber-800/60 bg-amber-950/30 p-2.5 text-xs text-amber-300 flex items-center space-x-2">
                       <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
                       <span>
-                        Policy Trigger: <strong className="font-mono">{appr.triggerRule}</strong>
+                        Policy Engine Reason (Authoritative): <strong className="font-mono">{appr.triggerRule}</strong>
                       </span>
                     </div>
                   )}
@@ -327,7 +327,7 @@ export default function ApprovalsPage() {
 
                       <div className="md:col-span-2 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">AI Reasoning</span>
+                          <span className="text-slate-400">AI note (unverified)</span>
                           <span className="text-emerald-400 font-medium">
                             Confidence: {Math.round(parseFloat(appr.proposal.confidence) * 100)}%
                           </span>

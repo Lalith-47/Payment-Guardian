@@ -23,6 +23,27 @@ export function validateGrounding(
   reasoning: string,
   context: AgentContext
 ): GroundingValidation {
+  const flaggedPhrases: string[] = [];
+
+  // Check 1: External policy / threshold / limit / rule claims (model has no policy context)
+  const forbiddenPolicyPatterns = [
+    /\b(auto-?retry|refund|approval|discount)\s+threshold\b/i,
+    /\bwithin\s+(the\s+)?(policy|store|system)\s+limits?\b/i,
+    /\bunder\s+(the\s+)?(policy|store|auto-?refund)\s+limits?\b/i,
+    /\bexceeds?\s+(the\s+)?(policy|store)\s+limits?\b/i,
+    /\bper\s+(the\s+)?(store|merchant|configured)\s+policy\b/i,
+    /\b(store|merchant|system)\s+policy\s+(allows|permits|requires|mandates)\b/i,
+    /\bpolicy\s+rule\s+(allows|permits|requires|triggered)\b/i,
+  ];
+
+  for (const pattern of forbiddenPolicyPatterns) {
+    const match = reasoning.match(pattern);
+    if (match) {
+      flaggedPhrases.push(match[0]);
+    }
+  }
+
+  // Check 2: Customer history claims without DB context
   const hasCustomerHistory = Boolean(
     context.customerHistory &&
       context.customerHistory.trim().length > 0 &&
@@ -45,21 +66,20 @@ export function validateGrounding(
       /\btrusted (client|customer)\b/i,
     ];
 
-    const flaggedPhrases: string[] = [];
     for (const pattern of forbiddenHistoryPatterns) {
       const match = reasoning.match(pattern);
       if (match) {
         flaggedPhrases.push(match[0]);
       }
     }
+  }
 
-    if (flaggedPhrases.length > 0) {
-      return {
-        isGrounded: false,
-        flaggedPhrases,
-        reason: `Reasoning claims customer history (${flaggedPhrases.join(", ")}) that was not provided in the DB context object`,
-      };
-    }
+  if (flaggedPhrases.length > 0) {
+    return {
+      isGrounded: false,
+      flaggedPhrases,
+      reason: `Reasoning claims policy thresholds, limits, rules, or customer history (${flaggedPhrases.join(", ")}) that are not in the structured context`,
+    };
   }
 
   return { isGrounded: true, flaggedPhrases: [] };

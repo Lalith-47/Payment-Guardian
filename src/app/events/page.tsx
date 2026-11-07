@@ -363,7 +363,7 @@ function EventsContent() {
                               <span className="text-slate-300 text-[11px] font-mono ml-1.5">{p.modelUsed}</span>
                             </div>
                             <div>
-                              <span className="text-slate-400">Reasoning:</span>
+                              <span className="text-slate-400">AI note (unverified):</span>
                               <p className="text-slate-300 mt-0.5 italic">{p.reasoning}</p>
                             </div>
                             {p.message && (

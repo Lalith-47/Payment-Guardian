@@ -280,5 +280,38 @@ describe("F1 Grounding & Context Snapshot Verification", () => {
 
     evaluateSpy.mockRestore();
   });
+
+  it("7. C4 Policy Grounding: validator downgrades proposals claiming external thresholds, limits, or rules not in context", () => {
+    const context: AgentContextSnapshot = {
+      eventId: "evt_c4_test",
+      eventType: "payment.capture_declined",
+      source: "sandbox_negative_testing",
+      orderId: "ORD_C4",
+      invoiceId: null,
+      amount: 45.0,
+      currency: "USD",
+      retryCount: 0,
+      declineReason: "INSTRUMENT_DECLINED",
+      customerEmail: "user@example.com",
+      customerName: "Jane Doe",
+      customerNote: null,
+      customerHistory: null,
+    };
+
+    // Case A: Model claims "auto-retry threshold"
+    const validation1 = validateGrounding("Order amount is within the auto-retry threshold of the store.", context);
+    expect(validation1.isGrounded).toBe(false);
+    expect(validation1.flaggedPhrases).toContain("auto-retry threshold");
+
+    // Case B: Model claims "per store policy"
+    const validation2 = validateGrounding("Re-attempting capture per store policy limits.", context);
+    expect(validation2.isGrounded).toBe(false);
+    expect(validation2.flaggedPhrases.length).toBeGreaterThan(0);
+
+    // Case C: Pure grounded factual reasoning
+    const validation3 = validateGrounding("Payment instrument was declined. Customer note is not provided.", context);
+    expect(validation3.isGrounded).toBe(true);
+    expect(validation3.flaggedPhrases.length).toBe(0);
+  });
 });
 
