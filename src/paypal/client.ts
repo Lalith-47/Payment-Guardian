@@ -173,21 +173,25 @@ export class PayPalClient {
     cancelUrl?: string;
     requestId?: string;
   }): Promise<{ id: string; status: string; approveLink: string | null; raw: Record<string, unknown> }> {
+    const isE2E = process.env.STACK_ROLE === "e2e" || env.STACK_ROLE === "e2e";
     const requestId = params.requestId || crypto.randomUUID();
     const endpoint = `${this.baseUrl}/v2/checkout/orders`;
 
+    const purchaseUnit: Record<string, unknown> = {
+      reference_id: `rg_order_${Date.now()}`,
+      description: params.description || "Revenue Guardian Order",
+      amount: {
+        currency_code: params.currency,
+        value: params.amount,
+      },
+    };
+    if (isE2E) {
+      purchaseUnit.custom_id = `e2e_${Date.now()}`;
+    }
+
     const payload = {
       intent: "CAPTURE",
-      purchase_units: [
-        {
-          reference_id: `rg_order_${Date.now()}`,
-          description: params.description || "Revenue Guardian Order",
-          amount: {
-            currency_code: params.currency,
-            value: params.amount,
-          },
-        },
-      ],
+      purchase_units: [purchaseUnit],
       application_context: {
         brand_name: "Revenue Guardian",
         landing_page: "NO_PREFERENCE",
@@ -356,8 +360,10 @@ export class PayPalClient {
     note?: string;
     requestId?: string;
   }): Promise<{ id: string; invoiceNumber: string; status: string; raw: Record<string, unknown> }> {
+    const isE2E = process.env.STACK_ROLE === "e2e" || env.STACK_ROLE === "e2e";
     const requestId = params.requestId || crypto.randomUUID();
-    const invoiceNumber = await this.generateNextInvoiceNumber();
+    const rawNumber = await this.generateNextInvoiceNumber();
+    const invoiceNumber = isE2E ? `E2E-${rawNumber}` : rawNumber;
     const businessEmail = env.PAYPAL_BUSINESS_EMAIL || "merchant@example.com";
     const todayStr = new Date().toISOString().split("T")[0];
 

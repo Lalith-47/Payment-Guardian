@@ -34,6 +34,20 @@ export async function POST(req: NextRequest) {
   const eventId = eventPayload.id || `unknown_${Date.now()}`;
   const eventType = eventPayload.event_type || "UNKNOWN";
 
+  // Stack isolation: if running on demo stack, filter out any webhook belonging to the E2E test stack
+  const isDemo = (process.env.STACK_ROLE || env.STACK_ROLE || "demo") === "demo";
+  const resource = (eventPayload.resource || {}) as Record<string, any>;
+  const detail = resource.detail as Record<string, any> | undefined;
+  const invoiceNum = (detail?.invoice_number as string) || (resource.invoice_number as string) || "";
+  const customId = (resource.custom_id as string) || "";
+  const supplementaryData = resource.supplementary_data as Record<string, any> | undefined;
+  const relatedCustomId = (supplementaryData?.related_ids?.custom_id as string) || "";
+
+  if (isDemo && (invoiceNum.startsWith("E2E-") || customId.startsWith("e2e_") || relatedCustomId.startsWith("e2e_"))) {
+    log.info({ transmissionId, eventId, eventType, invoiceNum, customId }, "Ignoring E2E stack webhook on demo endpoint to preserve demo stack isolation");
+    return NextResponse.json({ status: "IGNORED_E2E", transmissionId, eventId }, { status: 200 });
+  }
+
   // 1. Redis Deduplication Check
   const dedupKey = `rg:wh_dedup:${transmissionId}:${eventId}`;
   const isRedisDup = await redis.get(dedupKey);

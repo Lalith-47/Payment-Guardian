@@ -231,4 +231,47 @@ describe("Webhook Processing: Unknown Event Types (* subscription)", () => {
 
     getOrderSpy.mockRestore();
   });
+
+  it("filters out e2e test webhooks (E2E- invoice or e2e_ custom_id) on demo stack before recording", async () => {
+    const prevRole = process.env.STACK_ROLE;
+    process.env.STACK_ROLE = "demo";
+
+    const e2eTransmissionId = `trans_e2e_${Date.now()}`;
+    const e2eEventId = `WH-E2E-${Date.now()}`;
+    const payload = {
+      id: e2eEventId,
+      event_type: "INVOICING.INVOICE.PAID",
+      resource: {
+        id: "INV2-TEST-E2E",
+        detail: { invoice_number: "E2E-INV-999" },
+      },
+    };
+
+    const req = new Request("http://localhost:3000/api/webhooks/paypal", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "paypal-transmission-id": e2eTransmissionId,
+        "paypal-transmission-time": new Date().toISOString(),
+        "paypal-cert-url": "https://api.sandbox.paypal.com/v1/notifications/certs/CERT-123",
+        "paypal-auth-algo": "SHA256withRSA",
+        "paypal-transmission-sig": "mock_sig",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("IGNORED_E2E");
+
+    // Assert it was NOT recorded in webhook_deliveries
+    const checkDelivery = await pool.query(
+      "SELECT * FROM webhook_deliveries WHERE transmission_id = $1",
+      [e2eTransmissionId]
+    );
+    expect(checkDelivery.rows.length).toBe(0);
+
+    process.env.STACK_ROLE = prevRole;
+  });
 });
