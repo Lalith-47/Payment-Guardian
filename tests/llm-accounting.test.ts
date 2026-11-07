@@ -70,5 +70,14 @@ describe("LLM Outbound Accounting & Isolation", () => {
       }
     }
   });
+
+  it("verifies llm_requests table supports origin column with measured/reconstructed distinction", async () => {
+    const { pool } = await import("@/db");
+    const checkCol = await pool.query(
+      "SELECT column_name, data_type, column_default FROM information_schema.columns WHERE table_name = 'llm_requests' AND column_name = 'origin'"
+    );
+    expect(checkCol.rows.length).toBe(1);
+    expect(checkCol.rows[0].column_name).toBe("origin");
+  });
 });
 

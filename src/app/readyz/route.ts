@@ -134,18 +134,27 @@ export async function GET() {
   // 6. LLM Budget Check (Local Counter + Provider Data)
   const llmUsage = await getLlmDailyUsage();
 
-  let localRequestCount = 0;
+  let measuredCount = 0;
+  let reconstructedCount = 0;
   try {
-    const res = await pool.query("SELECT count(*)::int as count FROM llm_requests");
-    localRequestCount = res.rows[0]?.count ?? 0;
+    const measuredRes = await pool.query(
+      "SELECT count(*)::int as count FROM llm_requests WHERE origin = 'measured'"
+    );
+    const reconstructedRes = await pool.query(
+      "SELECT count(*)::int as count FROM llm_requests WHERE origin = 'reconstructed'"
+    );
+    measuredCount = measuredRes.rows[0]?.count ?? 0;
+    reconstructedCount = reconstructedRes.rows[0]?.count ?? 0;
   } catch {
-    localRequestCount = llmUsage.used;
+    measuredCount = llmUsage.used;
+    reconstructedCount = 0;
   }
 
   const providerRequests = (providerUsage as { freeModelDailyRequests?: { used?: number } } | null)
     ?.freeModelDailyRequests;
   const providerUsed = typeof providerRequests?.used === "number" ? providerRequests.used : null;
-  const mismatch = providerUsed !== null ? providerUsed !== localRequestCount : false;
+  const expectedMeasured = providerUsed !== null ? Math.max(0, providerUsed - reconstructedCount) : null;
+  const mismatch = expectedMeasured !== null ? expectedMeasured !== measuredCount : false;
 
   const responseBody = {
     status: isReady ? "READY" : "NOT_READY",
@@ -160,7 +169,9 @@ export async function GET() {
         exhaustedByCap: llmUsage.exhaustedByCap,
         reprobeInSeconds: llmUsage.reprobeInSeconds ?? null,
       },
-      localCount: localRequestCount,
+      localCount: measuredCount + reconstructedCount,
+      measuredCount,
+      reconstructedCount,
       providerCount: providerUsed,
       provider: providerUsage,
       mismatch,

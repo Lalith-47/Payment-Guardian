@@ -188,6 +188,7 @@ export async function defaultOpenRouterCaller(
         attempt,
         latencyMs,
         errorMessage: errorMsg,
+        origin: "measured",
       });
     } catch (dbErr) {
       log.error({ dbErr }, "Failed to record outbound LLM request in db");
@@ -211,6 +212,7 @@ export async function defaultOpenRouterCaller(
         attempt,
         latencyMs,
         errorMessage: errText.slice(0, 1000),
+        origin: "measured",
       });
     } catch (dbErr) {
       log.error({ dbErr }, "Failed to record outbound LLM request in db");
@@ -237,6 +239,7 @@ export async function defaultOpenRouterCaller(
       attempt,
       latencyMs,
       errorMessage: null,
+      origin: "measured",
     });
   } catch (dbErr) {
     log.error({ dbErr }, "Failed to record outbound LLM request in db");

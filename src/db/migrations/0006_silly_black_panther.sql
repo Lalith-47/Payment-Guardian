@@ -1,0 +1,1 @@
+ALTER TABLE "llm_requests" ADD COLUMN IF NOT EXISTS "origin" text DEFAULT 'measured' NOT NULL;

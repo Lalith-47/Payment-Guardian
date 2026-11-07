@@ -267,4 +267,5 @@ export const llmRequests = pgTable("llm_requests", {
   attempt: integer("attempt").notNull().default(1),
   latencyMs: integer("latency_ms"),
   errorMessage: text("error_message"),
+  origin: text("origin").notNull().default("measured"),
 });
