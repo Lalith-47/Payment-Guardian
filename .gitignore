@@ -22,3 +22,4 @@ scripts/m0/
 docs/progress.md
 docs/checklist.md
 docker-compose.override.yml
+backups/
