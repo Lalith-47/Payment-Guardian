@@ -259,6 +259,28 @@ export async function defaultOpenRouterCaller(
   return { content };
 }
 
+/**
+ * Computes backoff delay for agent model retries.
+ * In production (when AGENT_RETRY_BACKOFF_MS is unset), enforces full exponential backoff with jitter.
+ * In test environments, honors AGENT_RETRY_BACKOFF_MS for deterministic, sub-second execution.
+ */
+export function computeBackoffDelay(
+  modelAttempt: number,
+  isRateLimit = false,
+  retryAfterSeconds?: number
+): number {
+  if (process.env.AGENT_RETRY_BACKOFF_MS) {
+    return parseInt(process.env.AGENT_RETRY_BACKOFF_MS, 10);
+  }
+  if (isRateLimit) {
+    const defaultDelay = retryAfterSeconds
+      ? retryAfterSeconds * 1000
+      : Math.pow(2, modelAttempt) * 1000 + Math.random() * 500;
+    return Math.min(defaultDelay, 5000);
+  }
+  return Math.pow(2, modelAttempt) * 300 + Math.random() * 200;
+}
+
 export class AgentService {
   private readonly caller: ModelCallerFn;
 
@@ -450,22 +472,14 @@ export class AgentService {
 
           // 2. CLASSIFY 429: Per-minute rate limit -> backoff with jitter
           if (errorObj.status === 429) {
-            const defaultDelay = errorObj.retryAfterSeconds
-              ? errorObj.retryAfterSeconds * 1000
-              : Math.pow(2, modelAttempt) * 1000 + Math.random() * 500;
-            const retryDelay = process.env.AGENT_RETRY_BACKOFF_MS
-              ? parseInt(process.env.AGENT_RETRY_BACKOFF_MS, 10)
-              : Math.min(defaultDelay, 5000);
+            const retryDelay = computeBackoffDelay(modelAttempt, true, errorObj.retryAfterSeconds);
             log.info({ retryDelay }, "Per-minute rate limit hit; backing off with jitter");
             await new Promise((r) => setTimeout(r, retryDelay));
             continue;
           }
 
           // Generic backoff + jitter for transient network / 5xx errors
-          const defaultBackoff = Math.pow(2, modelAttempt) * 300 + Math.random() * 200;
-          const backoffMs = process.env.AGENT_RETRY_BACKOFF_MS
-            ? parseInt(process.env.AGENT_RETRY_BACKOFF_MS, 10)
-            : defaultBackoff;
+          const backoffMs = computeBackoffDelay(modelAttempt, false);
           await new Promise((r) => setTimeout(r, backoffMs));
         }
       }
