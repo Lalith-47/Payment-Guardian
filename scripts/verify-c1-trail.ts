@@ -115,7 +115,7 @@ async function main() {
 
   // 6. Wait for real webhook delivery from PayPal to Cloudflare tunnel
   console.log("\nStep 5: Waiting for real PayPal PAYMENT.CAPTURE.COMPLETED webhook delivery...");
-  console.log("Listening for verified webhook on tunnel URL https://vic-shipments-pending-stay.trycloudflare.com/api/webhooks/paypal");
+  console.log(`Listening for verified webhook on tunnel URL ${env.APP_URL}/api/webhooks/paypal`);
   console.log("Timeout window: 300 seconds (5 minutes)");
 
   let verifiedDelivery: any = null;
@@ -134,9 +134,9 @@ async function main() {
        WHERE event_type = 'PAYMENT.CAPTURE.COMPLETED'
          AND signature_status = 'VALID'
          AND (
-           raw_body->'resource'->'supplementary_data'->'related_ids'->>'order_id' = $1
-           OR raw_body->'resource'->>'order_id' = $1
-           OR raw_body->'resource'->>'id' = $2
+           raw_body::jsonb->'resource'->'supplementary_data'->'related_ids'->>'order_id' = $1
+           OR raw_body::jsonb->'resource'->>'order_id' = $1
+           OR raw_body::jsonb->'resource'->>'id' = $2
          )
        ORDER BY received_at DESC LIMIT 1`,
       [orderId, paypalCaptureId || ""]
