@@ -274,31 +274,55 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   PERFORMANCE TESTING OVERRIDES (Phase 3 Toggles)
+   ══════════════════════════════════════════════════════════════════ */
+html[data-disable-canvas="1"] canvas,
+html[data-disable-canvas="1"] [data-canvas-layer="true"],
+html[data-disable-canvas="1"] .animate-liquid-blob-1,
+html[data-disable-canvas="1"] .animate-liquid-blob-2,
+html[data-disable-canvas="1"] .animate-liquid-blob-3,
+html[data-disable-canvas="1"] .animate-liquid-blob-hero {
+  display: none !important;
+}
+
+html[data-disable-glass="1"] .glass-panel,
+html[data-disable-glass="1"] .glass-panel-dark,
+html[data-disable-glass="1"] .glass-liquid,
+html[data-disable-glass="1"] .glass-liquid-dark,
+html[data-disable-glass="1"] .glass-pill,
+html[data-disable-glass="1"] .glass-pill-dark,
+html[data-disable-glass="1"] [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: #FFFFFF !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
    APPLE LIQUID GLASS SYSTEM
    ══════════════════════════════════════════════════════════════════ */
 .glass-liquid {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: 0 20px 48px -12px rgba(0, 28, 68, 0.08), 0 1px 2px rgba(255, 255, 255, 0.8) inset;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 12px 32px -8px rgba(0, 28, 68, 0.08), 0 1px 2px rgba(255, 255, 255, 0.8) inset;
 }
 
 .glass-liquid-dark {
-  background: rgba(0, 20, 53, 0.82);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  background: rgba(0, 20, 53, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(255, 255, 255, 0.15) inset;
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(255, 255, 255, 0.15) inset;
 }
 
 .glass-pill {
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 9999px;
-  box-shadow: 0 8px 30px rgba(0, 32, 96, 0.08), 0 1px 1px rgba(255, 255, 255, 0.9) inset;
+  box-shadow: 0 8px 24px rgba(0, 32, 96, 0.08), 0 1px 1px rgba(255, 255, 255, 0.9) inset;
 }
 
 .glass-pill-dark {
@@ -357,27 +381,27 @@
 }
 
 @keyframes liquid-blob-1 {
-  0% { transform: translate(0px, 0px) scale(1); }
-  50% { transform: translate(60px, 40px) scale(1.12); }
-  100% { transform: translate(-40px, 80px) scale(0.95); }
+  0% { transform: translate3d(0px, 0px, 0) scale(1); }
+  50% { transform: translate3d(60px, 40px, 0) scale(1.12); }
+  100% { transform: translate3d(-40px, 80px, 0) scale(0.95); }
 }
 
 @keyframes liquid-blob-2 {
-  0% { transform: translate(0px, 0px) scale(1); }
-  50% { transform: translate(-80px, 60px) scale(1.08); }
-  100% { transform: translate(40px, -40px) scale(1.15); }
+  0% { transform: translate3d(0px, 0px, 0) scale(1); }
+  50% { transform: translate3d(-80px, 60px, 0) scale(1.08); }
+  100% { transform: translate3d(40px, -40px, 0) scale(1.15); }
 }
 
 @keyframes liquid-blob-3 {
-  0% { transform: translate(0px, 0px) scale(1); }
-  50% { transform: translate(50px, -60px) scale(1.18); }
-  100% { transform: translate(-30px, 40px) scale(0.92); }
+  0% { transform: translate3d(0px, 0px, 0) scale(1); }
+  50% { transform: translate3d(50px, -60px, 0) scale(1.18); }
+  100% { transform: translate3d(-30px, 40px, 0) scale(0.92); }
 }
 
 @keyframes liquid-blob-4 {
-  0% { transform: translate(0px, 0px) scale(1); }
-  50% { transform: translate(-60px, -50px) scale(1.1); }
-  100% { transform: translate(70px, 30px) scale(1.05); }
+  0% { transform: translate3d(0px, 0px, 0) scale(1); }
+  50% { transform: translate3d(-60px, -50px, 0) scale(1.1); }
+  100% { transform: translate3d(70px, 30px, 0) scale(1.05); }
 }
 
 .card-hover-lift {

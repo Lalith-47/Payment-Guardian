@@ -20,6 +20,17 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+              try {
+                var p = new URLSearchParams(window.location.search);
+                if (p.get("disableCanvas") === "1") document.documentElement.dataset.disableCanvas = "1";
+                if (p.get("disableGlass") === "1") document.documentElement.dataset.disableGlass = "1";
+              } catch(e){}
+            })()`,
+          }}
+        />
       </head>
       <body className="antialiased min-h-screen bg-paper text-ink font-body">
         {children}

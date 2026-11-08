@@ -83,7 +83,6 @@ export function AppleLiquidScrollytelling() {
   const [currentFrame, setCurrentFrame] = useState<number>(1);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
-  const [loadedCount, setLoadedCount] = useState<number>(0);
   const [isBuffering, setIsBuffering] = useState<boolean>(true);
   const [activeMilestoneIndex, setActiveMilestoneIndex] = useState<number>(0);
 
@@ -91,6 +90,10 @@ export function AppleLiquidScrollytelling() {
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const targetFrameRef = useRef<number>(1);
   const animFrameIdRef = useRef<number | null>(null);
+  const lastMilestoneIdxRef = useRef<number>(0);
+  const lastDrawnFrameRef = useRef<number>(0);
+  const lastDrawTimestampRef = useRef<number>(0);
+  const lastStateUpdateRef = useRef<number>(0);
 
   // 1. Preload sequence frames progressively
   useEffect(() => {
@@ -106,7 +109,6 @@ export function AppleLiquidScrollytelling() {
         img.onload = () => {
           if (!isCancelled) {
             images[index] = img;
-            setLoadedCount((prev) => prev + 1);
           }
           resolve();
         };
@@ -119,7 +121,7 @@ export function AppleLiquidScrollytelling() {
     const runPreload = async () => {
       // Step A: Load initial frames
       const initialBatch = [];
-      for (let i = 1; i <= Math.min(20, TOTAL_FRAMES); i++) {
+      for (let i = 1; i <= Math.min(15, TOTAL_FRAMES); i++) {
         initialBatch.push(loadFrame(i));
       }
       await Promise.all(initialBatch);
@@ -127,10 +129,14 @@ export function AppleLiquidScrollytelling() {
         setIsBuffering(false);
       }
 
-      // Step B: Progressively stream the remainder
-      for (let i = 21; i <= TOTAL_FRAMES; i++) {
+      // Step B: Progressively stream the remainder in chunks
+      for (let i = 16; i <= TOTAL_FRAMES; i += 5) {
         if (isCancelled) break;
-        await loadFrame(i);
+        const chunk = [];
+        for (let j = i; j < Math.min(i + 5, TOTAL_FRAMES + 1); j++) {
+          chunk.push(loadFrame(j));
+        }
+        await Promise.all(chunk);
       }
     };
 
@@ -142,11 +148,11 @@ export function AppleLiquidScrollytelling() {
     };
   }, []);
 
-  // 2. Render active frame to high-DPI canvas
+  // 2. Render active frame to high-DPI canvas (desynchronized opaque context for maximum compositor throughput)
   const renderFrame = useCallback((frameNum: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { desynchronized: true, alpha: false } as any) as CanvasRenderingContext2D | null;
     if (!ctx) return;
 
     const clamped = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(frameNum)));
@@ -155,20 +161,20 @@ export function AppleLiquidScrollytelling() {
     if (img && img.complete && img.naturalWidth > 0) {
       // Draw image preserving 16:9 aspect ratio
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    } else if (videoFallbackRef.current && videoFallbackRef.current.duration) {
-      // Fallback: sync video currentTime
-      const targetTime = ((clamped - 1) / (TOTAL_FRAMES - 1)) * videoFallbackRef.current.duration;
-      if (Math.abs(videoFallbackRef.current.currentTime - targetTime) > 0.05) {
-        videoFallbackRef.current.currentTime = targetTime;
-      }
     }
   }, []);
 
-  // 3. Smooth animation loop for scrubbing / scrolling
+  // 3. Smooth animation loop with IntersectionObserver viewport culling
   useEffect(() => {
+    let isVisible = false;
     let lastRendered = 1;
 
     const tick = () => {
+      if (!isVisible && !isPlaying) {
+        animFrameIdRef.current = null;
+        return;
+      }
+
       if (isPlaying) {
         targetFrameRef.current += playbackSpeed * 0.8;
         if (targetFrameRef.current > TOTAL_FRAMES) {
@@ -181,10 +187,14 @@ export function AppleLiquidScrollytelling() {
       if (Math.abs(diff) > 0.05) {
         lastRendered += diff * (isPlaying ? 0.35 : 0.25);
         const rounded = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(lastRendered)));
-        setCurrentFrame(rounded);
-        renderFrame(rounded);
+        const now = performance.now();
+        if (rounded !== lastDrawnFrameRef.current && (now - lastDrawTimestampRef.current >= 20)) {
+          lastDrawTimestampRef.current = now;
+          lastDrawnFrameRef.current = rounded;
+          renderFrame(rounded);
+        }
 
-        // Update active milestone
+        // Update active milestone ONLY when index actually changes
         let currentIdx = 0;
         for (let i = MILESTONES.length - 1; i >= 0; i--) {
           if (rounded >= MILESTONES[i].frame) {
@@ -192,41 +202,71 @@ export function AppleLiquidScrollytelling() {
             break;
           }
         }
-        setActiveMilestoneIndex(currentIdx);
+        if (currentIdx !== lastMilestoneIdxRef.current) {
+          lastMilestoneIdxRef.current = currentIdx;
+          setActiveMilestoneIndex(currentIdx);
+        }
+
+        // Throttle React state re-renders during high-frequency tick loop
+        if (now - lastStateUpdateRef.current >= 120) {
+          lastStateUpdateRef.current = now;
+          setCurrentFrame(rounded);
+        }
       }
 
       animFrameIdRef.current = requestAnimationFrame(tick);
     };
 
-    animFrameIdRef.current = requestAnimationFrame(tick);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if ((isVisible || isPlaying) && !animFrameIdRef.current) {
+          animFrameIdRef.current = requestAnimationFrame(tick);
+        }
+      },
+      { threshold: 0.05 }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
     return () => {
+      observer.disconnect();
       if (animFrameIdRef.current) {
         cancelAnimationFrame(animFrameIdRef.current);
+        animFrameIdRef.current = null;
       }
     };
   }, [isPlaying, playbackSpeed, renderFrame]);
 
-  // 4. Scroll-Driven Scrollytelling Linkage
+  // 4. Scroll-Driven Scrollytelling Linkage (Zero-Reflow Cached Measurement)
   useEffect(() => {
+    let containerTop = 0;
+    let scrollableHeight = 1;
+
+    const measure = () => {
+      if (containerRef.current) {
+        containerTop = containerRef.current.offsetTop;
+        scrollableHeight = Math.max(1, containerRef.current.offsetHeight - window.innerHeight);
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure, { passive: true });
+
     const handleScroll = () => {
-      if (isPlaying) return; // User is in video playback mode
-      const container = containerRef.current;
-      if (!container) return;
-
-      const rect = container.getBoundingClientRect();
-      const scrollableHeight = container.offsetHeight - window.innerHeight;
-      if (scrollableHeight <= 0) return;
-
-      // Calculate progress from 0.00 to 1.00
-      const currentScroll = -rect.top;
+      if (isPlaying || scrollableHeight <= 0) return;
+      const currentScroll = window.scrollY - containerTop;
       const progress = Math.max(0, Math.min(1, currentScroll / scrollableHeight));
       const target = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(1 + progress * (TOTAL_FRAMES - 1))));
-
       targetFrameRef.current = target;
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, [isPlaying]);
 
   const jumpToMilestone = (frame: number) => {
@@ -296,8 +336,9 @@ export function AppleLiquidScrollytelling() {
             {/* The Main High-Performance Canvas */}
             <canvas
               ref={canvasRef}
-              width={1280}
-              height={720}
+              width={800}
+              height={450}
+              style={{ contain: "strict", willChange: "contents, transform", transform: "translate3d(0,0,0)" }}
               className="w-full h-full object-contain rounded-2xl block bg-[#e8f3fb] pointer-events-none"
             />
 
@@ -317,7 +358,7 @@ export function AppleLiquidScrollytelling() {
                 <div className="glass-pill px-5 py-2.5 flex items-center gap-3 shadow-lg">
                   <div className="w-4 h-4 border-2 border-[#0070BA] border-t-transparent rounded-full animate-spin" />
                   <span className="text-xs font-bold text-[#001C44]">
-                    Buffering Ultra-Res Sequence ({loadedCount}/{TOTAL_FRAMES})...
+                    Buffering Ultra-Res Sequence...
                   </span>
                 </div>
               </div>

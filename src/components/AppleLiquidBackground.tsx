@@ -18,12 +18,14 @@ export function AppleLiquidBackground() {
     };
 
     const loop = () => {
-      // Smooth lerp follow
-      currentX += (targetX - currentX) * 0.06;
-      currentY += (targetY - currentY) * 0.06;
-
-      if (mouseGlowRef.current) {
-        mouseGlowRef.current.style.transform = `translate3d(${currentX - 250}px, ${currentY - 250}px, 0)`;
+      const dx = targetX - currentX;
+      const dy = targetY - currentY;
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        currentX += dx * 0.08;
+        currentY += dy * 0.08;
+        if (mouseGlowRef.current) {
+          mouseGlowRef.current.style.transform = `translate3d(${currentX - 225}px, ${currentY - 225}px, 0)`;
+        }
       }
       animId = requestAnimationFrame(loop);
     };
@@ -40,54 +42,38 @@ export function AppleLiquidBackground() {
   return (
     <div
       className="pointer-events-none fixed inset-0 -z-20 overflow-hidden"
+      style={{ contain: "strict", transform: "translate3d(0,0,0)" }}
       aria-hidden="true"
     >
-      {/* Deep Canvas Foundation */}
-      <div className="absolute inset-0 bg-[#F4F7FB]" />
-
-      {/* Layer 1: Animated Organic Liquid Blobs */}
+      {/* Deep Canvas Foundation with Multi-Layered Liquid Mesh Gradients */}
       <div
-        className="absolute -top-[15%] left-[10%] w-[700px] h-[700px] rounded-full blur-[110px] opacity-45 mix-blend-multiply animate-liquid-blob-1"
+        className="absolute inset-0"
         style={{
-          background: "radial-gradient(circle, #0070BA 0%, #003087 60%, transparent 80%)",
-        }}
-      />
-
-      <div
-        className="absolute top-[20%] -right-[10%] w-[650px] h-[650px] rounded-full blur-[120px] opacity-35 mix-blend-multiply animate-liquid-blob-2"
-        style={{
-          background: "radial-gradient(circle, #00D4AA 0%, #0079C1 50%, transparent 80%)",
-        }}
-      />
-
-      <div
-        className="absolute top-[50%] left-[-8%] w-[600px] h-[600px] rounded-full blur-[130px] opacity-30 mix-blend-multiply animate-liquid-blob-3"
-        style={{
-          background: "radial-gradient(circle, #F59E0B 0%, #D97706 50%, transparent 80%)",
-        }}
-      />
-
-      <div
-        className="absolute -bottom-[10%] right-[15%] w-[750px] h-[750px] rounded-full blur-[140px] opacity-35 mix-blend-multiply animate-liquid-blob-4"
-        style={{
-          background: "radial-gradient(circle, #38BDF8 0%, #003087 60%, transparent 80%)",
+          background: `
+            radial-gradient(circle at 12% 10%, rgba(0, 112, 186, 0.22) 0%, transparent 45%),
+            radial-gradient(circle at 88% 22%, rgba(0, 212, 170, 0.18) 0%, transparent 45%),
+            radial-gradient(circle at 8% 62%, rgba(245, 158, 11, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 82% 82%, rgba(56, 189, 248, 0.18) 0%, transparent 50%),
+            #F4F7FB
+          `,
         }}
       />
 
       {/* Layer 2: Interactive Mouse Following Liquid Orb */}
       <div
         ref={mouseGlowRef}
-        className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full blur-[90px] opacity-25 mix-blend-soft-light transition-opacity duration-300 pointer-events-none"
+        className="absolute top-0 left-0 w-[450px] h-[450px] rounded-full opacity-30 transition-opacity duration-300 pointer-events-none"
         style={{
-          background: "radial-gradient(circle, #00CFDE 0%, #0070BA 40%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(0, 207, 222, 0.45) 0%, rgba(0, 112, 186, 0.15) 45%, transparent 70%)",
+          willChange: "transform",
         }}
       />
 
       {/* Layer 3: Subtle Apple Micro-Dot Matrix Overlay */}
       <div
-        className="absolute inset-0 opacity-[0.25]"
+        className="absolute inset-0 opacity-[0.2]"
         style={{
-          backgroundImage: "radial-gradient(rgba(0, 48, 135, 0.22) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(rgba(0, 48, 135, 0.2) 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }}
       />
