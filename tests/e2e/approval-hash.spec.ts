@@ -31,8 +31,7 @@ test.describe("Item 7: Approval UX with Hashed Tokens & Reload Resistance", () =
       reasoning: "High-value decline requires owner approval",
       message: "Refund approved for customer",
       modelUsed: "mock-model",
-      status: "PENDING",
-    });
+    } as any);
 
     const approval = await createApproval(testEventId, testPropId, 60, "AMOUNT_EXCEEDS_AUTO_REFUND_LIMIT");
 

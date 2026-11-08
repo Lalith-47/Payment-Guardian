@@ -55,7 +55,7 @@ async function main() {
     await noWebglPage.addInitScript(() => {
       // Mock getContext to return null for webgl/experimental-webgl/webgl2
       const originalGetContext = HTMLCanvasElement.prototype.getContext;
-      HTMLCanvasElement.prototype.getContext = function (type: string, ...args: any[]) {
+      (HTMLCanvasElement.prototype as any).getContext = function (type: string, ...args: any[]) {
         if (typeof type === "string" && type.toLowerCase().includes("webgl")) {
           return null;
         }
