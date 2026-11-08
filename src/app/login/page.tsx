@@ -41,26 +41,26 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8FAFC] text-[#0F172A] p-4 selection:bg-[#0070BA]/20 selection:text-[#001C44] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-paper text-ink p-4 selection:bg-accent/20 selection:text-ink relative overflow-hidden">
       {/* Background ambient lighting */}
       <div className="absolute top-1/4 -left-20 w-96 h-96 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-96 h-96 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
 
       <main className="w-full max-w-md relative z-10">
-        <div className="card-paypal-elevated p-8 sm:p-10 space-y-7">
+        <div className="card-paypal-elevated p-8 sm:p-10 space-y-7 bg-paper-2 border border-rule rounded-2xl shadow-xl">
           {/* Brand Header */}
           <div className="space-y-3 text-center">
             <Link href="/" className="inline-flex items-center justify-center mx-auto group">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#003087] to-[#0070BA] text-white shadow-lg shadow-[#003087]/25 group-hover:scale-105 transition-transform">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-accent to-accent-light text-paper-2 shadow-lg shadow-accent/25 group-hover:scale-105 transition-transform">
                 <span className="font-extrabold text-2xl tracking-tight font-serif italic">P</span>
               </span>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-[#001C44]">
+              <h1 className="text-2xl font-bold tracking-tight text-ink">
                 PayPal Business Guardian
               </h1>
               <p className="text-xs text-muted mt-1">
-                Merchant Back-Office & Deterministic Ledger Authentication
+                Merchant Back-Office &amp; Deterministic Ledger Authentication
               </p>
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function LoginPage() {
                   required
                   autoComplete="email"
                   disabled={loading || success}
-                  className="block w-full rounded-xl border border-rule bg-paper-3 pl-10 pr-3.5 py-2.5 text-xs text-ink placeholder-slate-400 focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all disabled:opacity-50"
+                  className="block w-full rounded-xl border border-rule bg-paper-3 pl-10 pr-3.5 py-2.5 text-xs text-ink placeholder-muted focus:border-focus focus:bg-paper-2 focus:outline-none transition-all disabled:opacity-50"
                   placeholder="owner@revenueguardian.local"
                 />
               </div>
@@ -114,7 +114,7 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   disabled={loading || success}
-                  className="block w-full rounded-xl border border-rule bg-paper-3 pl-10 pr-10 py-2.5 text-xs text-ink placeholder-slate-400 focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all disabled:opacity-50"
+                  className="block w-full rounded-xl border border-rule bg-paper-3 pl-10 pr-10 py-2.5 text-xs text-ink placeholder-muted focus:border-focus focus:bg-paper-2 focus:outline-none transition-all disabled:opacity-50"
                   placeholder="••••••••••••"
                 />
                 <button
@@ -136,7 +136,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || success}
-              className="w-full btn-paypal-primary font-bold mt-2"
+              className="w-full btn-paypal-primary font-bold mt-2 flex items-center justify-center gap-2"
             >
               <span>{loading ? "Verifying Credentials…" : "Sign In to Business Guardian"}</span>
               <ArrowRight className="h-4 w-4" />
@@ -149,7 +149,7 @@ export default function LoginPage() {
               <Shield className="h-3.5 w-3.5 text-success" />
               <span>TLS 1.3 Vault</span>
             </span>
-            <Link href="/" className="text-[#0070BA] hover:underline font-sans font-semibold">
+            <Link href="/" className="text-accent hover:underline font-sans font-semibold">
               Public 3D Experience
             </Link>
           </div>

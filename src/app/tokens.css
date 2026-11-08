@@ -62,8 +62,8 @@
   /* Inks & Text */
   --color-ink: #0F172A;
   --color-ink-2: #334155;
-  --color-muted: #64748B;
-  --color-muted-light: #94A3B8;
+  --color-muted: #475569;
+  --color-muted-light: #64748B;
 
   /* Rules & Hairlines */
   --color-rule: #E2E8F0;
@@ -71,16 +71,16 @@
   --color-rule-subtle: rgba(15, 23, 42, 0.06);
 
   /* Accents & States */
-  --color-accent: #0079C1;
-  --color-accent-hi: #009CDE;
+  --color-accent: #0070BA;
+  --color-accent-hi: #003087;
   --color-accent-ink: #FFFFFF;
-  --color-focus: #009CDE;
+  --color-focus: #0070BA;
 
-  --color-success: #059669;
+  --color-success: #047857;
   --color-success-bg: #ECFDF5;
   --color-success-border: #A7F3D0;
 
-  --color-warning: #D97706;
+  --color-warning: #B45309;
   --color-warning-bg: #FFFBEB;
   --color-warning-border: #FDE68A;
 

@@ -29,4 +29,4 @@ videos/
 traces/
 docs/qa/videos/
 docs/qa/traces/
-
+*.png

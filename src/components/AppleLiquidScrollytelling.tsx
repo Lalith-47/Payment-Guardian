@@ -298,7 +298,7 @@ export function AppleLiquidScrollytelling() {
               ref={canvasRef}
               width={1280}
               height={720}
-              className="w-full h-full object-contain rounded-2xl block bg-[#e8f3fb]"
+              className="w-full h-full object-contain rounded-2xl block bg-[#e8f3fb] pointer-events-none"
             />
 
             {/* Video Fallback Element */}
@@ -308,12 +308,12 @@ export function AppleLiquidScrollytelling() {
               playsInline
               muted
               preload="auto"
-              className="hidden"
+              className="hidden pointer-events-none"
             />
 
             {/* Buffering Indicator */}
             {isBuffering && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-30 transition-opacity">
+              <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-30 transition-opacity pointer-events-none">
                 <div className="glass-pill px-5 py-2.5 flex items-center gap-3 shadow-lg">
                   <div className="w-4 h-4 border-2 border-[#0070BA] border-t-transparent rounded-full animate-spin" />
                   <span className="text-xs font-bold text-[#001C44]">
@@ -409,6 +409,7 @@ export function AppleLiquidScrollytelling() {
                 max={TOTAL_FRAMES}
                 value={currentFrame}
                 onChange={handleScrub}
+                aria-label="Liquid transition frame scrubber"
                 className="w-full h-1.5 bg-paper-3 rounded-lg appearance-none cursor-pointer accent-[#0070BA]"
               />
             </div>

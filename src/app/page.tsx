@@ -297,6 +297,7 @@ export default function LandingPage() {
                 step="5"
                 value={thresholdCeiling}
                 onChange={(e) => setThresholdCeiling(parseInt(e.target.value, 10))}
+                aria-label="Decline interception threshold ceiling in USD"
                 className="w-full h-2 bg-paper-3 rounded-lg appearance-none cursor-pointer accent-[#0070BA]"
               />
 

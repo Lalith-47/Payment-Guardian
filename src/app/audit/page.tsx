@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { DashboardShell } from "@/components/DashboardShell";
+import "@/lib/ag-grid";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef } from "ag-grid-community";
 import { FileText, Download, RefreshCw, Shield, Search } from "lucide-react";

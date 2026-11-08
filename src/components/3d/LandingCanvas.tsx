@@ -29,7 +29,7 @@ export function LandingCanvas({ fallback }: LandingCanvasProps) {
   }, []);
 
   if (!mounted) {
-    return <div className="fixed inset-0 -z-10" aria-hidden="true" />;
+    return <div className="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true" />;
   }
 
   if (webglError) {
@@ -38,7 +38,7 @@ export function LandingCanvas({ fallback }: LandingCanvasProps) {
 
   return (
     <Canvas
-      className="fixed inset-0 -z-10"
+      className="fixed inset-0 -z-10 pointer-events-none"
       camera={{ position: [0, 0, 35], fov: 45 }}
       gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false }}
       onCreated={({ gl }) => {
@@ -54,7 +54,7 @@ export function LandingCanvas({ fallback }: LandingCanvasProps) {
       <OrbitControls
         enablePan={false}
         enableZoom={false}
-        enableRotate={true}
+        enableRotate={false}
         autoRotate={true}
         autoRotateSpeed={0.15}
         maxPolarAngle={Math.PI / 2 - 0.05}
@@ -197,10 +197,10 @@ function LoadingFallback() {
 function CanvasFallback() {
   return (
     <div
-      className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--color-board)_0%,_var(--color-deep)_100%)]"
+      className="fixed inset-0 -z-10 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--color-board)_0%,_var(--color-deep)_100%)]"
       aria-hidden="true"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--color-accent)_0%,_transparent_50%)] opacity-10" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--color-accent)_0%,_transparent_50%)] opacity-10" />
     </div>
   );
 }

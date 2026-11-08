@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { DashboardShell } from "@/components/DashboardShell";
+import "@/lib/ag-grid";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef, RowClickedEvent } from "ag-grid-community";
 import {
