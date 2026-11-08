@@ -8,8 +8,28 @@ import { createChildLogger } from "@/lib/logger";
 
 const log = createChildLogger("readyz");
 
+function isPublicUrl(urlStr?: string): boolean {
+  if (!urlStr || urlStr.trim() === "") return false;
+  try {
+    const parsed = new URL(urlStr);
+    const host = parsed.hostname.toLowerCase();
+    if (
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "0.0.0.0" ||
+      host === "::1" ||
+      host.endsWith(".local")
+    ) {
+      return false;
+    }
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export async function GET() {
-  const checks: Record<string, { status: "UP" | "DOWN"; latencyMs?: number; error?: string }> = {};
+  const checks: Record<string, { status: "UP" | "DOWN" | "NOT_CONFIGURED"; latencyMs?: number; error?: string; message?: string }> = {};
   let isReady = true;
 
   // 1. Postgres Check
@@ -105,20 +125,23 @@ export async function GET() {
     };
   }
 
-  // 5. Registered PayPal Webhook Verification
+  // 5. Registered PayPal Webhook Verification (Optional when no public tunnel)
   const whStart = Date.now();
-  if (!env.PAYPAL_WEBHOOK_ID) {
-    isReady = false;
+  const isPublicAppUrl = isPublicUrl(env.APP_URL);
+
+  if (!env.PAYPAL_WEBHOOK_ID || !isPublicAppUrl) {
     checks.paypalWebhook = {
-      status: "DOWN",
+      status: "NOT_CONFIGURED",
       latencyMs: 0,
-      error: "PAYPAL_WEBHOOK_ID is not configured in environment.",
+      message: !env.PAYPAL_WEBHOOK_ID
+        ? "PAYPAL_WEBHOOK_ID is not configured in environment (polling reconciler active)."
+        : "Public APP_URL is not configured (polling reconciler active).",
     };
   } else {
     try {
       const webhooks = await paypalClient.listWebhooks();
       const matched = webhooks.find((w) => w.id === env.PAYPAL_WEBHOOK_ID);
-      const expectedUrl = env.APP_URL ? `${env.APP_URL.replace(/\/+$/, "")}/api/webhooks/paypal` : null;
+      const expectedUrl = `${env.APP_URL!.replace(/\/+$/, "")}/api/webhooks/paypal`;
 
       if (!matched) {
         isReady = false;
@@ -127,7 +150,7 @@ export async function GET() {
           latencyMs: Date.now() - whStart,
           error: `Configured PAYPAL_WEBHOOK_ID '${env.PAYPAL_WEBHOOK_ID}' is NOT among registered sandbox webhooks.`,
         };
-      } else if (expectedUrl && matched.url !== expectedUrl) {
+      } else if (matched.url !== expectedUrl) {
         isReady = false;
         checks.paypalWebhook = {
           status: "DOWN",

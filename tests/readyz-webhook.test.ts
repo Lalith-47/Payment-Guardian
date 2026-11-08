@@ -6,14 +6,15 @@ import { env } from "@/config/env";
 
 describe("Item 3: Webhook Registration Robustness & Readyz Probes", () => {
   it("reports paypalWebhook as UP when PAYPAL_WEBHOOK_ID matches registered webhook with expected URL", async () => {
-    const expectedUrl = `${(env.APP_URL || "https://example.com").replace(/\/+$/, "")}/api/webhooks/paypal`;
+    const prevId = env.PAYPAL_WEBHOOK_ID;
+    const prevAppUrl = env.APP_URL;
+    (env as any).APP_URL = "https://example.com";
+    const expectedUrl = "https://example.com/api/webhooks/paypal";
     const mockWebhookId = "WH-MOCK-OK-123";
 
     vi.spyOn(paypalClient, "listWebhooks").mockResolvedValue([
       { id: mockWebhookId, url: expectedUrl, event_types: [] },
     ]);
-
-    const prevId = env.PAYPAL_WEBHOOK_ID;
     (env as any).PAYPAL_WEBHOOK_ID = mockWebhookId;
 
     try {
@@ -23,16 +24,19 @@ describe("Item 3: Webhook Registration Robustness & Readyz Probes", () => {
       expect(body.checks.paypalWebhook.latencyMs).toBeDefined();
     } finally {
       (env as any).PAYPAL_WEBHOOK_ID = prevId;
+      (env as any).APP_URL = prevAppUrl;
       vi.restoreAllMocks();
     }
   });
 
   it("reports paypalWebhook as DOWN when PAYPAL_WEBHOOK_ID is not among registered webhooks", async () => {
     vi.spyOn(paypalClient, "listWebhooks").mockResolvedValue([
-      { id: "WH-DIFFERENT-456", url: "https://other.com/api/webhooks/paypal", event_types: [] },
+      { id: "WH-DIFFERENT-456", url: "https://example.com/api/webhooks/paypal", event_types: [] },
     ]);
 
     const prevId = env.PAYPAL_WEBHOOK_ID;
+    const prevAppUrl = env.APP_URL;
+    (env as any).APP_URL = "https://example.com";
     (env as any).PAYPAL_WEBHOOK_ID = "WH-NON-EXISTENT-ID";
 
     try {
@@ -43,6 +47,7 @@ describe("Item 3: Webhook Registration Robustness & Readyz Probes", () => {
       expect(body.checks.paypalWebhook.error).toContain("is NOT among registered sandbox webhooks");
     } finally {
       (env as any).PAYPAL_WEBHOOK_ID = prevId;
+      (env as any).APP_URL = prevAppUrl;
       vi.restoreAllMocks();
     }
   });
@@ -54,6 +59,8 @@ describe("Item 3: Webhook Registration Robustness & Readyz Probes", () => {
     ]);
 
     const prevId = env.PAYPAL_WEBHOOK_ID;
+    const prevAppUrl = env.APP_URL;
+    (env as any).APP_URL = "https://new-tunnel.trycloudflare.com";
     (env as any).PAYPAL_WEBHOOK_ID = mockWebhookId;
 
     try {
@@ -64,6 +71,47 @@ describe("Item 3: Webhook Registration Robustness & Readyz Probes", () => {
       expect(body.checks.paypalWebhook.error).toContain("does not match expected destination");
     } finally {
       (env as any).PAYPAL_WEBHOOK_ID = prevId;
+      (env as any).APP_URL = prevAppUrl;
+      vi.restoreAllMocks();
+    }
+  });
+
+  it("reports paypalWebhook as NOT_CONFIGURED and remains READY when PAYPAL_WEBHOOK_ID is unset", async () => {
+    const prevId = env.PAYPAL_WEBHOOK_ID;
+    const prevAppUrl = env.APP_URL;
+    (env as any).PAYPAL_WEBHOOK_ID = undefined;
+    (env as any).APP_URL = "https://example.com";
+
+    try {
+      const res = await GET();
+      const body = await res.json();
+      expect(res.status).toBe(200);
+      expect(body.status).toBe("READY");
+      expect(body.checks.paypalWebhook.status).toBe("NOT_CONFIGURED");
+      expect(body.checks.paypalWebhook.message).toContain("PAYPAL_WEBHOOK_ID is not configured");
+    } finally {
+      (env as any).PAYPAL_WEBHOOK_ID = prevId;
+      (env as any).APP_URL = prevAppUrl;
+      vi.restoreAllMocks();
+    }
+  });
+
+  it("reports paypalWebhook as NOT_CONFIGURED and remains READY when APP_URL is unset or localhost", async () => {
+    const prevId = env.PAYPAL_WEBHOOK_ID;
+    const prevAppUrl = env.APP_URL;
+    (env as any).PAYPAL_WEBHOOK_ID = "WH-LOCAL-TEST";
+    (env as any).APP_URL = "http://localhost:3000";
+
+    try {
+      const res = await GET();
+      const body = await res.json();
+      expect(res.status).toBe(200);
+      expect(body.status).toBe("READY");
+      expect(body.checks.paypalWebhook.status).toBe("NOT_CONFIGURED");
+      expect(body.checks.paypalWebhook.message).toContain("Public APP_URL is not configured");
+    } finally {
+      (env as any).PAYPAL_WEBHOOK_ID = prevId;
+      (env as any).APP_URL = prevAppUrl;
       vi.restoreAllMocks();
     }
   });
