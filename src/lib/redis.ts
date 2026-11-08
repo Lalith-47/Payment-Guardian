@@ -9,9 +9,26 @@ declare global {
   var __redisClient: Redis | undefined;
 }
 
+export function resolveRedisUrl(): string {
+  if (process.env.TEST_REDIS_URL) {
+    return process.env.TEST_REDIS_URL;
+  }
+  if (process.env.NODE_ENV === "test") {
+    try {
+      const u = new URL(env.REDIS_URL);
+      u.pathname = "/2"; // Redis DB 2 strictly reserved for tests to avoid demo DB pollution
+      return u.toString();
+    } catch {
+      return env.REDIS_URL;
+    }
+  }
+  return env.REDIS_URL;
+}
+
 export function getRedisClient(): Redis {
   if (!global.__redisClient) {
-    global.__redisClient = new Redis(env.REDIS_URL, {
+    const url = resolveRedisUrl();
+    global.__redisClient = new Redis(url, {
       maxRetriesPerRequest: null, // Required by BullMQ
       enableReadyCheck: true,
       lazyConnect: process.env.SKIP_ENV_VALIDATION === "1",

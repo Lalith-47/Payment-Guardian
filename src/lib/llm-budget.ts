@@ -1,5 +1,8 @@
 import { redis } from "@/lib/redis";
 import { env } from "@/config/env";
+import { db } from "@/db";
+import { llmRequests } from "@/db/schema";
+import { gte, sql } from "drizzle-orm";
 import { createChildLogger } from "@/lib/logger";
 
 const log = createChildLogger("llm-budget");
@@ -52,14 +55,34 @@ export async function getLlmDailyUsage(scope?: "real" | "test"): Promise<{
       };
     }
 
-    const key = getTodayKey(scope);
-    const countStr = await redis.get(key);
-    const used = countStr ? parseInt(countStr, 10) : 0;
+    let used = 0;
+    if (scope === "test") {
+      const key = getTodayKey("test");
+      const countStr = await redis.get(key);
+      used = countStr ? parseInt(countStr, 10) : 0;
+    } else {
+      // Single source of truth: rows with timestamp >= current UTC midnight from llm_requests table
+      const utcMidnight = new Date();
+      utcMidnight.setUTCHours(0, 0, 0, 0);
+
+      try {
+        const [counts] = await db
+          .select({
+            totalCount: sql<number>`count(*)::int`,
+          })
+          .from(llmRequests)
+          .where(gte(llmRequests.timestamp, utcMidnight));
+        used = Number(counts?.totalCount || 0);
+      } catch {
+        used = 0;
+      }
+    }
+
     const budget = env.LLM_DAILY_BUDGET;
     const remaining = Math.max(0, budget - used);
     return { used, budget, remaining, exhaustedByCap: false };
   } catch (err) {
-    log.error({ err }, "Failed to get LLM daily usage from Redis");
+    log.error({ err }, "Failed to get LLM daily usage from authoritative source");
     return { used: 0, budget: env.LLM_DAILY_BUDGET, remaining: env.LLM_DAILY_BUDGET, exhaustedByCap: false };
   }
 }
@@ -81,19 +104,18 @@ export async function incrementLlmUsage(scope?: "real" | "test"): Promise<{ used
     return { used: env.LLM_DAILY_BUDGET, allowed: false };
   }
 
-  const key = getTodayKey(scope);
-  const used = await redis.incr(key);
+  // Budget decisions derive strictly from llm_requests table (single source of truth)
+  const usage = await getLlmDailyUsage(scope);
+  const allowed = usage.used < env.LLM_DAILY_BUDGET;
 
-  if (used === 1) {
+  // Track transient key in redis with 48h TTL for cache / rate inspection
+  const key = getTodayKey(scope);
+  const redisCount = await redis.incr(key);
+  if (redisCount === 1) {
     await redis.expire(key, 60 * 60 * 48);
   }
 
-  const allowed = used <= env.LLM_DAILY_BUDGET;
-  if (!allowed) {
-    log.warn({ used, budget: env.LLM_DAILY_BUDGET, key }, "LLM daily budget exceeded!");
-  }
-
-  return { used, allowed };
+  return { used: usage.used, allowed };
 }
 
 export async function isLlmBudgetAvailable(scope?: "real" | "test"): Promise<boolean> {

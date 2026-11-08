@@ -10,7 +10,7 @@ describe("Item 3: Webhook Registration Robustness & Readyz Probes", () => {
     const mockWebhookId = "WH-MOCK-OK-123";
 
     vi.spyOn(paypalClient, "listWebhooks").mockResolvedValue([
-      { id: mockWebhookId, url: expectedUrl },
+      { id: mockWebhookId, url: expectedUrl, event_types: [] },
     ]);
 
     const prevId = env.PAYPAL_WEBHOOK_ID;
@@ -29,7 +29,7 @@ describe("Item 3: Webhook Registration Robustness & Readyz Probes", () => {
 
   it("reports paypalWebhook as DOWN when PAYPAL_WEBHOOK_ID is not among registered webhooks", async () => {
     vi.spyOn(paypalClient, "listWebhooks").mockResolvedValue([
-      { id: "WH-DIFFERENT-456", url: "https://other.com/api/webhooks/paypal" },
+      { id: "WH-DIFFERENT-456", url: "https://other.com/api/webhooks/paypal", event_types: [] },
     ]);
 
     const prevId = env.PAYPAL_WEBHOOK_ID;
@@ -50,7 +50,7 @@ describe("Item 3: Webhook Registration Robustness & Readyz Probes", () => {
   it("reports paypalWebhook as DOWN when registered URL does not match expected APP_URL destination", async () => {
     const mockWebhookId = "WH-MISMATCH-URL";
     vi.spyOn(paypalClient, "listWebhooks").mockResolvedValue([
-      { id: mockWebhookId, url: "https://old-tunnel.trycloudflare.com/api/webhooks/paypal" },
+      { id: mockWebhookId, url: "https://old-tunnel.trycloudflare.com/api/webhooks/paypal", event_types: [] },
     ]);
 
     const prevId = env.PAYPAL_WEBHOOK_ID;

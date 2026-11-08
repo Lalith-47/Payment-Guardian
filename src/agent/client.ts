@@ -188,19 +188,21 @@ export async function defaultOpenRouterCaller(
   } catch (err) {
     const latencyMs = Date.now() - startTime;
     const errorMsg = (err as Error).message;
-    try {
-      await db.insert(schema.llmRequests).values({
-        caller,
-        model,
-        eventId,
-        httpStatus: null,
-        attempt,
-        latencyMs,
-        errorMessage: errorMsg,
-        origin: "measured",
-      });
-    } catch (dbErr) {
-      log.error({ dbErr }, "Failed to record outbound LLM request in db");
+    if (isReal) {
+      try {
+        await db.insert(schema.llmRequests).values({
+          caller,
+          model,
+          eventId,
+          httpStatus: null,
+          attempt,
+          latencyMs,
+          errorMessage: errorMsg,
+          origin: "measured",
+        });
+      } catch (dbErr) {
+        log.error({ dbErr }, "Failed to record outbound LLM request in db");
+      }
     }
     throw err;
   }
@@ -212,19 +214,21 @@ export async function defaultOpenRouterCaller(
     const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined;
     const errText = await res.text();
 
-    try {
-      await db.insert(schema.llmRequests).values({
-        caller,
-        model,
-        eventId,
-        httpStatus: res.status,
-        attempt,
-        latencyMs,
-        errorMessage: errText.slice(0, 1000),
-        origin: "measured",
-      });
-    } catch (dbErr) {
-      log.error({ dbErr }, "Failed to record outbound LLM request in db");
+    if (isReal) {
+      try {
+        await db.insert(schema.llmRequests).values({
+          caller,
+          model,
+          eventId,
+          httpStatus: res.status,
+          attempt,
+          latencyMs,
+          errorMessage: errText.slice(0, 1000),
+          origin: "measured",
+        });
+      } catch (dbErr) {
+        log.error({ dbErr }, "Failed to record outbound LLM request in db");
+      }
     }
 
     log.warn({ status: res.status, model, retryAfter, err: errText }, "LLM provider call failed");
@@ -239,19 +243,21 @@ export async function defaultOpenRouterCaller(
     throw error;
   }
 
-  try {
-    await db.insert(schema.llmRequests).values({
-      caller,
-      model,
-      eventId,
-      httpStatus: res.status,
-      attempt,
-      latencyMs,
-      errorMessage: null,
-      origin: "measured",
-    });
-  } catch (dbErr) {
-    log.error({ dbErr }, "Failed to record outbound LLM request in db");
+  if (isReal) {
+    try {
+      await db.insert(schema.llmRequests).values({
+        caller,
+        model,
+        eventId,
+        httpStatus: res.status,
+        attempt,
+        latencyMs,
+        errorMessage: null,
+        origin: "measured",
+      });
+    } catch (dbErr) {
+      log.error({ dbErr }, "Failed to record outbound LLM request in db");
+    }
   }
 
   const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
