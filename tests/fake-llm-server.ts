@@ -87,6 +87,8 @@ export function createFakeLlmServer(config: FakeLlmServerConfig = {}) {
           // Default: auto_retry
           proposalContent = {
             action: "retry",
+            amount: 15.0,
+            currency: "USD",
             confidence: 0.95,
             reasoning: "Transient instrument decline; safe automatic capture retry is recommended.",
             message: "Your payment card encountered a temporary decline. We will re-attempt the charge.",

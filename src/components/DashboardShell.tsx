@@ -99,7 +99,11 @@ export function DashboardShell({
 
   const handleSignOut = async () => {
     try {
-      await fetch("/api/auth/sign-out", { method: "POST" });
+      await fetch("/api/auth/sign-out", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
     } catch {
       // ignore
     }
