@@ -53,7 +53,11 @@ export function createFakeLlmServer(config: FakeLlmServerConfig = {}) {
 
         if (body.includes("Extract invoice details from") || body.includes("INVOICE_EXTRACTOR")) {
           let amount = 400.0;
-          if (body.includes("750") || body.includes("800") || body.includes("over_limit")) {
+          if (body.includes("-500") || body.includes("negative")) {
+            amount = -500.0;
+          } else if (body.includes("NaN") || body.includes("invalid amount")) {
+            amount = null as any;
+          } else if (body.includes("750") || body.includes("800") || body.includes("over_limit")) {
             amount = 750.0;
           }
           let customerEmail: string | null = "client@example.com";

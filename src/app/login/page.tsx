@@ -32,7 +32,13 @@ export default function LoginPage() {
       }
 
       setSuccess(true);
-      setTimeout(() => router.push("/dashboard"), 300);
+      const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const rawReturnTo = searchParams ? searchParams.get("returnTo") : null;
+      const safeReturnTo =
+        rawReturnTo && rawReturnTo.startsWith("/") && !rawReturnTo.startsWith("//") && !rawReturnTo.includes("://")
+          ? rawReturnTo
+          : "/dashboard";
+      setTimeout(() => router.push(safeReturnTo), 300);
     } catch (err) {
       setError((err as Error).message);
     } finally {

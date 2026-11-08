@@ -9,8 +9,8 @@ import { createChildLogger } from "@/lib/logger";
 const log = createChildLogger("policies-api");
 
 export const policyUpdateSchema = z.object({
-  name: z.string().min(1, "Policy name is required"),
-  description: z.string().nullable().optional(),
+  name: z.string().min(1, "Policy name is required").max(100, "Policy name must be at most 100 characters"),
+  description: z.string().max(500, "Description must be at most 500 characters").nullable().optional(),
   currency: z.string().min(3).max(3).default("USD"),
   autoRetryMaxAttempts: z.number().int().min(0).max(5).default(2),
   autoRetryMinIntervalHours: z.number().int().min(1).max(48).default(4),
@@ -23,7 +23,7 @@ export const policyUpdateSchema = z.object({
   requireApprovalForActions: z.array(z.string()).default(["escalate"]),
   reminderCadenceHours: z.number().int().min(1).max(72).default(24),
   tone: z.enum(["empathetic", "professional", "urgent"]).default("empathetic"),
-  changeReason: z.string().optional(),
+  changeReason: z.string().max(500, "Change reason must be at most 500 characters").optional(),
 });
 
 export async function GET(req: NextRequest) {

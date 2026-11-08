@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
           error: extractionResult.error || "Failed to extract invoice details",
           missingFields: extractionResult.missingFields,
         },
-        { status: 200 }
+        { status: 400 }
       );
     }
 
@@ -90,10 +90,18 @@ export async function POST(req: NextRequest) {
     }
   } else {
     // 2. Direct structured fields provided
+    const rawAmount = body.amount !== undefined ? (typeof body.amount === "number" ? body.amount : parseFloat(body.amount as string)) : null;
+    if (body.amount !== undefined && (rawAmount === null || isNaN(rawAmount) || !isFinite(rawAmount) || rawAmount <= 0)) {
+      return NextResponse.json(
+        { error: "Invalid invoice amount: must be a positive finite number greater than zero" },
+        { status: 400 }
+      );
+    }
+
     extractedData = {
       customerName: (body.customerName as string) || null,
       customerEmail: (body.customerEmail as string) || null,
-      amount: typeof body.amount === "number" ? body.amount : parseFloat(body.amount as string) || null,
+      amount: rawAmount,
       currency: (body.currency as string) || "USD",
       dueDays: typeof body.dueDays === "number" ? body.dueDays : 15,
       note: (body.note as string) || null,
@@ -106,6 +114,20 @@ export async function POST(req: NextRequest) {
     if (!extractedData.customerEmail) missingFields.push("customerEmail");
     if (!extractedData.amount || extractedData.amount <= 0) missingFields.push("amount");
     if (!extractedData.currency) missingFields.push("currency");
+  }
+
+  // Boundary validation: Amount must be a positive finite number
+  if (
+    extractedData.amount !== null &&
+    (typeof extractedData.amount !== "number" ||
+      isNaN(extractedData.amount) ||
+      !isFinite(extractedData.amount) ||
+      extractedData.amount <= 0)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid invoice amount: must be a positive finite number greater than zero" },
+      { status: 400 }
+    );
   }
 
   // If required fields are missing, return early asking owner to fill them
