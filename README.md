@@ -31,6 +31,12 @@ Revenue Guardian is an autonomous payment recovery & back-office financial triag
 
 All utility scripts are tracked in `scripts/`:
 
+- **`scripts/sync-webhook.ts`**:
+  Finds or registers a PayPal Sandbox Webhook for the current `APP_URL`, subscribed exclusively to the event types Revenue Guardian handles (`CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.REFUNDED`, `INVOICING.INVOICE.PAID`). Prints the exact `PAYPAL_WEBHOOK_ID=...` string for the owner to configure in `.env` (never edits `.env` automatically).
+  ```bash
+  npx tsx scripts/sync-webhook.ts
+  ```
+
 - **`scripts/update-webhook.ts`**:
   Verifies that `PAYPAL_WEBHOOK_ID` is registered in PayPal Sandbox and sends a `PATCH` update to point the webhook destination to `${APP_URL}/api/webhooks/paypal`.
   ```bash

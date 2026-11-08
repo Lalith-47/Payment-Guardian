@@ -106,20 +106,36 @@ export async function GET() {
   }
 
   // 5. Registered PayPal Webhook Verification
-  if (env.PAYPAL_WEBHOOK_ID) {
-    const whStart = Date.now();
+  const whStart = Date.now();
+  if (!env.PAYPAL_WEBHOOK_ID) {
+    isReady = false;
+    checks.paypalWebhook = {
+      status: "DOWN",
+      latencyMs: 0,
+      error: "PAYPAL_WEBHOOK_ID is not configured in environment.",
+    };
+  } else {
     try {
       const webhooks = await paypalClient.listWebhooks();
-      const isRegistered = webhooks.some((w) => w.id === env.PAYPAL_WEBHOOK_ID);
-      if (isRegistered) {
-        checks.paypalWebhook = { status: "UP", latencyMs: Date.now() - whStart };
-      } else {
+      const matched = webhooks.find((w) => w.id === env.PAYPAL_WEBHOOK_ID);
+      const expectedUrl = env.APP_URL ? `${env.APP_URL.replace(/\/+$/, "")}/api/webhooks/paypal` : null;
+
+      if (!matched) {
         isReady = false;
         checks.paypalWebhook = {
           status: "DOWN",
           latencyMs: Date.now() - whStart,
           error: `Configured PAYPAL_WEBHOOK_ID '${env.PAYPAL_WEBHOOK_ID}' is NOT among registered sandbox webhooks.`,
         };
+      } else if (expectedUrl && matched.url !== expectedUrl) {
+        isReady = false;
+        checks.paypalWebhook = {
+          status: "DOWN",
+          latencyMs: Date.now() - whStart,
+          error: `Registered webhook URL '${matched.url}' does not match expected destination '${expectedUrl}'.`,
+        };
+      } else {
+        checks.paypalWebhook = { status: "UP", latencyMs: Date.now() - whStart };
       }
     } catch (err) {
       isReady = false;
