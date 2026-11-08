@@ -16,12 +16,10 @@ export async function determineWebhookOrigin(
   }
 
   if (
-    (transmissionId && transmissionId.startsWith("trans_")) ||
+    (transmissionId && transmissionId.startsWith("trans_wh_sim_")) ||
     (eventId && (
       eventId.startsWith("wh_evt_") ||
-      eventId.startsWith("WH-SIM") ||
-      eventId.startsWith("WH-REC") ||
-      eventId.startsWith("WH-UNKNOWN")
+      eventId.startsWith("WH-SIM")
     ))
   ) {
     return "simulated";
@@ -34,6 +32,7 @@ export async function determineWebhookOrigin(
     (resource.order_id as string) ||
     (resource.intent ? (resource.id as string) : null);
   const resourceCaptureId = (resource.status && resource.amount ? (resource.id as string) : null);
+  const rawResourceId = (resource.id as string) || null;
 
   if (resourceInvoiceId) {
     const [inv] = await db
@@ -63,7 +62,13 @@ export async function determineWebhookOrigin(
   }
 
   // If resource IDs were present but matched nothing created by us:
-  return "simulated";
+  const hasIdentifiableResource = Boolean(resourceInvoiceId || resourceOrderId || resourceCaptureId || rawResourceId);
+  if (hasIdentifiableResource) {
+    return "simulated";
+  }
+
+  // Otherwise, no resource IDs present to evaluate; leave unknown rather than guess
+  return "unknown";
 }
 
 export async function isWebhookDeliveryDuplicate(
