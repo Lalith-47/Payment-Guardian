@@ -78,7 +78,37 @@ Prior to commit addressing Item 1 (invoice due terms bug):
 - **Invoice 0050 (`INV2-WM7Y-KVGX-2XA4-8G3W`)**: Created via Live Call 1 ($20.00 to Acme Corp, net 15 prompt). Due to a hardcoded `{ term_type: "DUE_ON_RECEIPT" }` payload in `paypalClient.createDraftInvoice`, PayPal reported `term_type = "DUE_ON_RECEIPT"` and `due_date = "2026-11-07"`. Subsequently paid in sandbox and reconciled to `PAID_CONFIRMED_BY_POLLING`.
 - **Invoice 0051 (`INV2-KBEJ-EYQW-7ATK-W7JQ`)**: Created via Live Call 2 ($750.00 to Beta LLC, net 30 prompt, over-limit human approval). Although the proposal stated `dueDays: 30`, `createDraftInvoice` omitted the term payload, resulting in PayPal recording `term_type = "DUE_ON_RECEIPT"` and `due_date = "2026-11-07"`, while `paypal_invoices.due_days` defaulted to `15`.
 - Both records (0050 and 0051) are preserved unmodified as historical pre-fix records.
-- Invoices created post-fix (e.g. 0060 `INV2-F4LY-K7PW-F7E2-SSZS` with Net 30 -> `NET_30` / `2026-12-07`, and 0061 `INV2-S5Z6-JVQ7-R9ZK-7QAC` with custom 20 days -> `DUE_ON_DATE_SPECIFIED` / `2026-11-27`) correctly reflect parsed due terms and store the exact terms reported back by PayPal on GET.
+- Invoices created post-fix (0060 `INV2-F4LY-K7PW-F7E2-SSZS` with Net 30 -> `NET_30` / `2026-12-07`, and 0061 `INV2-S5Z6-JVQ7-R9ZK-7QAC` with custom 20 days -> `DUE_ON_DATE_SPECIFIED` / `2026-11-27`) correctly reflect parsed due terms and store the exact terms reported back by PayPal on GET.
+
+## Complete Invoice Registry (Every Invoice Created in Runs)
+The following is the exhaustive list of all invoice records across the demo database and PayPal sandbox:
+
+| Invoice ID | Invoice Number | DB Table | Amount | Status | Payment Term | Due Date | Origin / Note |
+|---|---|---|---|---|---|---|---|
+| `INV2-WM7Y-KVGX-2XA4-8G3W` | `0050` | `paypal_invoices` | $20.00 USD | `PAID_CONFIRMED_BY_POLLING` | DUE_ON_RECEIPT | 2026-11-07 | Live Call 1 ($20 Acme Corp) |
+| `INV2-KBEJ-EYQW-7ATK-W7JQ` | `0051` | `paypal_invoices` | $750.00 USD | `SENT` | DUE_ON_RECEIPT | 2026-11-07 | Live Call 2 ($750 Beta LLC) |
+| `INV2-F4LY-K7PW-F7E2-SSZS` | `0060` | `paypal_invoices` | $30.00 USD | `SENT` | `NET_30` | 2026-12-07 | Real verification invoice (Net 30) |
+| `INV2-S5Z6-JVQ7-R9ZK-7QAC` | `0061` | `paypal_invoices` | $45.00 USD | `SENT` | `DUE_ON_DATE_SPECIFIED` | 2026-11-27 | Real verification invoice (custom 20 days) |
+| `INV2-LH2U-HJ83-EN9F-9U7F` | `E2E-0062` | PayPal Sandbox | $150.00 USD | `SENT` | NET_15 | 2026-11-22 | E2E stack test execution |
+| `INV2-3Z9H-U569-AWC5-RH2L` | `E2E-E2E-0063` | PayPal Sandbox | $150.00 USD | `SENT` | NET_15 | 2026-11-22 | E2E stack test execution |
+| `INV2-XDGK-PTGE-94YG-YJS9` | `E2E-E2E-0064` | PayPal Sandbox | $150.00 USD | `DRAFT` | NET_15 | 2026-11-22 | E2E stack test execution |
+| `INV2-4G66-ZV93-2K3Q-ZN2S` | `E2E-E2E-0065` | PayPal Sandbox | $150.00 USD | `DRAFT` | NET_15 | 2026-11-22 | E2E stack test execution |
+| `INV_SYNC_c40fc2c1` ... `INV_SYNC_95b899b9` | NULL | `paypal_invoices` | $500.00 USD | `SENT` | NULL | NULL | 14 synthetic seed records from sync/polling tests |
+
+*Note on scratch IDs*: `INV2-7T2W-TY8U-45W9-2DVL` and `INV2-9UET-E5C7-P5B3-6K6N` cited in an interim report were ephemeral test objects created in the isolated test database `revenue_guardian_test` during unit test harness development, not demo DB verification records. The authoritative verification invoices are `INV2-F4LY-K7PW-F7E2-SSZS` (0060) and `INV2-S5Z6-JVQ7-R9ZK-7QAC` (0061).
+
+## Webhook Deliveries Classification (Real vs Simulated)
+- **Delivery 63 (`WH-7Y7254563A4550640-11V2185806837105M`)**: PayPal's canned Webhook Simulator sample. Payload contains `create_time: 2015-02-17T18:51:33Z`, capture `42311647XV020574X`, and order `8U481631H66031715`. It is **simulated** (not a real delivery).
+- **Nov 4 M1 Webhook**: Used the exact same simulator event ID `WH-7Y7254563A4550640-11V2185806837105M` from 2015, and was likewise **simulated**.
+- **Provably Real Webhook Deliveries**:
+  - Deliveries 47 & 48: `WH-3L12717952942970T-25G99833JD6155048` and `WH-5NW19326K3043071Y-8GN930717H152400K` (`CHECKOUT.ORDER.APPROVED` for sandbox order `9H315076FR413194X`, created Nov 7 11:22 & 11:27 UTC).
+  - Delivery 49: `WH-0A160470LX2405000-2U246758JX0520422` (`PAYMENT.CAPTURE.COMPLETED` for capture `96Y881058L747472P`, order `9H315076FR413194X`, created Nov 7 11:37 UTC — the accepted real C1 trail).
+  - Delivery 22: `WH-3RU56185SY270690U-5A375863H98296418` (`PAYMENT.CAPTURE.COMPLETED` for capture `4D699688EK0420814`, order `2CM682479Y333790V`).
+  - Deliveries 10, 14, 18, 23, 27, 31, 41, 50: `INVOICING.INVOICE.CREATED` deliveries for real sandbox invoices 0022 through 0029.
+  - Deliveries 64, 65, 66, 67, 68, 69: Real sandbox webhooks emitted by PayPal for sandbox invoices created during E2E runs (`E2E-0062`, `E2E-E2E-0063`, `E2E-E2E-0064`, `E2E-E2E-0065`).
+- **Simulated / Synthetic Deliveries**:
+  - Delivery 63: Canned 2015 simulator sample (`WH-7Y7254563A4550640-11V2185806837105M`).
+  - All deliveries with transmission IDs starting with `trans_` (`trans_unknown_*`, `trans_wh_sim_*`, `trans_wh_rec_*`, `wh_evt_*`): synthetically created by local test suites and simulator harnesses.
 
 - Local counts today: queries rows where `timestamp >= current UTC midnight` for `origin = 'measured'` and `origin = 'reconstructed'`.
 - `localCountToday = measuredCount + reconstructedCount`.
