@@ -224,11 +224,12 @@ export default function AuditPage() {
           <div className="ag-theme-quartz w-full h-[600px] rounded-xl overflow-hidden border border-rule">
             <AgGridReact<AuditEntry>
               ref={gridRef}
+              theme="legacy"
               rowData={filteredLogs}
               columnDefs={columnDefs}
               pagination={true}
               paginationPageSize={20}
-              animateRows={false}
+              paginationPageSizeSelector={[10, 20, 50, 100]}
             />
           </div>
         </div>

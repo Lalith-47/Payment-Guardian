@@ -428,13 +428,14 @@ function InvoicesContent() {
               </div>
               <div className="ag-theme-quartz w-full h-[540px] rounded-xl overflow-hidden border border-rule">
                 <AgGridReact<InvoiceItem>
+                  theme="legacy"
                   rowData={invoices}
                   columnDefs={columnDefs}
-                  rowSelection={"single"}
+                  rowSelection={{ mode: "singleRow" }}
                   onRowClicked={onRowClicked}
                   pagination={true}
                   paginationPageSize={15}
-                  animateRows={false}
+                  paginationPageSizeSelector={[10, 15, 25, 50]}
                 />
               </div>
             </div>

@@ -30,3 +30,4 @@ traces/
 docs/qa/videos/
 docs/qa/traces/
 *.png
+!docs/qa/screens/*.png

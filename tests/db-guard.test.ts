@@ -36,10 +36,15 @@ describe("Database Guard Isolation", () => {
 
   it("resolveAndGuardTestDatabaseUrl appends _test cleanly without regex artifacts", () => {
     const prevUrl = process.env.DATABASE_URL;
+    const prevTestUrl = process.env.TEST_DATABASE_URL;
+    delete process.env.TEST_DATABASE_URL;
     process.env.DATABASE_URL = "postgresql://postgres:pass@localhost:5433/my_custom_db";
     const resolved = resolveAndGuardTestDatabaseUrl();
     expect(resolved).toBe("postgresql://postgres:pass@localhost:5433/my_custom_db_test");
     expect(resolved).not.toContain("$1");
     process.env.DATABASE_URL = prevUrl;
+    if (prevTestUrl) {
+      process.env.TEST_DATABASE_URL = prevTestUrl;
+    }
   });
 });

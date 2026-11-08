@@ -1,4 +1,3 @@
-import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
+import { ModuleRegistry, AllCommunityModule, ValidationModule } from "ag-grid-community";
 
-ModuleRegistry.registerModules([AllCommunityModule]);
-
+ModuleRegistry.registerModules([AllCommunityModule, ValidationModule]);
