@@ -391,4 +391,91 @@ describe("Webhook Processing: Unknown Event Types (* subscription)", () => {
     verifySpy.mockRestore();
     process.env.STACK_ROLE = prevRole;
   });
+
+  it("Item 2: Simulated delivery with VALID signature is classified as simulated and never changes any event or invoice state", async () => {
+    const prevRole = process.env.STACK_ROLE;
+    process.env.STACK_ROLE = "demo";
+
+    // 1. Snapshot initial state of events and paypal_invoices
+    const eventsBefore = await pool.query("SELECT id, status FROM events");
+    const invoicesBefore = await pool.query("SELECT id, status FROM paypal_invoices");
+
+    // 2. Mock signature verification to return valid (as PayPal simulator events do)
+    const verifySpy = vi.spyOn(verifier, "verifyPayPalWebhookSignature").mockResolvedValue({
+      valid: true,
+      status: "VALID",
+      signingString: "mock_sim_signing_string",
+      crc: 999999,
+    });
+
+    const simTransmissionId = `trans_sim_check_${Date.now()}`;
+    const simEventId = `WH-SIM-CHECK-${Date.now()}`;
+
+    // Payload modeled on PayPal simulator sample (canned 2015 capture for untracked order)
+    const simPayload = {
+      id: simEventId,
+      create_time: "2015-02-17T18:51:33Z",
+      event_type: "PAYMENT.CAPTURE.COMPLETED",
+      summary: "Payment completed for $ 57.0 USD",
+      resource_type: "capture",
+      resource: {
+        id: "42311647XV020574X",
+        amount: { value: "57.00", currency_code: "USD" },
+        supplementary_data: {
+          related_ids: {
+            order_id: "8U481631H66031715",
+          },
+        },
+      },
+    };
+
+    const req = new Request("http://localhost:3000/api/webhooks/paypal", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "paypal-transmission-id": simTransmissionId,
+        "paypal-transmission-time": new Date().toISOString(),
+        "paypal-cert-url": "https://api.sandbox.paypal.com/v1/notifications/certs/CERT-SIM",
+        "paypal-auth-algo": "SHA256withRSA",
+        "paypal-transmission-sig": "valid_sim_sig",
+      },
+      body: JSON.stringify(simPayload),
+    });
+
+    // 3. Post to webhook route
+    const res = await POST(req as any);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("RECEIVED");
+    expect(body.origin).toBe("simulated");
+
+    // 4. Verify recorded delivery has origin: simulated and unified signature_status: VALID
+    const delivery = await pool.query(
+      "SELECT origin, signature_status FROM webhook_deliveries WHERE transmission_id = $1",
+      [simTransmissionId]
+    );
+    expect(delivery.rows.length).toBe(1);
+    expect(delivery.rows[0].origin).toBe("simulated");
+    expect(delivery.rows[0].signature_status).toBe("VALID");
+
+    // 5. Run processor directly to ensure failsafe isolation
+    await processEventPipeline({
+      eventId: simEventId,
+      type: "PAYMENT.CAPTURE.COMPLETED",
+      source: "paypal_webhook",
+      transmissionId: simTransmissionId,
+      payload: simPayload,
+    });
+
+    // 6. Verify zero event rows were modified or created
+    const eventsAfter = await pool.query("SELECT id, status FROM events");
+    expect(eventsAfter.rows).toEqual(eventsBefore.rows);
+
+    // 7. Verify zero invoice rows were modified or created
+    const invoicesAfter = await pool.query("SELECT id, status FROM paypal_invoices");
+    expect(invoicesAfter.rows).toEqual(invoicesBefore.rows);
+
+    verifySpy.mockRestore();
+    process.env.STACK_ROLE = prevRole;
+  });
 });

@@ -319,6 +319,14 @@ export async function processEventPipeline(
         break;
       }
 
+      if (delivery.origin === "simulated") {
+        log.warn(
+          { transmissionId: jobData.transmissionId, eventId: jobData.eventId },
+          "PAYMENT.CAPTURE.COMPLETED delivery is simulated; ignoring without modifying event or invoice state"
+        );
+        break;
+      }
+
       // 2. Extract verified order id and capture id strictly from verified payload resource
       const supplementaryData = resource.supplementary_data as Record<string, any> | undefined;
       const verifiedOrderId =
@@ -450,6 +458,14 @@ export async function processEventPipeline(
         log.warn(
           { transmissionId: jobData.transmissionId, eventId: jobData.eventId },
           "Rejected INVOICING.INVOICE.PAID: No signature-VALID webhook_deliveries row found"
+        );
+        break;
+      }
+
+      if (delivery.origin === "simulated") {
+        log.warn(
+          { transmissionId: jobData.transmissionId, eventId: jobData.eventId },
+          "INVOICING.INVOICE.PAID delivery is simulated; ignoring without modifying invoice state"
         );
         break;
       }

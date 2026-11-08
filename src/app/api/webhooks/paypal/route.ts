@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyPayPalWebhookSignature } from "@/webhooks/verify";
-import { recordWebhookDelivery, isWebhookDeliveryDuplicate } from "@/db/queries/webhooks";
+import { recordWebhookDelivery, isWebhookDeliveryDuplicate, determineWebhookOrigin } from "@/db/queries/webhooks";
 import { eventsQueue } from "@/queue";
 import { redis } from "@/lib/redis";
 import { appendAuditLog } from "@/db/queries/audit";
@@ -75,6 +75,10 @@ export async function POST(req: NextRequest) {
       ? "SKIPPED_E2E: Object carries e2e tag, filtered on demo stack"
       : null;
 
+  // Determine origin according to system rules
+  const origin = await determineWebhookOrigin(eventPayload, transmissionId, eventId);
+  const unifiedSignatureStatus = verification.valid ? "VALID" : "INVALID";
+
   // 3. Record in webhook_deliveries table (records both valid and rejected/skipped deliveries with reason)
   try {
     await recordWebhookDelivery({
@@ -91,7 +95,8 @@ export async function POST(req: NextRequest) {
         "paypal-auth-algo": authAlgo,
         ...(skipReason ? { "x-rg-skip-reason": skipReason } : {}),
       },
-      signatureStatus: verification.status,
+      signatureStatus: unifiedSignatureStatus,
+      origin,
     });
   } catch (err) {
     log.warn({ err, transmissionId, eventId }, "Database recorded duplicate or error inserting webhook delivery");
@@ -138,7 +143,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 5. Enqueue untagged verified webhook to BullMQ for asynchronous processing
+  // 5. Simulator events pass signature verification, but must NEVER mutate event or invoice states
+  if (origin === "simulated") {
+    log.info(
+      { transmissionId, eventId, eventType },
+      "Webhook verified but identified as simulated: skipping BullMQ so event/invoice state is never modified"
+    );
+    return NextResponse.json(
+      { status: "RECEIVED", transmissionId, eventId, origin: "simulated" },
+      { status: 200 }
+    );
+  }
+
+  // 6. Enqueue untagged real verified webhook to BullMQ for asynchronous processing
   await eventsQueue.add(eventType, {
     eventId,
     type: eventType,

@@ -207,7 +207,8 @@ export const webhookDeliveries = pgTable(
     resourceType: text("resource_type"),
     rawBody: text("raw_body").notNull(),
     headers: jsonb("headers").notNull(),
-    signatureStatus: text("signature_status").notNull(), // 'VALID', 'INVALID', 'TAMPERED', 'STALE_TIMESTAMP', 'BAD_CERT_HOST'
+    signatureStatus: text("signature_status").notNull(), // 'VALID', 'INVALID'
+    origin: text("origin").notNull().default("unknown"), // 'real', 'simulated', 'unknown'
     receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
     processedAt: timestamp("processed_at", { withTimezone: true }),
   },
