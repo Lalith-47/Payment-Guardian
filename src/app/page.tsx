@@ -114,14 +114,14 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted">Auto Limit</div>
+                  <div className="text-xs text-muted">Auto Guardrail</div>
                   <div className="text-xl font-normal text-ink num mt-1">
-                    $25.00 <span className="u">USD</span>
+                    Policy Bound
                   </div>
                 </div>
                 <div>
                   <div className="text-xs text-muted">Auto Match</div>
-                  <div className="text-xl font-normal text-accent num mt-1">99.4%</div>
+                  <div className="text-xl font-normal text-accent num mt-1">Active</div>
                 </div>
               </div>
             </div>
@@ -255,12 +255,12 @@ export default function LandingPage() {
         <section id="section-threshold" className="py-24 border-t border-rule">
           <div className="container">
             <div className="ticks rounded-card border border-rule-2 bg-paper-2/60 p-8 sm:p-12 max-w-4xl mx-auto">
-              <div className="text-xs text-muted">Maximum Autonomous Refund Threshold</div>
-              <div className="text-figure font-extralight text-ink num leading-none my-4">
-                $25.00 <span className="text-2xl text-muted font-light">USD</span>
+              <div className="text-xs text-muted">Autonomous Recovery Guardrails</div>
+              <div className="text-figure font-extralight text-ink leading-none my-4 text-3xl sm:text-4xl md:text-5xl">
+                Policy-Governed Ceilings
               </div>
               <p className="lead text-ink-2 max-w-2xl">
-                Transactions exceeding this threshold strictly require single-use cryptographic owner approval. Below this ceiling, legitimate instrument failures resolve autonomously in under 4 seconds.
+                Transactions exceeding merchant-configured thresholds strictly require single-use cryptographic owner approval. Below these ceilings, legitimate instrument failures resolve autonomously in seconds.
               </p>
               <div className="flex flex-wrap items-center gap-4 mt-8 pt-6 border-t border-rule text-xs text-muted">
                 <span>Configured in PostgreSQL</span>
@@ -306,7 +306,7 @@ export default function LandingPage() {
                     <td className="py-3 px-4 font-mono text-ink">evt_dec_2240ee07</td>
                     <td className="py-3 px-4">PAYMENT.CAPTURE.DECLINED</td>
                     <td className="py-3 px-4 num text-ink">$15.00 USD</td>
-                    <td className="py-3 px-4">Within $25 Auto-Refund Ceiling</td>
+                    <td className="py-3 px-4">Within Policy Auto-Refund Ceiling</td>
                     <td className="py-3 px-4 text-accent flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                       <span>AUTONOMOUS_REFUND</span>
@@ -316,7 +316,7 @@ export default function LandingPage() {
                     <td className="py-3 px-4 font-mono text-ink">evt_dec_f26b6c08</td>
                     <td className="py-3 px-4">INSTRUMENT_DECLINED</td>
                     <td className="py-3 px-4 num text-ink">$75.00 USD</td>
-                    <td className="py-3 px-4">Amount Exceeds $25 Limit</td>
+                    <td className="py-3 px-4">Amount Exceeds Policy Limit</td>
                     <td className="py-3 px-4 text-warning flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-warning" />
                       <span>OWNER_APPROVED</span>
@@ -333,7 +333,7 @@ export default function LandingPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-3 px-4 font-mono text-ink">evt_cap_64197072</td>
+                    <td className="py-3 px-4 font-mono text-ink">evt_cap_96y88105</td>
                     <td className="py-3 px-4">PAYMENT.CAPTURE.COMPLETED</td>
                     <td className="py-3 px-4 num text-ink">$250.00 USD</td>
                     <td className="py-3 px-4">Sandbox Delivery 49 Verified</td>
