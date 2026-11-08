@@ -32,7 +32,7 @@ test.describe("M3-Lite End-to-End Suite: Invoices Lifecycle with AI Extraction &
 
     // 3. Navigate to Invoices Screen
     await page.goto("/invoices");
-    await expect(page.locator("h1")).toContainText("PayPal Invoicing Grid (M3-Lite)");
+    await expect(page.locator("h1")).toContainText("PayPal Invoicing Grid");
     await page.screenshot({ path: "docs/screenshots/09-invoices.png" });
 
     // 4. Test Natural Language Invoice Creation - AUTO Path (< $500)

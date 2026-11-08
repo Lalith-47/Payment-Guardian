@@ -135,7 +135,7 @@ export default function LandingPage() {
 
       <main className="relative z-10">
         {/* Hero Section */}
-        <section id="section-hero" className="relative min-h-screen flex flex-col justify-center">
+        <section id="section-hero" className="relative min-h-dvh flex flex-col justify-center">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--color-deep)] opacity-60" />
           <div className="relative container px-6 py-20">
             <div className="max-w-4xl mx-auto text-center">
@@ -151,20 +151,19 @@ export default function LandingPage() {
                 for Every Declined Payment
               </h1>
               <p className="hero-subtitle mt-6 text-lead text-muted max-w-2xl mx-auto leading-relaxed">
-                Revenue Guardian monitors PayPal capture declines, triages recovery options with AI,
-                enforces your financial guardrails, and executes settlements — all auditable, all under your control.
+                Autonomous payment triage, financial guardrail enforcement, and deterministic PayPal settlements.
               </p>
               <div className="hero-cta mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   href="/onboarding"
-                  className="inline-flex items-center space-x-2 rounded-input bg-accent px-8 py-3.5 text-base font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent shadow-[0_4px_20px_-4px_rgb(245,166,35/0.4)]"
+                  className="inline-flex items-center space-x-2 rounded-input bg-accent px-8 py-3.5 text-base font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent shadow-card"
                 >
                   <span>Start Onboarding</span>
                   <ArrowRight className="h-5 w-5" />
                 </Link>
                 <Link
                   href="/login"
-                  className="inline-flex items-center space-x-2 rounded-input border border-rule-2 bg-ink/80 backdrop-blur-sm px-8 py-3.5 text-base font-semibold text-board-type hover:bg-ink transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
+                  className="inline-flex items-center space-x-2 rounded-input border border-rule-2 bg-ink/90 px-8 py-3.5 text-base font-semibold text-board-type hover:bg-ink transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
                 >
                   <span>Owner Login</span>
                   <ArrowRight className="h-5 w-5" />
@@ -172,7 +171,7 @@ export default function LandingPage() {
               </div>
               <div className="hero-indicator mt-16 flex items-center justify-center gap-2 text-xs text-muted">
                 <span className="hidden sm:inline">Scroll to explore</span>
-                <ArrowDown className="h-5 w-5 animate-bounce" />
+                <ArrowDown className="h-5 w-5" />
               </div>
             </div>
           </div>
@@ -186,14 +185,14 @@ export default function LandingPage() {
                 The Silent Revenue Killer
               </h2>
               <p className="mt-4 text-lead text-muted">
-                Declined payments don't just lose a sale — they lose the customer, the lifetime value, and the trust.
+                Declined payments don’t just lose a sale, they lose customer lifetime value and trust.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <ProblemCard
                 icon={<Zap className="h-6 w-6" />}
                 title="Instant Decline"
-                description="Card declines happen in milliseconds. No webhook, no notification — just lost revenue."
+                description="Card declines happen in milliseconds, leaving lost revenue without notifications."
                 stat="422 HTTP"
               />
               <ProblemCard
@@ -220,7 +219,7 @@ export default function LandingPage() {
                 Event → Agent → Rules → Action → Log
               </h2>
               <p className="mt-4 text-lead text-muted">
-                A deterministic pipeline where AI proposes, rules decide, and code executes — every step auditable.
+                A deterministic pipeline where AI proposes, rules decide, and code executes, with every step auditable.
               </p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
@@ -245,7 +244,7 @@ export default function LandingPage() {
                 Your Rules. Enforced by Code.
               </h2>
               <p className="mt-4 text-lead text-muted">
-                Every financial threshold lives in your policy — editable in the UI, versioned in Postgres, enforced by the engine.
+                Every financial threshold lives in your policy, editable in the UI, versioned in Postgres, enforced by the engine.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -270,21 +269,21 @@ export default function LandingPage() {
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   href="/onboarding"
-                  className="inline-flex items-center space-x-2 rounded-input bg-accent px-8 py-3.5 text-base font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent shadow-[0_4px_20px_-4px_rgb(245,166,35/0.4)]"
+                  className="inline-flex items-center space-x-2 rounded-input bg-accent px-8 py-3.5 text-base font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent shadow-card"
                 >
                   <span>Configure Guardrails</span>
                   <ArrowRight className="h-5 w-5" />
                 </Link>
                 <Link
                   href="/login"
-                  className="inline-flex items-center space-x-2 rounded-input border border-rule-2 bg-ink/80 backdrop-blur-sm px-8 py-3.5 text-base font-semibold text-board-type hover:bg-ink transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
+                  className="inline-flex items-center space-x-2 rounded-input border border-rule-2 bg-ink/90 px-8 py-3.5 text-base font-semibold text-board-type hover:bg-ink transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
                 >
                   <span>Access Dashboard</span>
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </div>
               <p className="mt-8 text-xs text-muted">
-                Built for the PayPal AI Hackathon • No PayPal logos per hackathon rules • "Payments Sandbox" neutral wording
+                Built for the PayPal AI Hackathon, Payments Sandbox neutral wording
               </p>
             </div>
           </div>
@@ -293,8 +292,8 @@ export default function LandingPage() {
 
       <footer className="relative z-10 border-t border-rule-2 bg-ink-2/50 py-8">
         <div className="container px-6 text-center text-xs text-muted">
-          <p>Revenue Guardian — Autonomous Payment Recovery for PayPal Sandbox</p>
-          <p className="mt-1">Owner-controlled • Deterministic execution • Full audit trail</p>
+          <p>Revenue Guardian: Autonomous Payment Recovery for PayPal Sandbox</p>
+          <p className="mt-1">Owner-controlled, deterministic execution, full audit trail</p>
         </div>
       </footer>
     </div>

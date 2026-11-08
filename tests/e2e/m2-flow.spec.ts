@@ -114,7 +114,7 @@ test.describe("M2 End-to-End Suite: Dashboard, Policies, Checkout, Events, Appro
     await page.screenshot({ path: "docs/screenshots/05-approvals.png" });
 
     // Verify Pending Approval is rendered with policy trigger rule
-    const approvalCard = page.locator(':is(.rounded-card, .rounded-xl):has-text("Approve & Execute via Executor")').first();
+    const approvalCard = page.locator(':is(.rounded-card, .rounded-xl):has-text("refund ($75.00 USD)")').first();
     await expect(approvalCard).toBeVisible({ timeout: 20000 });
     await expect(approvalCard.locator("text=Proposed Action")).toBeVisible();
 

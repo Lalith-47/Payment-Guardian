@@ -219,7 +219,7 @@ export default function ApprovalsPage() {
         {/* Rejection Reason Modal */}
         {rejectingItem && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="w-full max-w-md rounded-card border border-rule-2 bg-ink-2 p-6 shadow-[0_20px_60px_-20px_rgb(0,0,0/0.5)] space-y-4">
+            <div className="w-full max-w-md rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
               <div className="flex items-center space-x-2 text-error">
                 <XCircle className="h-5 w-5" />
                 <h3 className="text-sm font-semibold text-board-type">Reject Proposed Action</h3>

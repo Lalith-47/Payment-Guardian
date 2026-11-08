@@ -67,6 +67,21 @@ describe("M3-Lite Invoice Execution & Idempotency", () => {
       };
     });
 
+    vi.spyOn(paypalClient, "getInvoice").mockImplementation(async (invId) => {
+      return {
+        id: invId,
+        status: "SENT",
+        detail: {
+          invoice_number: `INV-${testId}`,
+          payment_term: {
+            term_type: "NET_15",
+            due_date: "2026-11-22",
+          },
+        },
+        amount: { value: "150.00", currency_code: "USD" },
+      } as any;
+    });
+
     const idempotencyKey = `req_inv_${testId}`;
 
     // First execution

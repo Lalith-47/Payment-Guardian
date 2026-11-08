@@ -557,7 +557,7 @@ function InvoicesContent() {
         {/* Create Invoice Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/85 p-4 overflow-y-auto">
-            <div className="w-full max-w-xl rounded-card border border-rule-2 bg-ink-2 p-6 shadow-[0_20px_60px_-20px_rgb(0,0,0/0.5)] space-y-4 my-8">
+            <div className="w-full max-w-xl rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4 my-8">
               <div className="flex items-center justify-between border-b border-rule-2 pb-3">
                 <div className="flex items-center space-x-2">
                   <Sparkles className="h-4 w-4 text-accent" />

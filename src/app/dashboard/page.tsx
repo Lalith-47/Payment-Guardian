@@ -62,7 +62,7 @@ export default async function DashboardPage() {
                 <span>Autonomous Back-Office Recovery</span>
               </div>
               <h1 className="text-section font-bold tracking-tight text-board-type leading-[1.05] max-w-none">
-                Monitoring PayPal capture declines, triaging recovery options, and guarding financial risk.
+                Autonomous Back-Office Recovery
               </h1>
               <p className="mt-3 text-lead text-muted max-w-xl">
                 Every money action passes through owner-defined limits. The AI proposes, deterministic code decides, PayPal executes, everything is logged.
@@ -71,7 +71,7 @@ export default async function DashboardPage() {
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:ml-auto">
               <Link
                 href="/checkout"
-                className="inline-flex items-center space-x-2 rounded-input bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent shadow-[0_4px_16px_-4px_rgb(245,166,35/0.4)]"
+                className="inline-flex items-center space-x-2 rounded-input bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent shadow-card"
               >
                 <CreditCard className="h-4 w-4" />
                 <span>Simulate Checkout</span>
@@ -290,7 +290,7 @@ function MetricCard({
     <div className="rounded-card border border-rule-2 bg-ink-2 p-5 shadow-card space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted">{title}</span>
-        <span className={`flex h-9 w-9 items-center justify-center rounded-card ${iconBg}`}>{icon}</span>
+        <span className={`flex h-9 w-9 items-center justify-center rounded-input ${iconBg}`}>{icon}</span>
       </div>
       <div className="flex items-baseline space-x-2">
         {isTextValue ? (

@@ -75,7 +75,7 @@ export default function LoginPage() {
       <LoginCanvas fallback={<CanvasFallback />} />
 
       <main className="relative z-10 w-full max-w-md px-6 py-20">
-        <div className="relative login-card rounded-card border border-rule-2 bg-ink-2/80 backdrop-blur-xl p-8 shadow-[0_20px_60px_-20px_rgb(0,0,0/0.5)]">
+        <div className="relative login-card rounded-card border border-rule-2 bg-ink-2/80 backdrop-blur-xl p-8 shadow-card">
           {/* Subtle corner accents */}
           <div className="absolute -top-0.5 -left-0.5 h-4 w-4 border-t-2 border-l-2 border-accent/50 rounded-tl-card" />
           <div className="absolute -top-0.5 -right-0.5 h-4 w-4 border-t-2 border-r-2 border-accent/50 rounded-tr-card" />
@@ -83,7 +83,7 @@ export default function LoginPage() {
           <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 border-b-2 border-r-2 border-accent/50 rounded-br-card" />
 
           <div className="mb-8 text-center">
-            <div className="login-title inline-flex items-center justify-center gap-2 mx-auto mb-4 flex h-14 w-14 rounded-card bg-accent text-accent-ink">
+            <div className="login-title inline-flex items-center justify-center gap-2 mx-auto mb-4 flex h-14 w-14 rounded-input bg-accent text-accent-ink">
               <ShieldAlert className="h-7 w-7" />
             </div>
             <h1 className="login-title text-2xl font-bold tracking-tight text-board-type">Revenue Guardian</h1>
@@ -157,11 +157,11 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || success}
-              className="login-submit w-full rounded-input bg-accent px-4 py-3 font-semibold text-accent-ink hover:opacity-90 active:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-[0_4px_16px_-4px_rgb(245,166,35/0.4)]"
+              className="login-submit w-full rounded-input bg-accent px-4 py-3 font-semibold text-accent-ink hover:opacity-90 active:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                  <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" aria-hidden="true"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
                   Signing in…
                 </span>
               ) : (
@@ -176,7 +176,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-muted max-w-md mx-auto">
-          This is a hackathon demo. All data lives in your Postgres. PayPal Sandbox only — no real money moves.
+          This is a hackathon demo. All data lives in your Postgres. PayPal Sandbox only, no real money moves.
         </p>
       </main>
     </div>
