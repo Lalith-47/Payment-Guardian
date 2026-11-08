@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { DashboardShell } from "@/components/DashboardShell";
-import { Sliders, History, Check, AlertCircle, Save, ArrowLeft } from "lucide-react";
+import { Sliders, History, Check, AlertCircle, Save, ArrowLeft, Shield, Clock, Zap } from "lucide-react";
 import Link from "next/link";
 
 interface PolicyData {
@@ -81,7 +81,7 @@ export default function PoliciesPage() {
           setVersions(data.versions);
         }
       }
-    } catch (err) {
+    } catch {
       setStatusMsg({ type: "error", text: "Failed to load policy from database" });
     } finally {
       setLoading(false);
@@ -139,21 +139,21 @@ export default function PoliciesPage() {
 
   return (
     <DashboardShell>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-rule">
           <div>
-            <h1 className="text-xl font-bold text-board-type flex items-center gap-2">
-              <Sliders className="h-5 w-5 text-accent" />
-              <span>Guardrails & Policies Editor</span>
+            <h1 className="text-2xl font-bold text-[#001C44] flex items-center gap-2.5">
+              <Sliders className="h-6 w-6 text-[#0070BA]" />
+              <span>Guardrails & Policy Engine</span>
             </h1>
-            <p className="mt-1 text-xs text-muted">
-              Manage financial thresholds, retry cadences, and approval requirements. All limits live in PostgreSQL.
+            <p className="mt-1 text-sm text-muted">
+              Configure deterministic refund ceilings, retry intervals, and human consent triggers. Stored in PostgreSQL.
             </p>
           </div>
           <Link
             href="/dashboard"
-            className="inline-flex items-center space-x-1.5 text-xs text-muted hover:text-board-type"
+            className="btn-paypal-secondary btn-sm inline-flex items-center gap-1.5 self-start sm:self-auto"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Dashboard</span>
@@ -162,45 +162,47 @@ export default function PoliciesPage() {
 
         {statusMsg && (
           <div
-            className={`rounded-input p-3 text-xs flex items-center space-x-2 border ${
+            className={`rounded-2xl p-4 text-xs flex items-center gap-2.5 border font-medium ${
               statusMsg.type === "success"
                 ? "bg-success/15 border-success/30 text-success"
                 : "bg-error/15 border-error/30 text-error"
             }`}
           >
             {statusMsg.type === "success" ? (
-              <Check className="h-4 w-4 shrink-0 text-success" />
+              <Check className="h-5 w-5 shrink-0 text-success" />
             ) : (
-              <AlertCircle className="h-4 w-4 shrink-0 text-error" />
+              <AlertCircle className="h-5 w-5 shrink-0 text-error" />
             )}
             <span>{statusMsg.text}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Main Policy Form */}
-          <div className="lg:col-span-2 rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card">
-            <h2 className="text-sm font-semibold text-board-type mb-4">Active Guardrail Parameters</h2>
+          <div className="lg:col-span-8 card-paypal p-6 sm:p-8 space-y-6">
+            <h2 className="text-base font-bold text-[#001C44] border-b border-rule pb-3">
+              Active Policy Parameters
+            </h2>
 
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-board-type">Policy Name</label>
+            <form onSubmit={handleSave} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Policy Name</label>
                   <input
                     type="text"
                     value={policy.name}
                     onChange={(e) => setPolicy({ ...policy, name: e.target.value })}
                     required
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type placeholder-muted focus:border-focus focus:outline-none"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-medium text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-board-type">Store Currency</label>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Store Base Currency</label>
                   <select
                     value={policy.currency}
                     onChange={(e) => setPolicy({ ...policy, currency: e.target.value })}
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -210,9 +212,9 @@ export default function PoliciesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-board-type">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 border-t border-rule">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">
                     Max Auto-Refund Amount ({policy.currency})
                   </label>
                   <input
@@ -222,13 +224,13 @@ export default function PoliciesPage() {
                     value={policy.autoRefundMaxAmount}
                     onChange={(e) => setPolicy({ ...policy, autoRefundMaxAmount: parseFloat(e.target.value) || 0 })}
                     required
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   />
-                  <p className="mt-1 text-xs text-muted">Refunds exceeding this require owner approval.</p>
+                  <p className="text-[11px] text-muted">Refunds above this threshold require owner sign-off warrant.</p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-board-type">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">
                     AI Confidence Threshold ({Math.round(policy.confidenceThreshold * 100)}%)
                   </label>
                   <input
@@ -238,15 +240,15 @@ export default function PoliciesPage() {
                     step="0.05"
                     value={policy.confidenceThreshold}
                     onChange={(e) => setPolicy({ ...policy, confidenceThreshold: parseFloat(e.target.value) })}
-                    className="mt-2 block w-full accent-accent"
+                    className="block w-full accent-[#0070BA] mt-3 h-2 bg-paper-subtle rounded-lg cursor-pointer"
                   />
-                  <p className="mt-1 text-xs text-muted">Proposals below threshold fail-closed to manual review.</p>
+                  <p className="text-[11px] text-muted">Proposals below threshold fail-closed to manual review.</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-board-type">Max Automated Retries</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 border-t border-rule">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Max Automated Retries</label>
                   <input
                     type="number"
                     min="0"
@@ -254,13 +256,13 @@ export default function PoliciesPage() {
                     value={policy.autoRetryMaxAttempts}
                     onChange={(e) => setPolicy({ ...policy, autoRetryMaxAttempts: parseInt(e.target.value, 10) || 0 })}
                     required
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   />
-                  <p className="mt-1 text-xs text-muted">Maximum re-attempts per failed capture.</p>
+                  <p className="text-[11px] text-muted">Maximum capture retries per failed payment.</p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-board-type">Retry Cadence Interval (hours)</label>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Retry Interval (hours)</label>
                   <input
                     type="number"
                     min="1"
@@ -270,15 +272,15 @@ export default function PoliciesPage() {
                       setPolicy({ ...policy, autoRetryMinIntervalHours: parseInt(e.target.value, 10) || 1 })
                     }
                     required
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   />
-                  <p className="mt-1 text-xs text-muted">Minimum spacing between automatic retry runs.</p>
+                  <p className="text-[11px] text-muted">Minimum spacing between automatic retry attempts.</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-board-type">Max Offer Discount (%)</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-2 border-t border-rule">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Max Discount (%)</label>
                   <input
                     type="number"
                     min="0"
@@ -288,16 +290,16 @@ export default function PoliciesPage() {
                       setPolicy({ ...policy, offerAlternativeMaxDiscountPct: parseInt(e.target.value, 10) || 0 })
                     }
                     required
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-board-type">Customer Tone</label>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Customer Tone</label>
                   <select
                     value={policy.tone}
                     onChange={(e) => setPolicy({ ...policy, tone: e.target.value as any })}
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   >
                     <option value="empathetic">Empathetic</option>
                     <option value="professional">Professional</option>
@@ -305,8 +307,8 @@ export default function PoliciesPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-board-type">Reminder Cadence (hours)</label>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Reminder Cadence (hours)</label>
                   <input
                     type="number"
                     min="1"
@@ -314,17 +316,17 @@ export default function PoliciesPage() {
                     value={policy.reminderCadenceHours}
                     onChange={(e) => setPolicy({ ...policy, reminderCadenceHours: parseInt(e.target.value, 10) || 24 })}
                     required
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   />
                 </div>
               </div>
 
-              {/* Invoicing Guardrails (M3-Lite) */}
-              <div className="pt-4 border-t border-rule-2 space-y-4">
-                <h3 className="text-xs font-semibold text-board-type">Invoice Automation Guardrails</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-board-type">
+              {/* Invoicing Guardrails */}
+              <div className="pt-4 border-t border-rule space-y-4">
+                <h3 className="text-sm font-bold text-[#001C44]">Invoicing Guardrails</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink-2">
                       Max Auto-Send Amount ({policy.currency})
                     </label>
                     <input
@@ -334,13 +336,13 @@ export default function PoliciesPage() {
                       value={policy.maxAutoInvoiceAmount}
                       onChange={(e) => setPolicy({ ...policy, maxAutoInvoiceAmount: parseFloat(e.target.value) || 0 })}
                       required
-                      className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                      className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                     />
-                    <p className="mt-1 text-xs text-muted">Invoices above this threshold require owner approval.</p>
+                    <p className="text-[11px] text-muted">Invoices exceeding this ceiling require manual consent.</p>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-board-type">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink-2">
                       Default Payment Due Days
                     </label>
                     <input
@@ -350,86 +352,101 @@ export default function PoliciesPage() {
                       value={policy.defaultDueDays}
                       onChange={(e) => setPolicy({ ...policy, defaultDueDays: parseInt(e.target.value, 10) || 15 })}
                       required
-                      className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                      className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                     />
-                    <p className="mt-1 text-xs text-muted">Fallback due window if omitted in natural language prompt.</p>
+                    <p className="text-[11px] text-muted">Default net-terms period when unspecified.</p>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-board-type mb-2">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-ink-2">
                     Allowed Auto-Send Currencies
                   </label>
-                  <div className="flex flex-wrap gap-4">
-                    {["USD", "EUR", "GBP", "CAD"].map((curr) => (
+                  <div className="flex flex-wrap gap-3">
+                    {["USD", "EUR", "GBP", "CAD"].map((curr) => {
+                      const checked = policy.allowedCurrencies.includes(curr);
+                      return (
+                        <label
+                          key={curr}
+                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold cursor-pointer transition-all ${
+                            checked
+                              ? "bg-accent/10 border-accent/30 text-[#0070BA]"
+                              : "bg-paper-3 border-rule text-ink-2 hover:bg-paper-3"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              setPolicy((prev) => {
+                                const exists = prev.allowedCurrencies.includes(curr);
+                                const updated = exists
+                                  ? prev.allowedCurrencies.filter((c) => c !== curr)
+                                  : [...prev.allowedCurrencies, curr];
+                                return { ...prev, allowedCurrencies: updated.length ? updated : ["USD"] };
+                              });
+                            }}
+                            className="hidden"
+                          />
+                          <span>{curr}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action approvals */}
+              <div className="space-y-2 pt-2 border-t border-rule">
+                <label className="block text-xs font-bold text-ink-2">
+                  Always Require Explicit Owner Approval For:
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {["escalate", "refund", "offer", "retry"].map((act) => {
+                    const checked = policy.requireApprovalForActions.includes(act);
+                    return (
                       <label
-                        key={curr}
-                        className="inline-flex items-center space-x-2 text-xs text-board-type capitalize cursor-pointer"
+                        key={act}
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold capitalize cursor-pointer transition-all ${
+                          checked
+                            ? "bg-warning/15 border-warning/30 text-warning"
+                            : "bg-paper-3 border-rule text-ink-2 hover:bg-paper-3"
+                        }`}
                       >
                         <input
                           type="checkbox"
-                          checked={policy.allowedCurrencies.includes(curr)}
-                          onChange={() => {
-                            setPolicy((prev) => {
-                              const exists = prev.allowedCurrencies.includes(curr);
-                              const updated = exists
-                                ? prev.allowedCurrencies.filter((c) => c !== curr)
-                                : [...prev.allowedCurrencies, curr];
-                              return { ...prev, allowedCurrencies: updated.length ? updated : ["USD"] };
-                            });
-                          }}
-                          className="rounded border-rule-2 bg-ink text-accent focus:ring-0"
+                          checked={checked}
+                          onChange={() => toggleApprovalAction(act)}
+                          className="hidden"
                         />
-                        <span>{curr}</span>
+                        <span>{act}</span>
                       </label>
-                    ))}
-                  </div>
-                  <p className="mt-1 text-xs text-muted">Unlisted currencies will always trigger approval.</p>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-board-type mb-2">
-                  Always Require Approval For:
-                </label>
-                <div className="flex flex-wrap gap-4">
-                  {["escalate", "refund", "offer", "retry"].map((act) => (
-                    <label
-                      key={act}
-                      className="inline-flex items-center space-x-2 text-xs text-board-type capitalize cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={policy.requireApprovalForActions.includes(act)}
-                        onChange={() => toggleApprovalAction(act)}
-                        className="rounded border-rule-2 bg-ink text-accent focus:ring-0"
-                      />
-                      <span>{act}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-rule-2">
-                <label className="block text-xs font-medium text-board-type">
-                  Reason for Change (Archived in Version History)
+              {/* Audit change reason */}
+              <div className="pt-4 border-t border-rule space-y-1.5">
+                <label className="block text-xs font-bold text-ink-2">
+                  Audit Change Reason (Archived in PostgreSQL Version History)
                 </label>
                 <input
                   type="text"
                   value={changeReason}
                   onChange={(e) => setChangeReason(e.target.value)}
-                  placeholder="e.g. Lowered auto-refund threshold ahead of holiday rush"
-                  className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type placeholder-muted focus:border-focus focus:outline-none"
+                  placeholder="e.g. Adjusted auto-refund ceiling for quarterly policy review"
+                  className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs text-ink placeholder-slate-400 focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
 
-              <div className="pt-4 flex justify-end">
+              <div className="pt-2 flex justify-end">
                 <button
                   type="submit"
                   disabled={saving || loading}
-                  className="inline-flex items-center space-x-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:opacity-100 disabled:opacity-50 transition-colors"
+                  className="btn-paypal-primary font-bold"
                 >
-                  <Save className="h-3.5 w-3.5" />
+                  <Save className="h-4 w-4" />
                   <span>{saving ? "Saving Changes..." : "Save Guardrail Policy"}</span>
                 </button>
               </div>
@@ -437,29 +454,29 @@ export default function PoliciesPage() {
           </div>
 
           {/* Version History Sidebar */}
-          <div className="rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-board-type flex items-center gap-1.5">
-                <History className="h-4 w-4 text-muted" />
-                <span>Versioned History</span>
+          <div className="lg:col-span-4 card-paypal p-6 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-rule">
+              <h2 className="text-sm font-bold text-[#001C44] flex items-center gap-2">
+                <History className="h-4 w-4 text-[#0070BA]" />
+                <span>Version History</span>
               </h2>
-              <span className="text-xs text-muted">{versions.length} revisions</span>
+              <span className="text-xs font-mono font-bold text-muted">{versions.length} revisions</span>
             </div>
 
             {versions.length === 0 ? (
-              <p className="text-xs text-muted">No revisions recorded yet.</p>
+              <p className="text-xs text-muted p-4 text-center">No revisions recorded yet.</p>
             ) : (
-              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
                 {versions.map((ver) => (
-                  <div key={ver.id} className="rounded-input border border-rule-2 bg-ink/40 p-3 space-y-1 text-xs">
-                    <div className="flex items-center justify-between font-medium">
-                      <span className="text-accent">v{ver.version}</span>
-                      <span className="text-muted">{new Date(ver.createdAt).toLocaleDateString()}</span>
+                  <div key={ver.id} className="rounded-2xl border border-rule bg-paper-3 p-4 space-y-2 text-xs hover:border-rule-2 transition-colors">
+                    <div className="flex items-center justify-between font-mono">
+                      <span className="badge-status badge-status--info font-bold">v{ver.version}</span>
+                      <span className="text-muted text-[11px]">{new Date(ver.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-board-type italic">{ver.changeReason || "No description provided"}</p>
-                    <div className="text-[11px] text-muted pt-1 flex justify-between">
-                      <span>By: {ver.changedBy}</span>
-                      <span>Refund: ${ver.snapshot?.autoRefundMaxAmount || 25}</span>
+                    <p className="text-ink-2 italic text-xs">"{ver.changeReason || "Owner update"}"</p>
+                    <div className="text-[11px] text-muted pt-2 flex justify-between font-mono border-t border-rule">
+                      <span className="truncate max-w-[140px]">{ver.changedBy}</span>
+                      <span className="font-bold text-ink">Refund: ${ver.snapshot?.autoRefundMaxAmount || 25}</span>
                     </div>
                   </div>
                 ))}

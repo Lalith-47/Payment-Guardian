@@ -10,6 +10,9 @@ import {
   XCircle,
   ArrowRight,
   ShieldAlert,
+  Zap,
+  ShoppingBag,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -105,7 +108,7 @@ export default function CheckoutTestPage() {
       } else if (res.ok) {
         setCaptureResult({
           status: "SUCCESS",
-          message: "Payment captured successfully!",
+          message: "Payment captured successfully",
           captureId: data.captureId,
         });
       } else {
@@ -126,54 +129,62 @@ export default function CheckoutTestPage() {
 
   return (
     <DashboardShell>
-      <div className="space-y-6">
-        {/* Header */}
+      <div className="space-y-8">
+        {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-board-type flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-accent" />
-              <span>Merchant Checkout Simulation</span>
+            <h1 className="text-2xl font-bold text-[#001C44] flex items-center gap-2.5">
+              <CreditCard className="h-6 w-6 text-[#0070BA]" />
+              <span>Checkout Negative Testing Sandbox</span>
             </h1>
-            <p className="mt-1 text-xs text-muted">
-              Create real PayPal sandbox orders and test negative payment responses to trigger agent triage.
+            <p className="mt-1 text-sm text-muted">
+              Create live PayPal sandbox orders and trigger deterministic decline recovery scenarios.
             </p>
           </div>
-          <span className="inline-flex items-center space-x-1.5 rounded-input border border-warning/30 bg-warning/15 px-3 py-1.5 text-xs font-medium text-warning">
-            <AlertTriangle className="h-3.5 w-3.5 text-warning" />
-            <span>Sandbox Negative Testing Active</span>
-          </span>
+          <div className="inline-flex items-center gap-2 rounded-full border border-warning/30 bg-warning/15 px-3 py-1 text-xs font-mono font-bold text-warning self-start sm:self-auto">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span>Negative Testing Active</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Step 1: Create Order */}
-          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-6 space-y-4">
-            <div className="flex items-center space-x-2 border-b border-rule/50 pb-3">
-              <span className="flex h-6 w-6 items-center justify-center rounded-pill bg-accent text-xs font-bold text-accent-ink">
-                1
-              </span>
-              <h2 className="text-sm font-semibold text-ink">Create Sandbox Order</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Step 1: Create Order (Interactive PayPal Checkout Simulator) */}
+          <div className="lg:col-span-6 card-paypal p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-rule pb-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0070BA] text-white text-xs font-bold font-mono">
+                  1
+                </span>
+                <h2 className="text-base font-bold text-[#001C44]">Create Sandbox Order</h2>
+              </div>
+              <span className="text-xs font-mono text-muted">Step 1 of 2</span>
             </div>
 
-            <form onSubmit={handleCreateOrder} className="space-y-4">
+            <form onSubmit={handleCreateOrder} className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-ink">Amount</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="1"
-                    value={createAmount}
-                    onChange={(e) => setCreateAmount(e.target.value)}
-                    required
-                    className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs text-ink focus:border-accent focus:outline-none"
-                  />
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Amount</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono text-xs">
+                      $
+                    </span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      value={createAmount}
+                      onChange={(e) => setCreateAmount(e.target.value)}
+                      required
+                      className="block w-full rounded-xl border border-rule bg-paper-3 pl-7 pr-3 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-ink">Currency</label>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Currency</label>
                   <select
                     value={createCurrency}
                     onChange={(e) => setCreateCurrency(e.target.value)}
-                    className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs text-ink focus:border-accent focus:outline-none"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3 py-2 text-xs font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -182,46 +193,47 @@ export default function CheckoutTestPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-ink">Item Description</label>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-ink-2">Item Description</label>
                 <input
                   type="text"
                   value={createDesc}
                   onChange={(e) => setCreateDesc(e.target.value)}
-                  className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs text-ink focus:border-accent focus:outline-none"
+                  className="block w-full rounded-xl border border-rule bg-paper-3 px-3 py-2 text-xs text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
 
+              {/* PayPal Classic Gold Pill Action Button */}
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full inline-flex items-center justify-center space-x-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:scale-95 disabled:opacity-50 transition-colors"
+                className="w-full btn-paypal-gold font-bold"
               >
-                <span>{creating ? "Generating Order..." : "Create PayPal Sandbox Order"}</span>
+                <span>{creating ? "Creating Sandbox Order..." : "Create PayPal Sandbox Order"}</span>
               </button>
             </form>
 
             {createdOrder && (
-              <div className="rounded-input border border-rule/60 bg-paper-3/60 p-4 space-y-3 text-xs">
+              <div className="rounded-2xl border border-success/30 bg-success/15 p-4 space-y-3 text-xs">
                 <div>
-                  <span className="text-muted">Order ID:</span>
-                  <p className="font-mono font-medium text-success mt-0.5">{createdOrder.orderId}</p>
+                  <span className="text-success font-semibold block text-[11px] uppercase tracking-wider font-mono">
+                    Created Sandbox Order ID:
+                  </span>
+                  <p className="font-mono text-success font-bold text-sm mt-0.5 select-all">
+                    {createdOrder.orderId}
+                  </p>
                 </div>
                 {createdOrder.approvalLink && (
-                  <div>
-                    <span className="text-muted">Payer Approval Link:</span>
+                  <div className="pt-2 border-t border-success/30">
                     <a
                       href={createdOrder.approvalLink}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 flex items-center space-x-1.5 text-accent hover:underline font-medium break-all"
+                      className="inline-flex items-center gap-1.5 text-[#0070BA] font-bold hover:underline text-xs"
                     >
                       <span>Open PayPal Sandbox Approval Page</span>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     </a>
-                    <p className="text-[11px] text-muted mt-1">
-                      (Optional in negative testing: you can proceed to capture directly to simulate decline)
-                    </p>
                   </div>
                 )}
               </div>
@@ -229,56 +241,58 @@ export default function CheckoutTestPage() {
           </div>
 
           {/* Step 2: Capture Order & Negative Testing */}
-          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-6 space-y-4">
-            <div className="flex items-center space-x-2 border-b border-rule/50 pb-3">
-              <span className="flex h-6 w-6 items-center justify-center rounded-pill bg-accent text-xs font-bold text-accent-ink">
-                2
-              </span>
-              <h2 className="text-sm font-semibold text-ink">Capture Order & Decline Injection</h2>
+          <div className="lg:col-span-6 card-paypal p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-rule pb-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#001C44] text-white text-xs font-bold font-mono">
+                  2
+                </span>
+                <h2 className="text-base font-bold text-[#001C44]">
+                  Capture Order & Decline Injection
+                </h2>
+              </div>
+              <span className="text-xs font-mono text-muted">Step 2 of 2</span>
             </div>
 
-            <form onSubmit={handleCapture} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-ink">PayPal Order ID</label>
+            <form onSubmit={handleCapture} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-ink-2">PayPal Order ID</label>
                 <input
                   type="text"
                   value={captureOrderId}
                   onChange={(e) => setCaptureOrderId(e.target.value)}
                   placeholder="e.g. 5C384813XW744883S"
                   required
-                  className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs font-mono text-ink focus:border-accent focus:outline-none"
+                  className="block w-full rounded-xl border border-rule bg-paper-3 px-3 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
 
-              <div>
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-medium text-ink">
+                  <label className="block text-xs font-bold text-ink-2">
                     Negative Testing Scenario
                   </label>
-                  <span className="text-[11px] text-warning">Sandbox Header Injected</span>
+                  <span className="text-[11px] text-muted font-mono">PayPal-Mock-Response</span>
                 </div>
                 <select
                   value={mockCode}
                   onChange={(e) => setMockCode(e.target.value)}
-                  className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs text-ink focus:border-accent focus:outline-none"
+                  className="block w-full rounded-xl border border-rule bg-paper-3 px-3 py-2 text-xs font-medium text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                 >
                   <option value="INSTRUMENT_DECLINED">
-                    INSTRUMENT_DECLINED (Card / Instrument declined by bank)
+                    INSTRUMENT_DECLINED (Card / Instrument declined by issuer)
                   </option>
                   <option value="TRANSACTION_REFUSED">
                     TRANSACTION_REFUSED (Risk / fraud policy refusal)
                   </option>
-                  <option value="NONE">None (Attempt normal capture)</option>
+                  <option value="NONE">None (Normal authorized capture)</option>
                 </select>
-                <p className="mt-1 text-xs text-muted">
-                  Transmits PayPal-Mock-Response header to sandbox API to force realistic error code.
-                </p>
               </div>
 
               <button
                 type="submit"
                 disabled={capturing || !captureOrderId}
-                className="w-full inline-flex items-center justify-center space-x-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:scale-95 disabled:opacity-50 transition-colors"
+                className="w-full btn-paypal-primary font-bold"
               >
                 <span>{capturing ? "Capturing Order..." : "Capture PayPal Order"}</span>
               </button>
@@ -286,7 +300,7 @@ export default function CheckoutTestPage() {
 
             {captureResult && (
               <div
-                className={`rounded-input border p-4 space-y-3 text-xs ${
+                className={`rounded-2xl border p-5 space-y-3 text-xs ${
                   captureResult.status === "SUCCESS"
                     ? "border-success/30 bg-success/15 text-success"
                     : captureResult.status === "DECLINED"
@@ -294,29 +308,29 @@ export default function CheckoutTestPage() {
                     : "border-error/30 bg-error/15 text-error"
                 }`}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2.5">
                   {captureResult.status === "SUCCESS" ? (
-                    <CheckCircle className="h-4 w-4 text-success" />
+                    <CheckCircle className="h-5 w-5 text-success shrink-0" />
                   ) : captureResult.status === "DECLINED" ? (
-                    <ShieldAlert className="h-4 w-4 text-warning" />
+                    <ShieldAlert className="h-5 w-5 text-warning shrink-0" />
                   ) : (
-                    <XCircle className="h-4 w-4 text-error" />
+                    <XCircle className="h-5 w-5 text-error shrink-0" />
                   )}
-                  <span className="font-semibold">{captureResult.message}</span>
+                  <span className="font-bold text-sm">{captureResult.message}</span>
                 </div>
 
                 {captureResult.eventId && (
-                  <div className="pt-2 border-t border-warning/30 space-y-2">
-                    <p className="text-ink">
-                      Resulting Event ID:{" "}
-                      <span className="font-mono text-ink font-medium">{captureResult.eventId}</span>
+                  <div className="pt-3 border-t border-warning/30 space-y-3">
+                    <p className="text-ink-2 text-xs font-medium">
+                      Resulting Sentry Event:{" "}
+                      <span className="font-mono font-bold text-ink">{captureResult.eventId}</span>
                     </p>
                     <Link
                       href={`/events?id=${captureResult.eventId}`}
-                      className="inline-flex items-center space-x-1.5 rounded-input bg-warning px-3 py-1.5 text-xs font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors"
+                      className="btn-paypal-primary btn-sm inline-flex items-center gap-1.5"
                     >
-                      <span>Inspect Event in Triage Grid</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
+                      <span>Inspect Event Triage</span>
+                      <ArrowRight className="h-3 w-3" />
                     </Link>
                   </div>
                 )}

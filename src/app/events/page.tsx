@@ -8,14 +8,13 @@ import { ColDef, RowClickedEvent } from "ag-grid-community";
 import {
   ListOrdered,
   RefreshCw,
-  ExternalLink,
   RotateCcw,
-  CheckCircle,
-  AlertCircle,
-  Clock,
   ShieldAlert,
   X,
-  FileText,
+  ArrowRight,
+  Clock,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 
 interface EventItem {
@@ -160,20 +159,23 @@ function EventsContent() {
         headerName: "Event ID",
         width: 170,
         cellRenderer: (params: any) => (
-          <span className="font-mono text-accent font-medium">{params.value}</span>
+          <span className="font-mono text-[#0070BA] font-bold">{params.value}</span>
         ),
       },
       {
         field: "type",
-        headerName: "Type",
-        width: 190,
+        headerName: "Classification",
+        width: 200,
+        cellRenderer: (params: any) => (
+          <span className="font-medium text-ink">{params.value}</span>
+        ),
       },
       {
         field: "source",
         headerName: "Source",
-        width: 150,
+        width: 130,
         cellRenderer: (params: any) => (
-          <span className="rounded-input bg-ink px-2 py-0.5 text-[11px] text-board-type border border-rule-2">
+          <span className="font-mono text-muted bg-paper-3 px-2 py-0.5 rounded-full text-[11px]">
             {params.value}
           </span>
         ),
@@ -181,23 +183,23 @@ function EventsContent() {
       {
         field: "status",
         headerName: "Status",
-        width: 160,
+        width: 170,
         cellRenderer: (params: any) => {
           const s = params.value;
-          let badge = "bg-ink text-board-type border border-rule-2";
+          let badgeClass = "badge-status badge-status--info";
           if (s === "RECOVERED" || s === "EXECUTED" || s === "COMPLETED") {
-            badge = "bg-success/15 text-success border border-success/30";
+            badgeClass = "badge-status badge-status--success";
           } else if (s === "EXECUTED_CONFIRMED_BY_POLLING") {
-            badge = "bg-info/15 text-info border border-info/30";
+            badgeClass = "badge-status badge-status--info";
           } else if (s === "AWAITING_APPROVAL") {
-            badge = "bg-warning/15 text-warning border border-warning/30";
+            badgeClass = "badge-status badge-status--warning";
           } else if (s === "WAITING_FOR_AI") {
-            badge = "bg-info/15 text-info border border-info/30";
+            badgeClass = "badge-status badge-status--info";
           } else if (s === "FAILED" || s === "REJECTED") {
-            badge = "bg-error/15 text-error border border-error/30";
+            badgeClass = "badge-status badge-status--error";
           }
           return (
-            <span className={`inline-flex items-center rounded-pill border px-2 py-0.5 text-xs font-medium ${badge}`}>
+            <span className={badgeClass}>
               {s}
             </span>
           );
@@ -206,21 +208,16 @@ function EventsContent() {
       {
         field: "amount",
         headerName: "Amount",
-        width: 110,
-        valueGetter: (params) => (params.data?.amount ? `$${params.data.amount} ${params.data.currency}` : "—"),
-      },
-      {
-        headerName: "AI Proposal",
         width: 130,
-        valueGetter: (params) => params.data?.proposal?.action || "—",
+        valueGetter: (params) => (params.data?.amount ? `$${params.data.amount} ${params.data.currency}` : "—"),
         cellRenderer: (params: any) => (
-          <span className="capitalize font-medium text-board-type">{params.value}</span>
+          <span className="font-mono text-ink font-bold">{params.value}</span>
         ),
       },
       {
         field: "createdAt",
         headerName: "Timestamp",
-        width: 180,
+        width: 170,
         valueFormatter: (params) => (params.value ? new Date(params.value).toLocaleString() : ""),
       },
     ];
@@ -240,38 +237,38 @@ function EventsContent() {
 
   return (
     <DashboardShell>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-rule">
           <div>
-            <h1 className="text-xl font-bold text-board-type flex items-center gap-2">
-              <ListOrdered className="h-5 w-5 text-info" />
-              <span>Payment Recovery Events</span>
+            <h1 className="text-2xl font-bold text-[#001C44] flex items-center gap-2.5">
+              <ListOrdered className="h-6 w-6 text-[#0070BA]" />
+              <span>Payment Recovery Event Stream</span>
             </h1>
-            <p className="mt-1 text-xs text-muted">
-              Interactive triage grid showing end-to-end event resolution from ingest to automated execution.
+            <p className="mt-1 text-sm text-muted">
+              Live lifecycle triage ledger tracing events from webhook ingestion to policy evaluation and executor dispatch.
             </p>
           </div>
           <button
             onClick={fetchEvents}
             disabled={loading}
-            className="inline-flex items-center space-x-1.5 rounded-input border border-ink/40 bg-ink/60 px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink hover:text-board-type transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent active:scale-[0.98]"
+            className="btn-paypal-secondary btn-sm"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
-            <span>Refresh Events</span>
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-[#0070BA]" : ""}`} />
+            <span className="hidden sm:inline">Refresh Events</span>
           </button>
         </div>
 
         {/* Main Grid and Detail Drawer layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* AG Grid Table */}
           <div className={selectedEventId ? "lg:col-span-7" : "lg:col-span-12"}>
-            <div className="rounded-card border border-ink/40 bg-ink-2 p-4 shadow-card space-y-3">
-              <div className="flex items-center justify-between text-xs text-muted pb-2 border-b border-ink/30">
-                <span>{events.length} Events Ingested</span>
-                <span>Click a row to inspect end-to-end proposal and execution trail</span>
+            <div className="card-paypal p-5 space-y-4">
+              <div className="flex items-center justify-between text-xs text-muted pb-3 border-b border-rule">
+                <span className="font-mono font-bold text-ink">{events.length} Events Ingested</span>
+                <span>Select any event row to inspect lifecycle trace</span>
               </div>
-              <div className="ag-theme-quartz-dark w-full h-[520px] rounded-input overflow-hidden">
+              <div className="ag-theme-quartz w-full h-[540px] rounded-xl overflow-hidden border border-rule">
                 <AgGridReact<EventItem>
                   rowData={events}
                   columnDefs={columnDefs}
@@ -287,42 +284,42 @@ function EventsContent() {
 
           {/* Side Detail Panel */}
           {selectedEventId && (
-            <div className="lg:col-span-5 rounded-card border border-ink/40 bg-ink-2 p-5 shadow-card space-y-4">
-              <div className="flex items-center justify-between border-b border-ink/30 pb-3">
-                <div className="flex items-center space-x-2">
-                  <ShieldAlert className="h-4 w-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-board-type">Event Resolution Detail</h2>
+            <div className="lg:col-span-5 card-paypal p-6 space-y-5">
+              <div className="flex items-center justify-between border-b border-rule pb-4">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 text-[#0070BA]" />
+                  <h2 className="text-sm font-bold text-[#001C44]">Event Resolution Trace</h2>
                 </div>
                 <button
                   onClick={() => setSelectedEventId(null)}
-                  className="text-muted hover:text-board-type p-1 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent rounded-input active:scale-[0.98]"
+                  className="text-muted hover:text-ink-2 p-1.5 rounded-full hover:bg-paper-3 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               {loadingDetail ? (
-                <div className="p-8 text-center text-xs text-muted">Loading pipeline trail…</div>
+                <div className="p-12 text-center text-xs text-muted">Loading event trace…</div>
               ) : !detail ? (
-                <div className="p-8 text-center text-xs text-muted">Event not found.</div>
+                <div className="p-12 text-center text-xs text-muted">Event record not found.</div>
               ) : (
-                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 text-xs">
+                <div className="space-y-5 max-h-[500px] overflow-y-auto pr-1 text-xs">
                   {/* Event summary */}
-                  <div className="rounded-input border border-ink/30 bg-ink/40 p-3 space-y-1.5">
+                  <div className="rounded-2xl border border-rule bg-paper-3 p-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-accent font-semibold">{detail.event.id}</span>
-                      <span className="rounded-input bg-ink px-2 py-0.5 text-[11px] font-medium text-board-type">
+                      <span className="font-mono text-[#0070BA] font-bold">{detail.event.id}</span>
+                      <span className="badge-status badge-status--info">
                         {detail.event.status}
                       </span>
                     </div>
-                    <p className="text-muted">
-                      External Order: <span className="text-board-type font-mono">{detail.event.externalId || "—"}</span>
+                    <p className="text-muted text-xs">
+                      External Order: <span className="text-ink font-mono font-bold">{detail.event.externalId || "—"}</span>
                     </p>
-                    <p className="text-muted">
-                      Ingested: <span className="text-board-type">{new Date(detail.event.createdAt).toLocaleString()}</span>
+                    <p className="text-muted text-xs">
+                      Ingested: <span className="text-ink-2 font-mono">{new Date(detail.event.createdAt).toLocaleString()}</span>
                     </p>
                     {detail.event.errorMessage && (
-                      <p className="text-error text-[11px] pt-1">
+                      <p className="text-error text-xs pt-1 font-medium">
                         Error: <span className="font-mono">{detail.event.errorMessage}</span>
                       </p>
                     )}
@@ -330,56 +327,54 @@ function EventsContent() {
 
                   {/* Retry Action button */}
                   {isRetryEligible && (
-                    <div className="rounded-input border border-warning/30 bg-warning/10 p-3 space-y-2">
+                    <div className="rounded-2xl border border-warning/30 bg-warning/15 p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-warning">Incident Recovery Available</span>
+                        <span className="font-bold text-warning text-xs">Recovery Triage Eligible</span>
                         <button
                           onClick={handleRetry}
                           disabled={retrying}
-                          className="inline-flex items-center space-x-1.5 rounded-input bg-warning px-3 py-1.5 text-xs font-semibold text-accent-ink hover:opacity-90 disabled:opacity-50 transition-opacity focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent active:scale-[0.98]"
+                          className="btn-paypal-gold btn-sm"
                         >
-                          <RotateCcw className={`h-3 w-3 ${retrying ? "motion-safe:animate-spin" : ""}`} />
+                          <RotateCcw className={`h-3 w-3 ${retrying ? "animate-spin" : ""}`} />
                           <span>{retrying ? "Retrying..." : "Retry Recovery"}</span>
                         </button>
                       </div>
-                      <p className="text-[11px] text-muted">
+                      <p className="text-[11px] text-warning">
                         Verifies LLM budget availability and re-enqueues for safe, idempotent re-triage.
                       </p>
-                      {retryResult && <p className="text-[11px] text-success pt-1">{retryResult}</p>}
+                      {retryResult && <p className="text-xs text-success font-bold pt-1">{retryResult}</p>}
                     </div>
                   )}
 
                   {/* Proposals / Reasoning */}
-                  <div>
-                    <h3 className="font-semibold text-board-type mb-2">AI Proposals & Reasoning</h3>
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-[#001C44]">AI Proposal & Reasoning</h3>
                     {detail.proposals.length === 0 ? (
-                      <p className="text-muted italic">No proposal generated (e.g. WAITING_FOR_AI or fail-safe).</p>
+                      <p className="text-muted italic text-xs">No proposal generated for this state.</p>
                     ) : (
                       <div className="space-y-3">
                         {detail.proposals.map((p) => (
-                          <div key={p.id} className="rounded-input border border-ink/30 bg-ink/30 p-3 space-y-2">
+                          <div key={p.id} className="rounded-2xl border border-rule bg-white p-4 space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="font-semibold text-success capitalize">Action: {p.action}</span>
-                              <span className="text-muted">Confidence: {Math.round(parseFloat(p.confidence) * 100)}%</span>
+                              <span className="font-bold text-success capitalize">Action: {p.action}</span>
+                              <span className="text-muted font-mono text-[11px]">Confidence: {Math.round(parseFloat(p.confidence) * 100)}%</span>
                             </div>
-                            <div>
-                              <span className="text-muted text-[11px]">Model:</span>
-                              <span className="text-board-type text-[11px] font-mono ml-1.5">{p.modelUsed}</span>
+                            <div className="text-[11px] text-muted font-mono">
+                              Model: {p.modelUsed}
                             </div>
-                            <div>
-                              <span className="text-muted">AI note (unverified):</span>
-                              <p className="text-board-type mt-0.5 italic">{p.reasoning}</p>
-                            </div>
+                            <p className="text-ink-2 text-xs bg-paper-3 p-3 rounded-xl border border-rule italic leading-relaxed">
+                              "{p.reasoning}"
+                            </p>
                             {p.message && (
-                              <div className="rounded-input bg-ink/80 p-2 border border-ink/30">
-                                <span className="text-muted text-[11px]">Draft Customer Notice (Not Sent):</span>
-                                <p className="text-board-type mt-0.5">{p.message}</p>
+                              <div className="rounded-xl bg-paper-3 p-3 border border-rule text-xs">
+                                <span className="text-muted text-[10px] block font-bold uppercase tracking-wider">Draft Customer Notice:</span>
+                                <p className="text-ink mt-1">{p.message}</p>
                               </div>
                             )}
                             {p.contextSnapshot && (
                               <div>
-                                <span className="text-muted text-[11px]">Grounded DB Context Snapshot:</span>
-                                <pre className="mt-1 max-h-24 overflow-y-auto rounded-input bg-ink p-2 font-mono text-[10px] text-muted">
+                                <span className="text-muted text-[10px] block font-bold uppercase tracking-wider">Context Snapshot:</span>
+                                <pre className="mt-1 max-h-24 overflow-y-auto rounded-xl bg-paper-3 p-2 font-mono text-[10px] text-ink-2 border border-rule">
                                   {JSON.stringify(p.contextSnapshot, null, 2)}
                                 </pre>
                               </div>
@@ -391,32 +386,32 @@ function EventsContent() {
                   </div>
 
                   {/* Action Executor Executions */}
-                  <div>
-                    <h3 className="font-semibold text-board-type mb-2">Action Executor Dispatches</h3>
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-[#001C44]">ActionExecutor Dispatches</h3>
                     {detail.actions.length === 0 ? (
-                      <p className="text-muted italic">No mutating actions executed yet.</p>
+                      <p className="text-muted italic text-xs">No mutating actions executed.</p>
                     ) : (
                       <div className="space-y-2">
                         {detail.actions.map((act) => (
-                          <div key={act.id} className="rounded-input border border-ink/30 bg-ink/30 p-3 space-y-1">
+                          <div key={act.id} className="rounded-2xl border border-rule bg-white p-3.5 space-y-1">
                             <div className="flex items-center justify-between">
-                              <span className="font-medium text-board-type">{act.actionType}</span>
+                              <span className="font-bold text-ink">{act.actionType}</span>
                               <span
-                                className={`rounded-input px-1.5 py-0.5 text-[11px] font-semibold ${
+                                className={`badge-status ${
                                   act.status === "SUCCESS"
-                                    ? "bg-success/20 text-success border border-success/30"
+                                    ? "badge-status--success"
                                     : act.status === "DEAD_LETTER"
-                                    ? "bg-error/20 text-error border border-error/30"
-                                    : "bg-ink text-board-type"
+                                    ? "badge-status--error"
+                                    : "badge-status--info"
                                 }`}
                               >
                                 {act.status}
                               </span>
                             </div>
-                            <p className="text-[11px] text-muted truncate">
-                              Idempotency: <span className="font-mono">{act.idempotencyKey}</span>
+                            <p className="text-[11px] text-muted truncate font-mono">
+                              Idempotency: {act.idempotencyKey}
                             </p>
-                            <p className="text-muted">
+                            <p className="text-muted font-mono text-[11px]">
                               {act.paypalMethod} {act.paypalEndpoint} ({act.statusCode || "—"})
                             </p>
                           </div>
@@ -426,16 +421,16 @@ function EventsContent() {
                   </div>
 
                   {/* Audit Trail */}
-                  <div>
-                    <h3 className="font-semibold text-board-type mb-2">Event Audit Trail</h3>
-                    <div className="space-y-1.5">
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-[#001C44]">Audit Trail</h3>
+                    <div className="space-y-2 border-l-2 border-rule pl-4 ml-2">
                       {detail.auditTrail.map((log) => (
-                        <div key={log.id} className="flex items-baseline space-x-2 text-[11px] text-muted">
-                          <span className="text-muted shrink-0">
-                            {new Date(log.timestamp).toLocaleTimeString()}
-                          </span>
-                          <span className="text-accent font-medium">[{log.actor}]</span>
-                          <span className="text-board-type">{log.action}</span>
+                        <div key={log.id} className="text-xs text-muted space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-[#0070BA] font-bold">[{log.actor}]</span>
+                            <span className="font-mono text-[11px]">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                          </div>
+                          <p className="text-ink-2">{log.action}</p>
                         </div>
                       ))}
                     </div>
@@ -452,7 +447,7 @@ function EventsContent() {
 
 export default function EventsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-muted">Loading events...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-muted text-xs font-mono">Loading events...</div>}>
       <EventsContent />
     </Suspense>
   );

@@ -220,8 +220,8 @@ export class PayPalClient {
         brand_name: "Revenue Guardian",
         landing_page: "NO_PREFERENCE",
         user_action: "PAY_NOW",
-        return_url: params.returnUrl || "http://localhost:3000/order-return",
-        cancel_url: params.cancelUrl || "http://localhost:3000/order-cancel",
+        return_url: params.returnUrl || `${process.env.APP_URL || "http://localhost:3000"}/order-return`,
+        cancel_url: params.cancelUrl || `${process.env.APP_URL || "http://localhost:3000"}/order-cancel`,
       },
     };
 

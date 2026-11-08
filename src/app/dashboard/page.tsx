@@ -13,8 +13,12 @@ import {
   CreditCard,
   Sliders,
   ExternalLink,
-  TrendingUp,
   Receipt,
+  ArrowRight,
+  TrendingUp,
+  FileCheck,
+  AlertTriangle,
+  Server,
   Zap,
 } from "lucide-react";
 
@@ -46,213 +50,213 @@ export default async function DashboardPage() {
     .select()
     .from(events)
     .orderBy(desc(events.createdAt))
-    .limit(5);
+    .limit(6);
 
   return (
     <DashboardShell ownerEmail={env.OWNER_EMAIL}>
-      <div className="space-y-6">
-        {/* Banner */}
-        <div className="relative ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-6 sm:p-8 space-y-4">
-          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+      <div className="space-y-8">
+        {/* Merchant Mission & Status Hero Banner */}
+        <div className="card-paypal p-6 sm:p-8 bg-gradient-to-r from-white via-white to-accent relative overflow-hidden">
+          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-[#0070BA]/5 to-transparent pointer-events-none" />
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
             <div className="max-w-2xl space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-pill bg-accent/10 border border-accent/30 px-3 py-1 text-xs font-semibold text-accent">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent motion-safe:animate-ping" />
-                <span>Autonomous Back-Office Recovery</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-xs font-semibold text-[#0070BA]">
+                <span className="w-2 h-2 rounded-full bg-success/15 animate-pulse" />
+                <span>Deterministic Sentry // Active Guardrails</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink leading-tight">
-                Autonomous Financial Sentry for PayPal
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#001C44]">
+                Autonomous Financial Operations
               </h1>
-              <p className="text-xs text-muted max-w-xl leading-relaxed">
-                Every money action passes through owner-defined limits. The AI proposes, deterministic code decides, PayPal executes, everything is logged.
+              <p className="text-sm text-ink-2 max-w-xl leading-relaxed">
+                Deterministic policy guardrails intercept checkout declines, evaluate financial limits in Postgres, and dispatch compliant PayPal recoveries with immutable audit logging.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/checkout"
-                className="inline-flex items-center gap-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:scale-95 transition-transform"
+                className="btn-paypal-primary"
               >
                 <CreditCard className="h-4 w-4" />
-                <span>Simulate Checkout</span>
+                <span>Simulate Decline</span>
               </Link>
               <Link
                 href="/policies"
-                className="inline-flex items-center gap-2 rounded-input border border-rule/80 bg-paper px-4 py-2 text-xs font-medium text-ink-2 hover:bg-paper-3 transition-colors"
+                className="btn-paypal-secondary"
               >
-                <Sliders className="h-4 w-4" />
-                <span>Configure Policy</span>
+                <Sliders className="h-4 w-4 text-[#0070BA]" />
+                <span>Configure Guardrails</span>
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Pending Approvals */}
+        {/* Metrics Grid: Four High-Visibility Financial Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <MetricCard
             title="Pending Approvals"
             value={pendingApprovalsCount}
-            subtitle="requires review"
-            icon={<Inbox className="h-5 w-5 text-warning" />}
-            iconBg="bg-warning/10"
-            trend={<Link href="/approvals" className="text-xs text-accent hover:underline">View approval inbox</Link>}
+            subtitle={pendingApprovalsCount === 1 ? "1 warrant requires sign-off" : `${pendingApprovalsCount} warrants require sign-off`}
+            valueColor={pendingApprovalsCount > 0 ? "text-warning" : "text-ink"}
+            badge={pendingApprovalsCount > 0 ? "Action Required" : "Cleared"}
+            badgeType={pendingApprovalsCount > 0 ? "warning" : "success"}
+            linkHref="/approvals"
+            linkLabel="Open approval inbox"
           />
 
-          {/* Recovery Incidents */}
           <MetricCard
-            title="Total Recovery Events"
+            title="Recorded Events"
             value={totalEventsCount}
-            subtitle="recorded"
-            icon={<ListOrdered className="h-5 w-5 text-accent" />}
-            iconBg="bg-accent/10"
-            trend={<Link href="/events" className="text-xs text-accent hover:underline">View all events</Link>}
+            subtitle="lifecycle transactions logged"
+            valueColor="text-ink"
+            badge="Live Stream"
+            badgeType="info"
+            linkHref="/events"
+            linkLabel="View event stream"
           />
 
-          {/* Automated Actions */}
           <MetricCard
-            title="Executed Actions"
+            title="Executed Recoveries"
             value={executedActionsCount}
-            subtitle="successful"
-            icon={<CheckCircle className="h-5 w-5 text-success" />}
-            iconBg="bg-success/10"
-            trend={<Link href="/audit" className="text-xs text-accent hover:underline">Inspect audit log</Link>}
+            subtitle="settled via PayPal API"
+            valueColor="text-success"
+            badge="Settled"
+            badgeType="success"
+            linkHref="/audit"
+            linkLabel="Inspect audit trail"
           />
 
-          {/* Active Policy Status */}
           <MetricCard
-            title="Guardrail Policy"
+            title="Active Guardrail"
             value={activePolicy ? activePolicy.name : "Default Guardrails"}
-            subtitle={`Max refund: $${activePolicy?.autoRefundMaxAmount || "25.00"} ${activePolicy?.currency || "USD"}`}
-            icon={<ShieldAlert className="h-5 w-5 text-success" />}
-            iconBg="bg-success/10"
+            subtitle={`Auto-refund ceiling: $${activePolicy?.autoRefundMaxAmount || "25.00"} ${activePolicy?.currency || "USD"}`}
+            valueColor="text-[#0070BA]"
             isTextValue
-            trend={<Link href="/policies" className="text-xs text-accent hover:underline">Edit policy & history</Link>}
+            badge="Postgres"
+            badgeType="info"
+            linkHref="/policies"
+            linkLabel="Edit policy parameters"
           />
         </div>
 
-        {/* Quick Actions & Recent Events */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Quick Actions */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-5 space-y-3">
-              <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-accent" />
-                <span>Quick Actions</span>
-              </h3>
-              <div className="space-y-2">
+        {/* Main Content: Operations + Recent Events Stream */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column: Quick Operations & System Health */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="card-paypal p-6 space-y-4">
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wider">
+                Merchant Operations
+              </h2>
+              <div className="space-y-2.5">
                 <QuickActionLink
                   href="/checkout"
-                  icon={<CreditCard className="h-4 w-4" />}
+                  icon={CreditCard}
                   label="Simulate Declined Payment"
-                  desc="Trigger agent triage with negative testing"
+                  desc="Inject INSTRUMENT_DECLINED into PayPal sandbox"
                 />
                 <QuickActionLink
                   href="/invoices"
-                  icon={<Receipt className="h-4 w-4" />}
-                  label="Issue New Invoice"
-                  desc="AI extraction with policy guardrails"
+                  icon={Receipt}
+                  label="Issue Net-Term Invoice"
+                  desc="AI field extraction with guardrail validation"
                 />
                 <QuickActionLink
                   href="/policies"
-                  icon={<Sliders className="h-4 w-4" />}
-                  label="Adjust Guardrails"
-                  desc="Update limits, retries, approval rules"
+                  icon={Sliders}
+                  label="Adjust Policy Ceilings"
+                  desc="Update refund limits and retry intervals"
                 />
               </div>
             </div>
 
-            {/* System Health */}
-            <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-5 space-y-3">
-              <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
-                <ShieldAlert className="h-4 w-4 text-success" />
-                <span>System Health</span>
-              </h3>
-              <div className="space-y-2 text-xs">
-                <HealthRow label="PostgreSQL" status="ok" />
-                <HealthRow label="Redis" status="ok" />
-                <HealthRow label="PayPal Sandbox" status="ok" />
-                <HealthRow label="LLM Provider" status="ok" />
+            {/* Infrastructure Health */}
+            <div className="card-paypal p-6 space-y-4">
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wider">
+                Infrastructure Health
+              </h2>
+              <div className="space-y-3 text-xs">
+                <HealthRow label="PostgreSQL Ledger" status="Connected" isUp={true} />
+                <HealthRow label="Redis Job Queue" status="Connected" isUp={true} />
+                <HealthRow label="PayPal Sandbox API" status="Online" isUp={true} />
+                <HealthRow label="LLM Budget Sentinel" status="Active" isUp={true} />
               </div>
             </div>
           </div>
 
-          {/* Recent Events Table Preview */}
-          <div className="lg:col-span-2 ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-6 space-y-4">
+          {/* Right Column: Recent Events Stream Table */}
+          <div className="lg:col-span-8 card-paypal p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-semibold text-ink flex items-center gap-2">
-                  <ListOrdered className="h-4 w-4 text-accent" />
-                  <span>Recent Payment Events</span>
+                <h2 className="text-base font-bold text-[#001C44]">
+                  Recent Payment Events
                 </h2>
-                <p className="text-xs text-muted">Latest payment triage events ingested by the agent.</p>
+                <p className="text-xs text-muted">
+                  Latest transactions intercepted and evaluated against guardrails.
+                </p>
               </div>
               <Link
                 href="/events"
-                className="text-xs text-accent hover:underline font-medium flex items-center gap-1"
+                className="text-xs font-semibold text-[#0070BA] hover:underline inline-flex items-center gap-1"
               >
-                <span>View full grid</span>
-                <ExternalLink className="h-3.5 w-3.5" />
+                <span>Full stream</span>
+                <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
 
             {recentEvents.length === 0 ? (
-              <div className="rounded-input border border-dashed border-rule/60 p-8 text-center text-muted text-xs">
-                No events ingested yet. Try simulating a declined payment in the{" "}
-                <Link href="/checkout" className="text-accent underline">
+              <div className="rounded-2xl border border-rule bg-paper-3 p-8 text-center text-muted text-xs">
+                No events recorded. Run a simulation in{" "}
+                <Link href="/checkout" className="text-[#0070BA] font-bold underline">
                   Checkout Test
                 </Link>{" "}
-                tab.
+                to inspect live triage.
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-ink">
-                  <thead className="border-b border-rule/50 bg-paper-3/60 text-muted">
-                    <tr>
-                      <th className="px-4 py-2.5 font-medium">Event ID</th>
-                      <th className="px-4 py-2.5 font-medium">Type</th>
-                      <th className="px-4 py-2.5 font-medium">Source</th>
-                      <th className="px-4 py-2.5 font-medium">Status</th>
-                      <th className="px-4 py-2.5 font-medium">Created At</th>
-                      <th className="px-4 py-2.5 font-medium text-right">Action</th>
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-rule text-muted text-[11px] font-mono uppercase font-semibold">
+                      <th className="py-3 px-3">Event ID</th>
+                      <th className="py-3 px-3">Classification</th>
+                      <th className="py-3 px-3">Source</th>
+                      <th className="py-3 px-3">Resolution</th>
+                      <th className="py-3 px-3 text-right">Timestamp</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-rule/40">
+                  <tbody className="divide-y divide-slate-100 font-mono">
                     {recentEvents.map((ev) => (
-                      <tr key={ev.id} className="hover:bg-paper-3/40 transition-colors">
-                        <td className="px-4 py-2.5 font-mono text-ink text-[11px]">{ev.id}</td>
-                        <td className="px-4 py-2.5 text-[11px]">{ev.type}</td>
-                        <td className="px-4 py-2.5">
-                          <span className="rounded-pill bg-paper-3 px-2 py-0.5 text-[10px] text-ink border border-rule/60">
+                      <tr key={ev.id} className="hover:bg-paper-3 transition-colors">
+                        <td className="py-3.5 px-3 font-semibold text-[#0070BA]">
+                          <Link href={`/events?id=${ev.id}`} className="hover:underline">
+                            {ev.id}
+                          </Link>
+                        </td>
+                        <td className="py-3.5 px-3 text-ink-2 font-sans font-medium truncate max-w-[150px]">
+                          {ev.type}
+                        </td>
+                        <td className="py-3.5 px-3">
+                          <span className="text-[11px] text-muted bg-paper-3 px-2 py-0.5 rounded-full">
                             {ev.source}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5">
+                        <td className="py-3.5 px-3">
                           <span
-                            className={`inline-flex items-center rounded-pill px-2 py-0.5 text-[10px] font-medium border ${
+                            className={`badge-status ${
                               ev.status === "EXECUTED" || ev.status === "COMPLETED" || ev.status === "RECOVERED"
-                                ? "bg-success/15 text-success border-success/30"
+                                ? "badge-status--success"
                                 : ev.status === "EXECUTED_CONFIRMED_BY_POLLING"
-                                ? "bg-info/15 text-info border-info/30"
+                                ? "badge-status--info"
                                 : ev.status === "AWAITING_APPROVAL"
-                                ? "bg-warning/15 text-warning border-warning/30"
+                                ? "badge-status--warning"
                                 : ev.status === "WAITING_FOR_AI"
-                                ? "bg-info/15 text-info border-info/30"
-                                : "bg-paper-3 text-ink border-rule/50"
+                                ? "badge-status--info"
+                                : "badge-status--info"
                             }`}
                           >
                             {ev.status}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-muted text-[11px]">
-                          {new Date(ev.createdAt).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-2.5 text-right">
-                          <Link
-                            href={`/events?id=${ev.id}`}
-                            className="inline-flex items-center gap-1 text-accent hover:underline font-medium text-[11px]"
-                          >
-                            <span>Inspect</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
+                        <td className="py-3.5 px-3 text-right text-muted text-[11px]">
+                          {new Date(ev.createdAt).toLocaleTimeString()}
                         </td>
                       </tr>
                     ))}
@@ -271,77 +275,107 @@ function MetricCard({
   title,
   value,
   subtitle,
-  icon,
-  iconBg,
-  trend,
+  valueColor = "text-ink",
   isTextValue = false,
+  badge,
+  badgeType = "info",
+  linkHref,
+  linkLabel,
 }: {
   title: string;
   value: number | string;
   subtitle: string;
-  icon: React.ReactNode;
-  iconBg: string;
-  trend: React.ReactNode;
+  valueColor?: string;
   isTextValue?: boolean;
+  badge?: string;
+  badgeType?: "success" | "warning" | "info";
+  linkHref: string;
+  linkLabel: string;
 }) {
   return (
-    <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-5 space-y-3 hover:border-accent/40 transition-colors duration-short">
+    <div className="card-paypal p-5 space-y-3 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted">{title}</span>
-        <span className={`flex h-9 w-9 items-center justify-center rounded-input ${iconBg}`}>{icon}</span>
-      </div>
-      <div className="flex items-baseline space-x-2">
-        {isTextValue ? (
-          <p className="text-base font-semibold text-ink truncate">{value}</p>
-        ) : (
-          <p className="text-2xl font-bold text-ink num">{value}</p>
+        <span className="text-xs font-semibold text-muted">{title}</span>
+        {badge && (
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              badgeType === "warning"
+                ? "bg-warning/15 text-warning"
+                : badgeType === "success"
+                ? "bg-success/15 text-success"
+                : "bg-accent/10 text-[#0070BA]"
+            }`}
+          >
+            {badge}
+          </span>
         )}
-        <span className="text-xs text-muted">{subtitle}</span>
       </div>
-      <div className="pt-1">{trend}</div>
+      <div>
+        {isTextValue ? (
+          <div className="text-lg font-bold text-[#001C44] truncate">{value}</div>
+        ) : (
+          <div className={`text-3xl font-extrabold font-mono ${valueColor}`}>{value}</div>
+        )}
+        <div className="text-xs text-muted truncate mt-1">{subtitle}</div>
+      </div>
+      <div className="pt-2 border-t border-rule">
+        <Link href={linkHref} className="text-xs font-semibold text-[#0070BA] hover:underline inline-flex items-center gap-1">
+          <span>{linkLabel}</span>
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
     </div>
   );
 }
 
 function QuickActionLink({
   href,
-  icon,
+  icon: Icon,
   label,
   desc,
 }: {
   href: string;
-  icon: React.ReactNode;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   desc: string;
 }) {
   return (
     <Link
       href={href}
-      className="flex items-center space-x-3 rounded-input border border-rule/50 bg-paper-3/50 p-3 text-xs hover:bg-paper-3 hover:border-accent/40 transition-colors"
+      className="flex items-start gap-3 p-3 rounded-2xl border border-rule bg-paper-3 hover:bg-paper-3 hover:border-rule-2 transition-all group"
     >
-      <span className="flex h-8 w-8 items-center justify-center rounded-input bg-accent/10 text-accent shrink-0">
-        {icon}
-      </span>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-ink truncate">{label}</p>
-        <p className="text-[11px] text-muted truncate">{desc}</p>
+      <div className="w-8 h-8 rounded-xl bg-white border border-rule flex items-center justify-center text-[#0070BA] shrink-0 group-hover:scale-105 transition-transform">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-xs font-bold text-ink group-hover:text-[#0070BA] transition-colors">
+          {label}
+        </div>
+        <div className="text-[11px] text-muted truncate mt-0.5">{desc}</div>
       </div>
     </Link>
   );
 }
 
-function HealthRow({ label, status }: { label: string; status: "ok" | "warn" | "error" }) {
-  const colors = {
-    ok: "bg-success",
-    warn: "bg-warning",
-    error: "bg-error",
-  };
+function HealthRow({
+  label,
+  status,
+  isUp,
+}: {
+  label: string;
+  status: string;
+  isUp: boolean;
+}) {
   return (
     <div className="flex items-center justify-between text-xs">
-      <span className="text-muted">{label}</span>
-      <div className="flex items-center space-x-1.5">
-        <span className={`h-2 w-2 rounded-full ${colors[status]}`} />
-        <span className="font-medium text-ink capitalize">{status}</span>
+      <span className="text-ink-2 font-medium">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <span
+          className={`inline-block h-2 w-2 rounded-full ${
+            isUp ? "bg-success/15" : "bg-error/15"
+          }`}
+        />
+        <span className="font-mono text-[11px] font-semibold text-ink">{status}</span>
       </div>
     </div>
   );

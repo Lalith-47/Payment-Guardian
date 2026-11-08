@@ -328,6 +328,8 @@ export function VantageCanvas({
     let targetPy = 0;
     let currentPx = 0;
     let currentPy = 0;
+    let targetScroll = 0;
+    let currentScroll = 0;
     let yaw = 0.55;
     let alpha = 0;
     let isVisible = true;
@@ -351,7 +353,15 @@ export function VantageCanvas({
       targetPy = ((e.clientY - cy) / cy);
     };
 
+    // Scroll Reactivity: tracks page scroll for cinematic 3D flight
+    const handleScroll = () => {
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      targetScroll = Math.min(1.0, Math.max(0.0, window.scrollY / maxScroll));
+    };
+
     window.addEventListener("mousemove", handlePointerMove, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
 
     // IntersectionObserver to pause rendering when scrolled off screen
     const observer = new IntersectionObserver(([entry]) => {
@@ -370,25 +380,31 @@ export function VantageCanvas({
       const dt = Math.min((time - lastTime) / 1000, 0.1);
       lastTime = time;
 
-      // Smooth camera interpolation toward cursor target
+      // Smooth camera interpolation toward cursor and scroll target
       const lerp = (a: number, b: number, k: number) => a + (b - a) * Math.min(1, k * dt);
       currentPx = lerp(currentPx, targetPx, 3.5);
       currentPy = lerp(currentPy, targetPy, 3.5);
+      currentScroll = lerp(currentScroll, targetScroll, 2.5);
 
       if (!reduceMotion) {
-        yaw += 0.03 * dt; // slow organic rotation
+        yaw += 0.02 * dt; // slow organic rotation
       }
       alpha = lerp(alpha, 1.0, 2.0);
 
       const w = canvas.clientWidth || 800;
       const h = canvas.clientHeight || 600;
 
-      // Parallax camera calculation
-      const camYaw = yaw + currentPx * 0.18;
-      const camPitch = 0.44 + currentPy * 0.12;
-      const dist = w < 768 ? 220 : 170;
+      // Cinematic Parallax camera calculation combining yaw, cursor, and scroll flight
+      const scrollYaw = currentScroll * 0.75;
+      const scrollPitch = Math.sin(currentScroll * Math.PI) * 0.18;
+      const scrollDist = Math.sin(currentScroll * Math.PI) * 35;
 
-      const target = [0, 36, 0];
+      const camYaw = yaw + currentPx * 0.18 + scrollYaw;
+      const camPitch = 0.44 + currentPy * 0.12 - scrollPitch;
+      const baseDist = w < 768 ? 220 : 170;
+      const dist = baseDist - scrollDist;
+
+      const target = [0, 36 + currentScroll * 6, 0];
       const eye = [
         target[0] + dist * Math.cos(camPitch) * Math.sin(camYaw),
         target[1] + dist * Math.sin(camPitch),
@@ -436,6 +452,7 @@ export function VantageCanvas({
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", handlePointerMove);
+      window.removeEventListener("scroll", handleScroll);
       observer.disconnect();
     };
   }, [mounted]);

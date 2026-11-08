@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ShieldAlert,
   Sliders,
   CreditCard,
   ListOrdered,
@@ -14,10 +13,12 @@ import {
   LogOut,
   RefreshCw,
   Receipt,
-  Sparkles,
-  Zap,
+  Menu,
+  X,
+  ExternalLink,
+  ChevronRight,
+  Lock,
 } from "lucide-react";
-import { DashboardBackground } from "@/components/3d/DashboardBackground";
 
 interface ReadyzData {
   status: string;
@@ -54,6 +55,7 @@ export function DashboardShell({
   const [readyz, setReadyz] = useState<ReadyzData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const fetchReadyz = async () => {
     try {
@@ -112,7 +114,7 @@ export function DashboardShell({
     { href: "/events", label: "Events", icon: ListOrdered },
     {
       href: "/approvals",
-      label: "Approval Inbox",
+      label: "Approvals",
       icon: Inbox,
       badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined,
     },
@@ -140,32 +142,37 @@ export function DashboardShell({
   const quotaPct = Math.min(100, Math.round((budgetUsed / Math.max(1, dailyBudget)) * 100));
 
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col font-body relative selection:bg-accent/20 selection:text-accent">
-      {/* Dynamic 3D / Ambient Canvas Background */}
-      <DashboardBackground />
-
-      {/* Top Glassmorphic Navigation Bar */}
-      <header className="border-b border-rule/60 bg-paper-2/80 backdrop-blur-2xl sticky top-0 z-30 transition-colors duration-short">
-        <div className="container max-w-7xl px-4 sm:px-6">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col font-sans selection:bg-[#0070BA]/20 selection:text-[#001C44]">
+      {/* Top Main Navigation Bar */}
+      <header className="border-b border-[#E2E8F0] bg-[#FFFFFF] sticky top-0 z-40 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between gap-4">
-            {/* Brand Logo & Tag */}
+            {/* Brand Logo & Name */}
             <div className="flex items-center gap-6">
-              <Link href="/dashboard" className="flex items-center gap-2.5 group">
-                <span className="relative flex h-9 w-9 items-center justify-center rounded-card bg-accent text-accent-ink font-bold group-hover:scale-105 transition-transform duration-short">
-                  <ShieldAlert className="h-5 w-5" />
+              <Link href="/dashboard" className="flex items-center gap-3 group">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#003087] to-[#0070BA] text-white shadow-md shadow-[#003087]/20 group-hover:scale-105 transition-transform">
+                  <span className="font-extrabold text-base tracking-tight font-serif italic">P</span>
                 </span>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold tracking-tight text-ink group-hover:text-accent transition-colors duration-short">
-                    Revenue Guardian
-                  </span>
-                  <span className="text-[10px] text-muted font-normal">
-                    PayPal sandbox sentry
-                  </span>
+                <div>
+                  <div className="text-sm font-bold tracking-tight text-[#001C44] flex items-center gap-1.5">
+                    <span>PayPal</span>
+                    <span className="font-semibold text-muted">Guardian</span>
+                  </div>
+                  <div className="text-[10px] text-muted font-medium">Deterministic Sentry</div>
                 </div>
               </Link>
 
               {/* Desktop Navigation Links */}
-              <nav className="hidden lg:flex items-center gap-1.5 pl-4 border-l border-rule/60">
+              <nav className="hidden lg:flex items-center gap-1 pl-4 border-l border-rule">
+                <Link
+                  href="/"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs text-muted hover:text-ink hover:bg-paper-3 transition-colors"
+                  title="View Public 3D Presentation"
+                >
+                  <span>Public 3D</span>
+                  <ExternalLink className="h-3 w-3 opacity-60" />
+                </Link>
+
                 {navItems.map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
@@ -173,16 +180,16 @@ export function DashboardShell({
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`relative flex items-center gap-2 px-3 py-1.5 rounded-card text-xs font-medium transition-colors duration-short ${
+                      className={`relative flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                         isActive
-                          ? "bg-accent/15 text-accent border border-accent/40"
-                          : "text-muted hover:bg-paper-3/70 hover:text-ink border border-transparent"
+                          ? "bg-[#0070BA]/10 text-[#0070BA] font-semibold"
+                          : "text-ink-2 hover:text-ink hover:bg-paper-3"
                       }`}
                     >
                       <Icon className="h-3.5 w-3.5 shrink-0" />
                       <span>{item.label}</span>
                       {item.badge !== undefined && (
-                        <span className="ml-0.5 px-1.5 py-0.2 rounded-pill bg-warning text-paper text-[10px] font-bold animate-pulse">
+                        <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-warning/15 text-warning text-[10px] font-mono font-bold">
                           {item.badge}
                         </span>
                       )}
@@ -192,109 +199,90 @@ export function DashboardShell({
               </nav>
             </div>
 
-            {/* Quick Actions & Session */}
+            {/* Quick Actions & Session User */}
             <div className="flex items-center gap-3">
-              <Link
-                href="/checkout"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-card bg-accent text-accent-ink text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform"
-              >
-                <Zap className="h-3.5 w-3.5 fill-current" />
-                <span>Simulate Decline</span>
-              </Link>
-
-              <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-card bg-paper-3/60 border border-rule/40 text-xs text-muted">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                <span className="truncate max-w-[160px]">
-                  {ownerEmail || "owner@revenueguardian.local"}
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-paper-3 border border-rule text-xs text-ink-2">
+                <span className="w-2 h-2 rounded-full bg-success/15 animate-pulse" />
+                <span className="truncate max-w-[170px] font-mono text-[11px] font-medium">
+                  {ownerEmail || "owner@paypal.local"}
                 </span>
               </div>
 
               <button
                 onClick={handleSignOut}
-                className="inline-flex items-center gap-1.5 rounded-card border border-rule/80 bg-paper-2 px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-paper-3 hover:text-ink transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
+                className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-white px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-paper-3 hover:text-ink transition-colors shadow-2xs"
                 title="Sign out of owner session"
               >
-                <LogOut className="h-3.5 w-3.5" />
+                <LogOut className="h-3.5 w-3.5 text-muted" />
                 <span className="hidden sm:inline">Sign Out</span>
+              </button>
+
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-2 rounded-lg text-ink-2 hover:bg-paper-3"
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
           </div>
         </div>
 
         {/* Live System Telemetry Strip */}
-        <div className="bg-paper/80 border-t border-rule/50 px-4 sm:px-6 py-2">
-          <div className="container max-w-7xl flex flex-wrap items-center justify-between gap-3 text-xs">
-            {/* Live Service Pulse Status */}
+        <div className="bg-[#F8FAFC] border-t border-rule px-4 sm:px-6 py-2">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+            {/* Live Service Status Indicator Pills */}
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               {/* Postgres */}
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  {pgOk && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                  )}
-                  <span
-                    className={`relative inline-flex rounded-full h-2 w-2 ${
-                      pgOk ? "bg-success" : "bg-error"
-                    }`}
-                  />
-                </span>
-                <span className="text-muted text-[11px]">Postgres:</span>
-                <span className="font-medium text-ink text-[11px]">
-                  {pgOk ? "Ready" : "Offline"}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`inline-block rounded-full h-2 w-2 ${
+                    pgOk ? "bg-success/15" : "bg-error/15"
+                  }`}
+                />
+                <span className="text-muted text-[11px] font-medium">Postgres:</span>
+                <span className="text-ink-2 text-[11px] font-semibold">
+                  {pgOk ? "Connected" : "Offline"}
                 </span>
               </div>
 
               {/* Redis */}
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  {redisOk && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                  )}
-                  <span
-                    className={`relative inline-flex rounded-full h-2 w-2 ${
-                      redisOk ? "bg-success" : "bg-error"
-                    }`}
-                  />
-                </span>
-                <span className="text-muted text-[11px]">Redis:</span>
-                <span className="font-medium text-ink text-[11px]">
-                  {redisOk ? "Ready" : "Offline"}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`inline-block rounded-full h-2 w-2 ${
+                    redisOk ? "bg-success/15" : "bg-error/15"
+                  }`}
+                />
+                <span className="text-muted text-[11px] font-medium">Redis:</span>
+                <span className="text-ink-2 text-[11px] font-semibold">
+                  {redisOk ? "Connected" : "Offline"}
                 </span>
               </div>
 
               {/* PayPal Sandbox */}
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  {ppOk && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                  )}
-                  <span
-                    className={`relative inline-flex rounded-full h-2 w-2 ${
-                      ppOk ? "bg-success" : "bg-error"
-                    }`}
-                  />
-                </span>
-                <span className="text-muted text-[11px]">PayPal:</span>
-                <span className="font-medium text-ink text-[11px]">
-                  {ppOk ? "Sandbox Connected" : "Unreachable"}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`inline-block rounded-full h-2 w-2 ${
+                    ppOk ? "bg-success/15" : "bg-error/15"
+                  }`}
+                />
+                <span className="text-muted text-[11px] font-medium">PayPal API:</span>
+                <span className="text-ink-2 text-[11px] font-semibold">
+                  {ppOk ? "Sandbox Live" : "Unreachable"}
                 </span>
               </div>
 
               {/* Model Reachability */}
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  {modelsOk && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                  )}
-                  <span
-                    className={`relative inline-flex rounded-full h-2 w-2 ${
-                      modelsOk ? "bg-success" : "bg-warning"
-                    }`}
-                  />
-                </span>
-                <span className="text-muted text-[11px]">Model:</span>
-                <span className="font-medium text-ink text-[11px]">
-                  {modelsOk ? "Online" : "Waiting"}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`inline-block rounded-full h-2 w-2 ${
+                    modelsOk ? "bg-success/15" : "bg-warning/15"
+                  }`}
+                />
+                <span className="text-muted text-[11px] font-medium">AI Model:</span>
+                <span className="text-ink-2 text-[11px] font-semibold">
+                  {modelsOk ? "Online" : "Standby"}
                 </span>
               </div>
             </div>
@@ -302,18 +290,18 @@ export function DashboardShell({
             {/* LLM Quota Gauge & Quick Refresh */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-muted text-[11px]">LLM Budget:</span>
-                <span className="font-medium text-ink text-[11px] tabular-nums">
-                  {budgetUsed} / {dailyBudget} calls
+                <span className="text-muted text-[11px] font-medium">Daily Quota:</span>
+                <span className="text-ink text-[11px] font-mono font-bold">
+                  {budgetUsed}/{dailyBudget}
                 </span>
-                <div className="w-20 h-1.5 bg-paper-3 rounded-pill overflow-hidden border border-rule/40">
+                <div className="w-16 h-1.5 bg-paper-subtle rounded-full overflow-hidden">
                   <div
-                    className={`h-full transition-opacity duration-short ${
+                    className={`h-full rounded-full ${
                       quotaPct > 80
-                        ? "bg-warning"
+                        ? "bg-error/15"
                         : quotaPct > 50
-                        ? "bg-accent"
-                        : "bg-info"
+                        ? "bg-warning/15"
+                        : "bg-[#0070BA]"
                     }`}
                     style={{ width: `${quotaPct}%` }}
                   />
@@ -326,22 +314,62 @@ export function DashboardShell({
                   fetchPendingApprovals();
                 }}
                 disabled={refreshing}
-                className="text-muted hover:text-ink p-1 rounded-card hover:bg-paper-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-muted hover:text-ink-2 p-1 rounded-full hover:bg-paper-subtle transition-colors disabled:opacity-50"
                 title="Refresh system status"
               >
                 <RefreshCw
                   className={`h-3.5 w-3.5 ${
-                    refreshing ? "motion-safe:animate-spin text-accent" : ""
+                    refreshing ? "animate-spin text-[#0070BA]" : ""
                   }`}
                 />
               </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-rule bg-white p-4 space-y-2">
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold text-ink-2 hover:bg-paper-3"
+            >
+              <span>Public 3D Presentation</span>
+              <ExternalLink className="h-4 w-4 text-muted" />
+            </Link>
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-medium ${
+                    isActive
+                      ? "bg-[#0070BA]/10 text-[#0070BA] font-bold"
+                      : "text-ink-2 hover:bg-paper-3"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge !== undefined && (
+                    <span className="px-2 py-0.5 rounded-full bg-warning/15 text-warning text-[10px] font-bold">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </header>
 
       {/* Main Page Content Container */}
-      <main className="flex-1 container max-w-7xl px-4 sm:px-6 py-6 lg:py-8 relative z-10">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
         {children}
       </main>
     </div>

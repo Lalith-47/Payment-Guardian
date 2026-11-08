@@ -11,10 +11,11 @@ import {
   ShieldCheck,
   RefreshCw,
   Zap,
-  Sparkles,
   Sliders,
   Lock,
-  ArrowUpRight,
+  ArrowRight,
+  Shield,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -136,7 +137,7 @@ export default function ApprovalsPage() {
   const handleApprove = async (appr: ApprovalItem) => {
     if (
       !confirm(
-        `Are you sure you want to APPROVE execution of ${appr.proposal?.action}? This will dispatch mutating API calls via ActionExecutor.`
+        `Are you sure you want to approve execution of ${appr.proposal?.action}? This will dispatch mutating API calls via ActionExecutor.`
       )
     ) {
       return;
@@ -199,7 +200,7 @@ export default function ApprovalsPage() {
 
       setStatusMsg({
         type: "success",
-        text: "Proposal rejected. Event transitioned to REJECTED and recorded in audit log.",
+        text: "Proposal rejected. Event recorded in audit log.",
       });
       setRejectingItem(null);
       setRejectReason("");
@@ -221,161 +222,136 @@ export default function ApprovalsPage() {
   return (
     <DashboardShell>
       <div className="space-y-8">
-        {/* Top Header & Simulation Trigger Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-6 border-b border-rule/50">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-pill bg-warning/10 border border-warning/30 text-xs font-medium text-warning">
-              <span className="w-1.5 h-1.5 rounded-full bg-warning animate-ping" />
-              <span>Deterministic Human Consent Gate</span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-ink flex items-center gap-3">
-              <Inbox className="h-6 w-6 text-accent" />
+        {/* Header Strip */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-rule">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold text-[#001C44] flex items-center gap-2.5">
+              <Inbox className="h-6 w-6 text-[#0070BA]" />
               <span>Owner Approval Inbox</span>
             </h1>
-            <p className="text-xs text-muted max-w-2xl leading-relaxed">
-              High-risk actions, policy threshold exceptions, or low-confidence AI proposals requiring explicit human consent.
+            <p className="text-sm text-muted max-w-xl">
+              High-value threshold exceptions and policy triggers requiring explicit owner consent before execution.
             </p>
           </div>
 
-          {/* Quick Actions Cluster */}
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => handleSimulateDecline("85.00")}
               disabled={simulating}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-input bg-accent text-accent-ink text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="btn-paypal-gold btn-sm"
             >
               <Zap className="h-3.5 w-3.5 fill-current" />
-              <span>{simulating ? "Generating Decline..." : "Simulate $85.00 Decline"}</span>
+              <span>{simulating ? "Generating..." : "Simulate $85 Decline"}</span>
             </button>
 
-            <div className="flex rounded-input border border-rule/60 bg-paper-2 p-1 text-xs">
+            {/* Status Filter Tabs */}
+            <div className="inline-flex rounded-full border border-rule bg-white p-1 shadow-2xs">
               <button
                 onClick={() => setFilter("PENDING")}
-                className={`rounded-input px-3 py-1 font-medium transition-colors ${
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
                   filter === "PENDING"
-                    ? "bg-accent/15 text-accent border border-accent/30"
-                    : "text-muted hover:text-ink"
+                    ? "bg-[#0070BA] text-white shadow-2xs"
+                    : "text-ink-2 hover:text-ink"
                 }`}
               >
-                Pending Review {pendingCount > 0 && `(${pendingCount})`}
+                Pending {pendingCount > 0 && `(${pendingCount})`}
               </button>
               <button
                 onClick={() => setFilter("ALL")}
-                className={`rounded-input px-3 py-1 font-medium transition-colors ${
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
                   filter === "ALL"
-                    ? "bg-accent/15 text-accent border border-accent/30"
-                    : "text-muted hover:text-ink"
+                    ? "bg-[#0070BA] text-white shadow-2xs"
+                    : "text-ink-2 hover:text-ink"
                 }`}
               >
-                All History ({approvals.length})
+                All ({approvals.length})
               </button>
             </div>
 
             <button
               onClick={fetchApprovals}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-input border border-rule/80 bg-paper-2 px-3 py-2 text-xs font-medium text-ink-2 hover:bg-paper-3 hover:text-ink transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-paypal-secondary btn-sm"
               title="Refresh inbox"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin text-accent" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-[#0070BA]" : ""}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
         </div>
 
-        {/* 4 Key Guardrail Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-4 space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted">
-              <span>Pending Decisions</span>
-              <Inbox className="h-4 w-4 text-warning" />
-            </div>
-            <div className="text-2xl font-bold text-ink num">{pendingCount}</div>
-            <div className="text-[11px] text-muted">
-              {pendingCount > 0 ? "Requires owner signature" : "All approvals resolved"}
+        {/* 4 Guardrail Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="card-paypal p-5 space-y-2">
+            <div className="text-xs font-semibold text-muted">Pending Warrants</div>
+            <div className="text-3xl font-extrabold text-[#001C44] font-mono">{pendingCount}</div>
+            <div className="text-xs text-muted">
+              {pendingCount > 0 ? "Awaiting owner review" : "Inbox clear"}
             </div>
           </div>
 
-          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-4 space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted">
-              <span>Auto-Refund Limit</span>
-              <Sliders className="h-4 w-4 text-accent" />
-            </div>
-            <div className="text-2xl font-bold text-accent num">$25.00 USD</div>
-            <div className="text-[11px] text-muted">Configured in PostgreSQL</div>
+          <div className="card-paypal p-5 space-y-2">
+            <div className="text-xs font-semibold text-muted">Auto-Refund Ceiling</div>
+            <div className="text-3xl font-extrabold text-[#0070BA] font-mono">$25.00</div>
+            <div className="text-xs text-muted">PostgreSQL enforced</div>
           </div>
 
-          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-4 space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted">
-              <span>Token Security</span>
-              <Lock className="h-4 w-4 text-accent" />
-            </div>
-            <div className="text-base font-bold text-ink tracking-tight">HMAC-SHA256</div>
-            <div className="text-[11px] text-muted">Hashed zero-knowledge storage</div>
+          <div className="card-paypal p-5 space-y-2">
+            <div className="text-xs font-semibold text-muted">Token Integrity</div>
+            <div className="text-lg font-bold font-mono text-ink mt-1">HMAC-SHA256</div>
+            <div className="text-xs text-muted">Single-use hashed tokens</div>
           </div>
 
-          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-4 space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted">
-              <span>Sentry Engine</span>
-              <ShieldCheck className="h-4 w-4 text-success" />
+          <div className="card-paypal p-5 space-y-2">
+            <div className="text-xs font-semibold text-muted">Sentry Engine</div>
+            <div className="text-base font-bold text-success mt-1 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-success/15 animate-pulse" />
+              <span>Active Gatekeeper</span>
             </div>
-            <div className="text-base font-bold text-success flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-success" />
-              <span>Active Protection</span>
-            </div>
-            <div className="text-[11px] text-muted">Sub-4s autonomous recovery</div>
+            <div className="text-xs text-muted">Deterministic triage</div>
           </div>
         </div>
 
-        {/* Status Feedback Toast Banner */}
+        {/* Status Feedback Toast */}
         {statusMsg && (
           <div
-            className={`rounded-card p-3.5 text-xs flex items-center gap-2.5 border transition-opacity duration-short ${
+            className={`rounded-2xl p-4 text-xs flex items-center gap-2.5 border font-medium ${
               statusMsg.type === "success"
-                ? "bg-success/10 border-success/30 text-success"
-                : "bg-error/10 border-error/30 text-error"
+                ? "bg-success/15 border-success/30 text-success"
+                : "bg-error/15 border-error/30 text-error"
             }`}
           >
             {statusMsg.type === "success" ? (
-              <CheckCircle className="h-4 w-4 shrink-0 text-success" />
+              <CheckCircle className="h-5 w-5 shrink-0 text-success" />
             ) : (
-              <AlertTriangle className="h-4 w-4 shrink-0 text-error" />
+              <AlertTriangle className="h-5 w-5 shrink-0 text-error" />
             )}
-            <span className="font-medium">{statusMsg.text}</span>
+            <span>{statusMsg.text}</span>
           </div>
         )}
 
-        {/* Empty State / Interactive Sentry Display */}
+        {/* List or Clean Empty State */}
         {displayedApprovals.length === 0 ? (
-          <div className="ticks rounded-card border border-rule/70 bg-paper-2/80 backdrop-blur-2xl p-12 text-center space-y-6">
-            <div className="relative flex h-20 w-20 items-center justify-center mx-auto">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent/20 opacity-75" />
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-paper-3 border border-accent/40 text-accent">
-                <ShieldCheck className="h-8 w-8" />
-              </div>
+          <div className="card-paypal p-12 text-center space-y-4">
+            <div className="h-12 w-12 rounded-2xl bg-success/15 border border-success/30 flex items-center justify-center mx-auto text-success">
+              <ShieldCheck className="h-6 w-6" />
             </div>
-
-            <div className="space-y-2 max-w-md mx-auto">
-              <h3 className="text-lg font-bold text-ink">Approval Inbox Clear</h3>
-              <p className="text-xs text-muted leading-relaxed">
-                There are currently no actions requiring manual owner review. Autonomous policy guardrails are enforcing routine recovery.
+            <div className="space-y-1 max-w-sm mx-auto">
+              <h2 className="text-base font-bold text-[#001C44]">Approval Inbox Clear</h2>
+              <p className="text-xs text-muted">
+                No transactions currently exceed merchant guardrails. Routine declines resolve autonomously within configured ceilings.
               </p>
             </div>
-
-            <div className="pt-2">
-              <button
-                onClick={() => handleSimulateDecline("85.00")}
-                disabled={simulating}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-input bg-accent text-accent-ink text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              >
-                <Zap className="h-3.5 w-3.5 fill-current" />
-                <span>Simulate decline</span>
-              </button>
-            </div>
+            <button
+              onClick={() => handleSimulateDecline("85.00")}
+              disabled={simulating}
+              className="btn-paypal-primary btn-sm"
+            >
+              <span>Simulate $85.00 Decline</span>
+            </button>
           </div>
         ) : (
-          /* List of Approval Cards */
-          <div className="space-y-4">
+          <div className="space-y-5">
             {displayedApprovals.map((appr) => {
               const isPending = appr.status === "PENDING";
               const isActing = actingToken === appr.token;
@@ -383,115 +359,114 @@ export default function ApprovalsPage() {
               return (
                 <div
                   key={appr.id}
-                  className="rounded-card ticks border border-rule/80 bg-paper-2/95 backdrop-blur-xl p-5 sm:p-6 space-y-5 hover:border-accent/40 transition-colors duration-short"
+                  className="card-paypal p-6 sm:p-7 space-y-5 hover:border-rule-2 transition-colors"
                 >
-                  {/* Card Header Strip */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-rule/50">
+                  {/* Top Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-rule">
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-xs font-bold text-ink px-2.5 py-0.5 rounded-pill bg-paper-3 border border-rule/60">
+                      <span className="font-mono text-xs font-bold text-ink px-2.5 py-1 rounded-full bg-paper-3 border border-rule">
                         {appr.id}
                       </span>
                       <span
-                        className={`rounded-pill px-2.5 py-0.5 text-[11px] font-bold border ${
+                        className={`badge-status ${
                           appr.status === "PENDING"
-                            ? "bg-warning/15 text-warning border-warning/40 animate-pulse"
+                            ? "badge-status--warning"
                             : appr.status === "APPROVED"
-                            ? "bg-success/15 text-success border-success/40"
-                            : "bg-error/15 text-error border-error/40"
+                            ? "badge-status--success"
+                            : "badge-status--error"
                         }`}
                       >
                         {appr.status}
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5 text-accent" />
-                        <span>Expires: {new Date(appr.expiresAt).toLocaleTimeString()}</span>
-                      </span>
-                      <span className="text-[11px]">Event: <span className="font-mono">{appr.eventId}</span></span>
+                    <div className="flex items-center gap-4 text-xs text-muted font-mono">
+                      <span>Expires: {new Date(appr.expiresAt).toLocaleTimeString()}</span>
+                      <span className="text-muted-light">|</span>
+                      <span>Event: {appr.eventId}</span>
                     </div>
                   </div>
 
-                  {/* Authoritative Trigger Rule Banner */}
+                  {/* Trigger Rule */}
                   {appr.triggerRule && (
-                    <div className="rounded-input border border-warning/30 bg-warning/10 p-3 text-xs text-warning flex items-center gap-2.5">
+                    <div className="rounded-xl border border-warning/30 bg-warning/15 p-3 text-xs text-warning flex items-center gap-2 font-medium">
                       <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
                       <span>
-                        Policy Engine Reason (Authoritative):{" "}
-                        <strong className="font-mono font-semibold">{appr.triggerRule}</strong>
+                        Policy Trigger: <strong className="font-mono">{appr.triggerRule}</strong>
                       </span>
                     </div>
                   )}
 
                   {/* Proposal Details Grid */}
                   {appr.proposal ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
-                      {/* Left: Action & Amount */}
-                      <div className="space-y-2 p-3.5 rounded-input bg-paper-3/60 border border-rule/40">
-                        <span className="text-[11px] text-muted">Proposed Action</span>
-                        <p className="text-base font-bold text-ink capitalize">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
+                      <div className="p-4 rounded-2xl bg-paper-3 border border-rule space-y-2">
+                        <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
+                          Proposed Action
+                        </span>
+                        <div className="text-base font-bold text-[#001C44] capitalize">
                           {appr.proposal.action}{" "}
                           {appr.proposal.amount ? `($${appr.proposal.amount} ${appr.proposal.currency || "USD"})` : ""}
-                        </p>
-                        <div className="text-[11px] text-muted pt-1 border-t border-rule/30">
-                          Model: <span className="font-mono">{appr.proposal.modelUsed}</span>
+                        </div>
+                        <div className="text-[11px] text-muted font-mono pt-1">
+                          Model: {appr.proposal.modelUsed}
                         </div>
                       </div>
 
-                      {/* Right: AI Analysis & Draft Notice */}
-                      <div className="md:col-span-2 space-y-2.5">
+                      <div className="md:col-span-2 space-y-3">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted text-[11px]">AI Reasoning Analysis</span>
-                          <span className="text-accent font-semibold text-[11px]">
+                          <span className="font-bold text-ink-2">AI Assessment</span>
+                          <span className="font-mono font-bold text-[#0070BA]">
                             Confidence: {Math.round(parseFloat(appr.proposal.confidence) * 100)}%
                           </span>
                         </div>
-                        <p className="text-xs text-ink-2 leading-relaxed bg-paper/50 p-2.5 rounded-input border border-rule/30">
+                        <p className="text-xs text-ink-2 bg-paper-3 p-3.5 rounded-xl border border-rule leading-relaxed">
                           {appr.proposal.reasoning}
                         </p>
                         {appr.proposal.message && (
-                          <div className="rounded-input bg-paper/70 p-2.5 border border-rule/40">
-                            <span className="text-muted text-[11px]">Draft Customer Notification:</span>
-                            <p className="text-ink text-xs mt-1 italic">{appr.proposal.message}</p>
+                          <div className="rounded-xl bg-white p-3.5 border border-rule">
+                            <span className="text-muted text-[11px] block font-bold uppercase tracking-wider">
+                              Draft Customer Message:
+                            </span>
+                            <p className="text-ink text-xs mt-1 italic">"{appr.proposal.message}"</p>
                           </div>
                         )}
                       </div>
                     </div>
                   ) : (
-                    <p className="text-xs text-muted italic">Proposal details unavailable.</p>
+                    <p className="text-xs text-muted italic">Proposal metadata unavailable.</p>
                   )}
 
-                  {/* Decision summary if already decided */}
+                  {/* Decided summary */}
                   {!isPending && (
-                    <div className="rounded-input bg-paper-3/70 p-3 text-xs border border-rule/60 text-muted">
+                    <div className="rounded-xl bg-paper-3 p-3 text-xs border border-rule text-muted">
                       Decided by <span className="text-ink font-semibold">{appr.decidedBy || "owner"}</span> at{" "}
                       {appr.decidedAt ? new Date(appr.decidedAt).toLocaleString() : "—"}.
                       {appr.rejectionReason && (
-                        <p className="text-error mt-1">Rejection reason: {appr.rejectionReason}</p>
+                        <p className="text-error font-medium mt-1">Reason: {appr.rejectionReason}</p>
                       )}
                     </div>
                   )}
 
-                  {/* Actions (Approve / Reject) */}
+                  {/* Action Controls */}
                   {isPending && (
-                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-rule/50">
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-rule">
                       <button
                         onClick={() => setRejectingItem(appr)}
                         disabled={isActing}
-                        className="inline-flex items-center gap-1.5 rounded-input border border-error/40 bg-error/15 px-3.5 py-2 text-xs font-semibold text-error hover:bg-error/25 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-error disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-paypal-secondary btn-sm text-error border-error/30 hover:bg-error/15 hover:border-error/30"
                       >
-                        <XCircle className="h-3.5 w-3.5" />
+                        <XCircle className="h-4 w-4" />
                         <span>Reject</span>
                       </button>
 
                       <button
                         onClick={() => handleApprove(appr)}
                         disabled={isActing}
-                        className="inline-flex items-center gap-1.5 rounded-input bg-accent text-accent-ink px-4 py-2 text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-paypal-primary btn-sm font-bold"
                       >
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        <span>{isActing ? "Executing..." : "Approve & Execute via Executor"}</span>
+                        <CheckCircle className="h-4 w-4" />
+                        <span>{isActing ? "Executing..." : "Approve & Execute via ActionExecutor"}</span>
                       </button>
                     </div>
                   )}
@@ -501,44 +476,44 @@ export default function ApprovalsPage() {
           </div>
         )}
 
-        {/* Rejection Justification Modal */}
+        {/* Rejection Modal */}
         {rejectingItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-paper/90 p-4">
-            <div className="w-full max-w-md rounded-card border border-rule/80 bg-paper-2 p-6 space-y-4">
-              <div className="flex items-center gap-2 text-error">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep backdrop-blur-xs p-4">
+            <div className="w-full max-w-md card-paypal-elevated p-6 sm:p-8 space-y-5">
+              <div className="flex items-center gap-2.5 text-error">
                 <XCircle className="h-5 w-5" />
-                <h3 className="text-sm font-semibold text-ink">Reject Proposed Action</h3>
+                <h3 className="text-base font-bold text-[#001C44]">Reject Proposed Action</h3>
               </div>
-              <p className="text-xs text-muted leading-relaxed">
-                Provide a justification for rejecting the AI proposal for{" "}
-                <span className="font-mono text-ink font-semibold">{rejectingItem.eventId}</span>. This will be archived in the append-only audit log.
+              <p className="text-xs text-ink-2">
+                Provide a reason for rejecting the action for{" "}
+                <span className="font-mono font-bold text-ink">{rejectingItem.eventId}</span>. This will be recorded in the append-only audit trail.
               </p>
 
               <form onSubmit={handleRejectSubmit} className="space-y-4">
                 <textarea
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="e.g. Order was already fulfilled or customer contacted support directly."
+                  placeholder="e.g. Transaction verified through offline customer support."
                   required
                   rows={3}
-                  className="w-full rounded-input border border-rule/70 bg-paper p-3 text-xs text-ink placeholder-muted focus:border-accent focus:outline-none"
+                  className="w-full rounded-xl border border-rule bg-paper-3 p-3 text-xs text-ink placeholder-slate-400 focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                 />
 
-                <div className="flex justify-end gap-2.5">
+                <div className="flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       setRejectingItem(null);
                       setRejectReason("");
                     }}
-                    className="rounded-input border border-rule/70 bg-paper px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-paper-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-paypal-secondary btn-sm"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={actingToken !== null}
-                    className="rounded-input bg-error text-ink px-4 py-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-paypal-primary btn-sm bg-error hover:bg-error border-transparent text-white"
                   >
                     Confirm Rejection
                   </button>

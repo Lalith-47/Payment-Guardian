@@ -1,18 +1,63 @@
-.git
-.gitignore
+# Dependencies & build artifacts
+node_modules/
+.next/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Test artifacts
+playwright-report/
+test-results/
+*.log
+tmp/
+
+# AI/Tooling artifacts
+.skills/
+.hallmark/
+.agents/
+graphify-out/
+graphify*
+
+# Development scripts & outputs
+scripts/m0/
+scripts/*.ts
+!scripts/reset-demo.ts
+!scripts/backup-demo-db.sh
+!scripts/verify-webhooks.ts
+!scripts/sync-webhook.ts
+!scripts/update-webhook.ts
+!scripts/create-sandbox-order.ts
+!scripts/capture-audit-screenshots.ts
+!scripts/verify-c1-trail.ts
+!scripts/verify-live-decline-flow.ts
+!scripts/verify-all-models-fail.ts
+reference-for-frontend/
+
+# Local configs
 .env
 .env.*
 !.env.example
-node_modules
-.next
-.skills
-.hallmark
-.agents
-graphify-out
-graphify*
-scripts/m0
-playwright-report
-test-results
-docs/screenshots
-coverage
-*.log
+docker-compose.override.yml
+docker-compose.*.yml
+docker-compose.*.yml.example
+
+# IDE & OS
+.DS_Store
+.idea/
+.vscode/
+
+# Documentation (large, not needed in build)
+docs/progress.md
+docs/checklist.md
+docs/M1.md
+docs/SPEC.md
+docs/llm-accounting.md
+docs/screenshots/
+
+# Backups & agent rules
+backups/
+AGENTS.md
+
+# Git
+.git/
+.gitignore

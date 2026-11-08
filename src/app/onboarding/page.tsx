@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldAlert, CheckCircle, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { Shield, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -58,157 +59,169 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-board p-6 flex items-center justify-center">
-      <div className="max-w-2xl w-full rounded-card border border-rule-2 bg-ink-2 p-8 shadow-card">
-        <div className="mb-6">
-          <span className="inline-flex items-center gap-1.5 rounded-input bg-info/10 border border-info/30 px-2.5 py-1 text-xs font-medium text-info">
-            <ShieldAlert className="h-3.5 w-3.5" />
-            <span>Initial Setup</span>
-          </span>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-board-type">Merchant Guardrail Onboarding</h1>
-          <p className="mt-1 text-sm text-muted">
-            Configure your autonomous payment recovery policies. All financial limits are owner-defined and enforced in Postgres.
-          </p>
-        </div>
-
-        {error && (
-          <div className="mb-6 rounded-input bg-error/10 border border-error/30 p-3 text-sm text-error flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-board-type">
-                Policy Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
-              />
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] p-4 sm:p-8 flex items-center justify-center selection:bg-[#0070BA]/20 selection:text-[#001C44]">
+      <main className="max-w-2xl w-full">
+        <div className="card-paypal-elevated p-8 sm:p-10 space-y-7">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-xs font-semibold text-[#0070BA]">
+              <span className="w-2 h-2 rounded-full bg-success/15 animate-pulse" />
+              <span>Step 1 of 1: Initial Setup</span>
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-board-type">
-                Store Currency
-              </label>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
-              >
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="CAD">CAD ($)</option>
-              </select>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#001C44]">
+              Merchant Guardrail Configuration
+            </h1>
+            <p className="text-sm text-muted">
+              Define your autonomous payment recovery policies. All ceilings and thresholds are strictly enforced in PostgreSQL.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-board-type">
-                Max Auto-Refund Amount (${currency})
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={autoRefundMaxAmount}
-                onChange={(e) => setAutoRefundMaxAmount(Number(e.target.value))}
-                required
-                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
-              />
-              <p className="mt-1 text-xs text-muted">Refunds above this amount require manual owner approval.</p>
+          {error && (
+            <div className="rounded-xl bg-error/15 border border-error/30 p-4 text-xs text-error font-medium flex items-center gap-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-error" />
+              <span>{error}</span>
             </div>
+          )}
 
-            <div>
-              <label className="block text-xs font-semibold text-board-type">
-                Max Automated Retries
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="5"
-                value={autoRetryMaxAttempts}
-                onChange={(e) => setAutoRetryMaxAttempts(Number(e.target.value))}
-                required
-                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
-              />
-              <p className="mt-1 text-xs text-muted">Subsequent capture attempts before stopping.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-board-type">
-                AI Confidence Threshold ({Math.round(confidenceThreshold * 100)}%)
-              </label>
-              <input
-                type="range"
-                min="0.5"
-                max="1.0"
-                step="0.05"
-                value={confidenceThreshold}
-                onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
-                className="mt-2 block w-full accent-accent"
-              />
-              <p className="mt-1 text-xs text-muted">Proposals with confidence below this threshold fail closed.</p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-board-type">
-                Max Offer Discount ({offerDiscountPct}%)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="50"
-                value={offerDiscountPct}
-                onChange={(e) => setOfferDiscountPct(Number(e.target.value))}
-                required
-                className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-board-type text-sm"
-              />
-              <p className="mt-1 text-xs text-muted">Maximum discount permitted on alternative offers.</p>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-board-type mb-2">
-              Always Require Approval For:
-            </label>
-            <div className="flex flex-wrap gap-4">
-              {["escalate", "refund", "offer", "retry"].map((act) => (
-                <label key={act} className="inline-flex items-center space-x-2 text-xs text-board-type capitalize cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={requireApprovalActions.includes(act)}
-                    onChange={() => toggleAction(act)}
-                    className="rounded border-rule-2 bg-ink text-accent focus:ring-0"
-                  />
-                  <span>{act}</span>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-ink-2">
+                  Policy Name
                 </label>
-              ))}
-            </div>
-          </div>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-medium text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
+                />
+              </div>
 
-          <div className="pt-4 border-t border-rule-2 flex justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex items-center space-x-2 rounded-input bg-accent px-5 py-2.5 font-medium text-accent-ink hover:opacity-90 active:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50 transition-colors"
-            >
-              <CheckCircle className="h-4 w-4" />
-              <span>{loading ? "Saving Guardrails..." : "Save Guardrails & Enter Dashboard"}</span>
-            </button>
-          </div>
-        </form>
-      </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-ink-2">
+                  Store Currency
+                </label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="CAD">CAD ($)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-ink-2">
+                  Max Auto-Refund Amount ({currency})
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={autoRefundMaxAmount}
+                  onChange={(e) => setAutoRefundMaxAmount(Number(e.target.value))}
+                  required
+                  className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
+                />
+                <p className="text-[11px] text-muted">Refunds exceeding this require manual owner approval.</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-ink-2">
+                  Max Automated Retries
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="5"
+                  value={autoRetryMaxAttempts}
+                  onChange={(e) => setAutoRetryMaxAttempts(Number(e.target.value))}
+                  required
+                  className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
+                />
+                <p className="text-[11px] text-muted">Attempts before escalating to owner review.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-ink-2">
+                  Offer Discount Ceilings (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={offerDiscountPct}
+                  onChange={(e) => setOfferDiscountPct(Number(e.target.value))}
+                  required
+                  className="block w-full rounded-xl border border-rule bg-paper-3 px-3.5 py-2 text-xs font-mono font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-ink-2">
+                  AI Confidence Threshold ({Math.round(confidenceThreshold * 100)}%)
+                </label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.0"
+                  step="0.05"
+                  value={confidenceThreshold}
+                  onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
+                  className="block w-full accent-[#0070BA] mt-3 h-2 bg-paper-subtle rounded-lg cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-rule">
+              <label className="block text-xs font-bold text-ink-2">
+                Actions Requiring Explicit Owner Consent
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {["escalate", "refund", "offer", "retry"].map((act) => {
+                  const checked = requireApprovalActions.includes(act);
+                  return (
+                    <label
+                      key={act}
+                      className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-semibold capitalize cursor-pointer transition-all ${
+                        checked
+                          ? "bg-accent/10 border-accent/30 text-[#0070BA]"
+                          : "bg-paper-3 border-rule text-ink-2 hover:bg-paper-3"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleAction(act)}
+                        className="hidden"
+                      />
+                      <span>{act}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="pt-4 flex justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-paypal-primary font-bold"
+              >
+                <span>{loading ? "Initializing..." : "Initialize Merchant Guardrails"}</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,169 +1,162 @@
-/* hallmark: 2.0.0 | theme: vantage | dial: object/steel | critique: reality capture meets financial guardrails | date: 2026-11-08 */
+/* PayPal Design System Tokens
+ * Combining Apple visual storytelling craftsmanship with PayPal's financial identity
+ */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
+
+  /* Spacing Scale (Strict 4px grid) */
   --space-3xs: 2px;
   --space-2xs: 4px;
   --space-xs: 8px;
   --space-sm: 12px;
   --space-md: 16px;
   --space-lg: 24px;
-  --space-xl: 40px;
-  --space-2xl: 64px;
-  --space-3xl: 96px;
-  --space-4xl: 144px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
 
-  --text-xs: 0.8125rem;
-  --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: 1.1875rem;
-  --text-xl: 1.5rem;
-  --text-2xl: 1.875rem;
-  --text-3xl: 2.375rem;
-  --text-display: clamp(2.875rem, 3.6vw + 1rem, 4.75rem);
-  --text-section: clamp(2rem, 1.6vw + 1.25rem, 3rem);
-  --text-title: clamp(1.125rem, 0.4vw + 1rem, 1.3125rem);
-  --text-lead: clamp(1.0625rem, 0.3vw + 1rem, 1.25rem);
-  --text-figure: clamp(4.5rem, 12vw + 1rem, 14rem);
+  /* Typography Scale */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.8125rem;   /* 13px */
+  --text-md: 0.875rem;    /* 14px */
+  --text-lg: 1rem;        /* 16px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-display: clamp(2.25rem, 3.5vw + 1rem, 4rem);
+  --text-section: clamp(1.5rem, 1.8vw + 0.8rem, 2.5rem);
+  --text-title: 1.125rem;
+  --text-lead: 1.0625rem;
+  --text-figure: clamp(2.5rem, 5vw + 1rem, 4.5rem);
 
+  /* Easing & Timing */
+  --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.12);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
   --dur-micro: 120ms;
-  --dur-short: 240ms;
-  --dur-long: 560ms;
+  --dur-short: 200ms;
+  --dur-medium: 350ms;
+  --dur-long: 600ms;
 
-  --color-error: oklch(72% 0.15 27);
-  --color-success: oklch(89% 0.19 126);
-  --color-warning: oklch(85% 0.14 85);
-  --color-info: oklch(72% 0.12 235);
+  /* PayPal Brand Palette */
+  --color-pp-navy-deep: #001435;
+  --color-pp-navy: #001C44;
+  --color-pp-blue: #003087;
+  --color-pp-bright-blue: #0079C1;
+  --color-pp-cyan: #009CDE;
+  --color-pp-teal: #00D4AA;
+  --color-pp-gold: #F59E0B;
+  --color-pp-amber: #D97706;
 
-  --container: 1440px;
-  --gutter: 64px;
-  --gap-columns: 32px;
-  --section-gap-s: 120px;
-  --section-gap: 152px;
-  --section-gap-l: 184px;
+  /* Surfaces & Canvas */
+  --color-paper: #F8FAFC;
+  --color-paper-2: #FFFFFF;
+  --color-paper-3: #F1F5F9;
+  --color-paper-subtle: #E2E8F0;
+  --color-deep: #001435;
 
-  --z-base: 1;
-  --z-raised: 10;
-  --z-dropdown: 100;
-  --z-sticky: 200;
-  --z-sticky-nav: 300;
-  --z-modal: 400;
-  --z-toast: 500;
-  --z-tooltip: 600;
+  /* Inks & Text */
+  --color-ink: #0F172A;
+  --color-ink-2: #334155;
+  --color-muted: #64748B;
+  --color-muted-light: #94A3B8;
 
-  /* Vantage theme palette: blue-black ground, pale steel ink, hairline rules, chromatic lime signal */
-  --color-paper: oklch(13.5% 0.012 235);
-  --color-paper-2: oklch(17% 0.014 235);
-  --color-paper-3: oklch(21% 0.016 235);
+  /* Rules & Hairlines */
+  --color-rule: #E2E8F0;
+  --color-rule-2: #CBD5E1;
+  --color-rule-subtle: rgba(15, 23, 42, 0.06);
 
-  --color-ink: oklch(95% 0.006 230);
-  --color-ink-2: oklch(82% 0.012 230);
-  --color-muted: oklch(66% 0.016 230);
+  /* Accents & States */
+  --color-accent: #0079C1;
+  --color-accent-hi: #009CDE;
+  --color-accent-ink: #FFFFFF;
+  --color-focus: #009CDE;
 
-  --color-rule: oklch(27% 0.014 235);
-  --color-rule-2: oklch(34% 0.016 235);
+  --color-success: #059669;
+  --color-success-bg: #ECFDF5;
+  --color-success-border: #A7F3D0;
 
-  --color-accent: oklch(89% 0.19 126);
-  --color-accent-hi: oklch(93% 0.17 126);
-  --color-accent-ink: oklch(19% 0.04 126);
-  --color-focus: oklch(89% 0.19 126);
+  --color-warning: #D97706;
+  --color-warning-bg: #FFFBEB;
+  --color-warning-border: #FDE68A;
 
-  --point-lo: oklch(42% 0.04 245);
-  --point-mid: oklch(70% 0.04 232);
-  --point-hi: oklch(96% 0.02 215);
+  --color-error: #DC2626;
+  --color-error-bg: #FEF2F2;
+  --color-error-border: #FECACA;
 
-  --color-slot: oklch(21% 0.016 235);
-  --color-board: oklch(13.5% 0.012 235);
-  --color-board-type: oklch(95% 0.006 230);
-  --color-paid: oklch(89% 0.19 126);
+  --color-info: #0284C7;
+  --color-info-bg: #F0F9FF;
+  --color-info-border: #BAE6FD;
 
-  --font-display: "Geologica", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Geologica", ui-sans-serif, system-ui, sans-serif;
-  --font-outlier: "Geist Mono", ui-monospace, monospace;
+  /* Layout */
+  --container: 1360px;
+  --gutter: 24px;
+  --gap-columns: 24px;
 
-  --radius-card: 4px;
-  --radius-input: 4px;
-  --radius-pill: 999px;
-  --radius-stock: 4px;
-  --rule-hair: 1px;
-  --tick: 10px;
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-input: 8px;
+  --radius-card: 16px;
+  --radius-card-lg: 20px;
+  --radius-pill: 9999px;
 
-  --shadow-card: none;
-  --tracking-display: -0.035em;
-  --display-weight: 300;
+  /* Shadows (Apple-grade diffused) */
+  --shadow-subtle: 0 1px 2px rgba(0, 20, 53, 0.04);
+  --shadow-card: 0 2px 8px -2px rgba(0, 20, 53, 0.05), 0 8px 24px -4px rgba(0, 20, 53, 0.04);
+  --shadow-elevated: 0 8px 30px -4px rgba(0, 20, 53, 0.08), 0 4px 12px -2px rgba(0, 20, 53, 0.04);
+  --shadow-modal: 0 20px 48px -8px rgba(0, 20, 53, 0.16), 0 8px 20px -4px rgba(0, 20, 53, 0.08);
+
+  /* Fonts */
+  --font-display: "Geologica", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Geologica", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @theme {
-  --text-xs: var(--text-xs);
-  --text-sm: var(--text-sm);
-  --text-md: var(--text-md);
-  --text-lg: var(--text-lg);
-  --text-xl: var(--text-xl);
-  --text-2xl: var(--text-2xl);
-  --text-3xl: var(--text-3xl);
-  --text-display: var(--text-display);
-  --text-section: var(--text-section);
-  --text-title: var(--text-title);
-  --text-lead: var(--text-lead);
-  --text-figure: var(--text-figure);
-
-  --ease-out: var(--ease-out);
-  --ease-in: var(--ease-in);
-  --ease-in-out: var(--ease-in-out);
-
-  --color-error: var(--color-error);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-warning);
-  --color-info: var(--color-info);
-
   --color-paper: var(--color-paper);
   --color-paper-2: var(--color-paper-2);
   --color-paper-3: var(--color-paper-3);
+  --color-paper-subtle: var(--color-paper-subtle);
+  --color-deep: var(--color-deep);
 
   --color-ink: var(--color-ink);
   --color-ink-2: var(--color-ink-2);
   --color-muted: var(--color-muted);
+  --color-muted-light: var(--color-muted-light);
 
   --color-rule: var(--color-rule);
   --color-rule-2: var(--color-rule-2);
+  --color-rule-subtle: var(--color-rule-subtle);
 
   --color-accent: var(--color-accent);
   --color-accent-hi: var(--color-accent-hi);
   --color-accent-ink: var(--color-accent-ink);
   --color-focus: var(--color-focus);
 
-  --color-board: var(--color-board);
-  --color-board-type: var(--color-board-type);
-  --color-paid: var(--color-paid);
+  --color-success: var(--color-success);
+  --color-success-bg: var(--color-success-bg);
+  --color-success-border: var(--color-success-border);
 
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
-  --font-outlier: var(--font-outlier);
+  --color-warning: var(--color-warning);
+  --color-warning-bg: var(--color-warning-bg);
+  --color-warning-border: var(--color-warning-border);
 
-  --radius-card: var(--radius-card);
-  --radius-input: var(--radius-input);
-  --radius-pill: var(--radius-pill);
-}
+  --color-error: var(--color-error);
+  --color-error-bg: var(--color-error-bg);
+  --color-error-border: var(--color-error-border);
 
-@media (max-width: 60rem) {
-  :root {
-    --gutter: 24px;
-    --section-gap-s: 80px;
-    --section-gap: 96px;
-    --section-gap-l: 120px;
-  }
-}
+  --color-info: var(--color-info);
+  --color-info-bg: var(--color-info-bg);
+  --color-info-border: var(--color-info-border);
 
-@media (max-width: 40rem) {
-  :root {
-    --gutter: 16px;
-    --section-gap-s: 56px;
-    --section-gap: 72px;
-    --section-gap-l: 96px;
-    --gap-columns: 16px;
-  }
+  --color-pp-navy: var(--color-pp-navy);
+  --color-pp-blue: var(--color-pp-blue);
+  --color-pp-bright: var(--color-pp-bright-blue);
+  --color-pp-cyan: var(--color-pp-cyan);
+  --color-pp-gold: var(--color-pp-gold);
 }

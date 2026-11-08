@@ -1,172 +1,392 @@
-/* hallmark: 2.0.0 | theme: vantage | dial: object/steel | critique: reality capture meets financial guardrails | date: 2026-11-08 */
-
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./base.css";
 @import "ag-grid-community/styles/ag-grid.css";
 @import "ag-grid-community/styles/ag-theme-quartz.css";
 
-/* Corner ticks: a hairline frame drawn only at its corners */
-.ticks {
-  position: relative;
+/* ══════════════════════════════════════════════════════════════════
+   PAYPAL PREMIUM DESIGN SYSTEM UTILITIES
+   ══════════════════════════════════════════════════════════════════ */
+
+/* PayPal Icon Monogram Pill */
+.paypal-monogram {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #003087 0%, #0079C1 100%);
+  color: #FFFFFF;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.05em;
+  box-shadow: 0 2px 6px rgba(0, 48, 135, 0.25);
 }
 
-.ticks::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border: var(--rule-hair) solid var(--color-rule-2);
-  -webkit-mask: conic-gradient(at var(--tick) var(--tick), transparent 75%, var(--color-ink) 0) 0 0 / calc(100% - var(--tick)) calc(100% - var(--tick));
-  mask: conic-gradient(at var(--tick) var(--tick), transparent 75%, var(--color-ink) 0) 0 0 / calc(100% - var(--tick)) calc(100% - var(--tick));
+/* PayPal Buttons */
+.btn-paypal-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: #0070BA;
+  color: #FFFFFF;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 112, 186, 0.2);
+  transition: all var(--dur-micro) var(--ease-apple);
 }
 
-/* Vantage Controls */
+.btn-paypal-primary:hover {
+  background: #005EA6;
+  box-shadow: 0 4px 12px rgba(0, 112, 186, 0.3);
+  color: #FFFFFF;
+}
+
+.btn-paypal-primary:active {
+  transform: scale(0.985);
+}
+
+.btn-paypal-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 24px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-pill);
+  background: #FFC439;
+  color: #001435;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 196, 57, 0.35);
+  transition: all var(--dur-micro) var(--ease-apple);
+}
+
+.btn-paypal-gold:hover {
+  background: #F4B324;
+  box-shadow: 0 4px 14px rgba(255, 196, 57, 0.45);
+}
+
+.btn-paypal-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 20px;
+  border: 1px solid var(--color-rule-2);
+  border-radius: var(--radius-pill);
+  background: #FFFFFF;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-subtle);
+  transition: all var(--dur-micro) var(--ease-apple);
+}
+
+.btn-paypal-secondary:hover {
+  background: var(--color-paper-3);
+  border-color: var(--color-muted-light);
+  color: var(--color-ink);
+}
+
+.btn-paypal-secondary:active {
+  transform: scale(0.985);
+}
+
+.btn-paypal-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--dur-micro) var(--ease-apple);
+}
+
+.btn-paypal-ghost:hover {
+  background: rgba(0, 112, 186, 0.08);
+  color: var(--color-pp-blue);
+}
+
+.btn-sm {
+  min-height: 34px;
+  padding: 0 14px;
+  font-size: var(--text-xs);
+}
+
+/* Card Styles */
+.card-paypal {
+  background: #FFFFFF;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--dur-short) var(--ease-apple), box-shadow var(--dur-short) var(--ease-apple);
+}
+
+.card-paypal:hover {
+  border-color: var(--color-rule-2);
+}
+
+.card-paypal-elevated {
+  background: #FFFFFF;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-card-lg);
+  box-shadow: var(--shadow-elevated);
+}
+
+.card-paypal-dark {
+  background: #001435;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-card);
+  color: #FFFFFF;
+  box-shadow: 0 12px 32px rgba(0, 14, 38, 0.4);
+}
+
+/* Legacy .btn compatibility */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  min-height: 48px;
-  padding: 0 var(--space-lg);
-  border: 0;
+  min-height: 38px;
+  padding: 0 var(--space-md);
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
-  background: var(--color-accent);
-  color: var(--color-accent-ink);
-  font: 400 var(--text-md)/1 var(--font-body);
+  background: #0070BA;
+  color: #FFFFFF;
+  font: 600 var(--text-sm)/1 var(--font-body);
   text-decoration: none;
   cursor: pointer;
-  transition: background var(--dur-short) var(--ease-out), box-shadow var(--dur-short) var(--ease-out), transform var(--dur-micro) var(--ease-out);
+  transition: all var(--dur-micro) var(--ease-apple);
 }
 
 .btn:hover {
-  background: var(--color-accent-hi);
-}
-
-.btn:active {
-  transform: translateY(1px);
+  background: #005EA6;
+  color: #FFFFFF;
 }
 
 .btn--line {
-  background: transparent;
+  background: #FFFFFF;
   color: var(--color-ink);
-  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
+  border: 1px solid var(--color-rule-2);
 }
 
 .btn--line:hover {
-  background: var(--color-paper-2);
-  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-muted);
+  background: var(--color-paper-3);
+  border-color: var(--color-muted-light);
 }
 
 .btn--sm {
-  min-height: 40px;
-  padding: 0 var(--space-md);
-  font-size: var(--text-sm);
+  min-height: 32px;
+  padding: 0 var(--space-sm);
+  font-size: var(--text-xs);
 }
 
-/* Vantage Navigation */
-.nav-vantage {
-  position: fixed;
-  inset: 0 0 auto;
-  z-index: var(--z-sticky-nav);
-  height: 72px;
-  background: color-mix(in oklab, var(--color-paper) 88%, transparent);
-  backdrop-filter: blur(12px);
-  box-shadow: inset 0 calc(-1 * var(--rule-hair)) 0 var(--color-rule);
+/* Glass panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-.wordmark__mark {
-  display: grid;
-  grid-template-columns: repeat(3, 4px);
-  gap: var(--space-2xs);
-  transform: skewX(-18deg);
+.glass-panel-dark {
+  background: rgba(0, 20, 53, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.wordmark__mark i {
-  width: 4px;
-  height: 14px;
-  border-radius: 1px;
-}
-
-/* Vantage Switches */
-.vantage-switch {
-  display: grid;
-  grid-template-columns: 1fr auto 44px;
+/* Badge System */
+.badge-status {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-lg);
-  padding: var(--space-md) 0;
-  border-bottom: var(--rule-hair) solid var(--color-rule);
-  cursor: pointer;
-  position: relative;
-}
-
-.vantage-switch input {
-  position: absolute;
-  opacity: 0;
-  width: 44px;
-  height: 24px;
-  right: 0;
-  margin: 0;
-  cursor: pointer;
-}
-
-.vantage-switch__track {
-  position: relative;
-  width: 44px;
-  height: 24px;
+  gap: 4px;
+  padding: 2px 8px;
   border-radius: var(--radius-pill);
-  box-shadow: inset 0 0 0 var(--rule-hair) var(--color-rule-2);
-  background: var(--color-paper-2);
-  transition: background var(--dur-short) var(--ease-out);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
 }
 
-.vantage-switch__track::after {
+.badge-status--success {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.badge-status--warning {
+  background: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.badge-status--error {
+  background: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.badge-status--info {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+/* AG-Grid PayPal Custom Skin */
+.ag-theme-quartz {
+  --ag-background-color: #FFFFFF;
+  --ag-header-background-color: #F8FAFC;
+  --ag-header-foreground-color: #475569;
+  --ag-border-color: #E2E8F0;
+  --ag-row-hover-color: #F0F7FF;
+  --ag-selected-row-background-color: #E0F2FE;
+  --ag-font-family: var(--font-body);
+  --ag-font-size: 12.5px;
+  --ag-grid-size: 6px;
+  --ag-border-radius: 8px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   APPLE LIQUID GLASS SYSTEM
+   ══════════════════════════════════════════════════════════════════ */
+.glass-liquid {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 20px 48px -12px rgba(0, 28, 68, 0.08), 0 1px 2px rgba(255, 255, 255, 0.8) inset;
+}
+
+.glass-liquid-dark {
+  background: rgba(0, 20, 53, 0.82);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(255, 255, 255, 0.15) inset;
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 9999px;
+  box-shadow: 0 8px 30px rgba(0, 32, 96, 0.08), 0 1px 1px rgba(255, 255, 255, 0.9) inset;
+}
+
+.glass-pill-dark {
+  background: rgba(0, 20, 53, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 1px 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+.liquid-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-shimmer::after {
   content: "";
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--color-muted);
-  transition: transform var(--dur-short) var(--ease-out), background var(--dur-short) var(--ease-out);
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  transform: rotate(30deg);
+  pointer-events: none;
+  animation: liquid-shimmer 6s ease-in-out infinite;
 }
 
-.vantage-switch input:checked + .vantage-switch__track {
-  background: var(--color-accent);
+@keyframes liquid-shimmer {
+  0% { transform: translateX(-100%) rotate(30deg); }
+  50% { transform: translateX(100%) rotate(30deg); }
+  100% { transform: translateX(100%) rotate(30deg); }
 }
 
-.vantage-switch input:checked + .vantage-switch__track::after {
-  transform: translateX(20px);
-  background: var(--color-accent-ink);
+/* Apple Liquid Floating Animations */
+.animate-liquid-blob-1 {
+  animation: liquid-blob-1 18s ease-in-out infinite alternate;
 }
 
-/* Vantage Callout Leader */
-.callout-leader {
-  position: absolute;
-  width: var(--rule-hair);
-  height: 64px;
-  background: color-mix(in oklab, var(--color-accent) 80%, transparent);
+.animate-liquid-blob-2 {
+  animation: liquid-blob-2 22s ease-in-out infinite alternate;
 }
 
-.callout-dot {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-paper) 70%, transparent);
+.animate-liquid-blob-3 {
+  animation: liquid-blob-3 20s ease-in-out infinite alternate;
 }
 
-/* Ag-Grid Theme Overrides */
-.ag-theme-quartz-dark {
-  --ag-background-color: var(--color-paper-2);
-  --ag-foreground-color: var(--color-ink);
-  --ag-border-color: var(--color-rule);
-  --ag-header-background-color: var(--color-paper-3);
-  --ag-header-foreground-color: var(--color-muted);
-  --ag-row-hover-color: var(--color-paper-3);
-  --ag-selected-row-background-color: color-mix(in oklab, var(--color-accent) 15%, transparent);
-  font-family: inherit;
-  font-size: 13px;
+.animate-liquid-blob-4 {
+  animation: liquid-blob-4 24s ease-in-out infinite alternate;
 }
+
+@keyframes liquid-blob-1 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(60px, 40px) scale(1.12); }
+  100% { transform: translate(-40px, 80px) scale(0.95); }
+}
+
+@keyframes liquid-blob-2 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(-80px, 60px) scale(1.08); }
+  100% { transform: translate(40px, -40px) scale(1.15); }
+}
+
+@keyframes liquid-blob-3 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(50px, -60px) scale(1.18); }
+  100% { transform: translate(-30px, 40px) scale(0.92); }
+}
+
+@keyframes liquid-blob-4 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(-60px, -50px) scale(1.1); }
+  100% { transform: translate(70px, 30px) scale(1.05); }
+}
+
+.card-hover-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 24px 48px -12px rgba(0, 32, 96, 0.12), 0 1px 2px rgba(255, 255, 255, 0.9) inset;
+}
+
+

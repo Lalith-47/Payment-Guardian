@@ -1,4 +1,4 @@
-/* Hallmark: genre modern-minimal · theme vantage · dial object/steel · critique reality capture meets financial guardrails · date 2026-11-08 */
+/* Apple-level base styles for PayPal interface */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -6,10 +6,14 @@
 
 html, body {
   overflow-x: clip;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html {
-  scrollbar-color: var(--color-muted) var(--color-paper);
+  scroll-behavior: smooth;
+  scrollbar-color: var(--color-rule-2) var(--color-paper);
   scroll-padding-top: var(--space-3xl);
 }
 
@@ -19,16 +23,14 @@ body {
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: var(--text-md);
-  font-weight: 300;
-  font-variation-settings: "SHRP" 0;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
+  font-weight: 400;
+  line-height: 1.5;
   caret-color: var(--color-accent);
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--color-accent) 24%, transparent);
-  color: var(--color-ink);
+  background: rgba(0, 121, 193, 0.18);
+  color: #001C44;
 }
 
 :focus-visible {
@@ -41,59 +43,46 @@ button:active, a:active {
 }
 
 button:disabled, input:disabled, select:disabled, textarea:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 a {
   color: inherit;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.16em;
-  text-decoration-color: var(--color-rule-2);
+  text-decoration: none;
+  transition: color var(--dur-micro) var(--ease-out);
 }
 
-a:hover {
-  text-decoration-color: var(--color-accent);
-}
-
-h1, h2, h3, h4 {
+h1, h2, h3, h4, h5, h6 {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: var(--display-weight, 300);
-  font-synthesis: none;
-  font-variation-settings: "SHRP" 100;
-  letter-spacing: var(--tracking-display);
-  line-height: 1.05;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   overflow-wrap: break-word;
-  min-width: 0;
-  text-wrap: balance;
+  color: var(--color-ink);
 }
 
 h1 {
-  max-width: 20ch;
   font-size: var(--text-display);
+  letter-spacing: -0.03em;
+  line-height: 1.08;
 }
 
 h2 {
-  max-width: 30ch;
   font-size: var(--text-section);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
 h3 {
-  max-width: 40ch;
   font-size: var(--text-title);
-  font-weight: 400;
-  line-height: 1.2;
-}
-
-b, strong {
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .lead {
   font-size: var(--text-lead);
-  line-height: 1.5;
-  max-width: 52ch;
+  line-height: 1.6;
   color: var(--color-ink-2);
 }
 
@@ -102,63 +91,22 @@ p {
   text-wrap: pretty;
 }
 
-p:not([class]) {
-  max-width: 65ch;
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
-img, video {
-  max-width: 100%;
-  height: auto;
-  display: block;
+.font-mono {
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
 }
 
-svg {
-  display: block;
-}
-
-[hidden] {
-  display: none !important;
-}
-
-button, input, select, textarea {
-  font: inherit;
-}
-
-.container {
+/* Container */
+.container-custom {
   width: 100%;
   max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: var(--gutter);
-  box-sizing: border-box;
-}
-
-.num, .figure, td.num {
-  font-variant-numeric: tabular-nums;
-  font-weight: 400;
-}
-
-.u {
-  color: var(--color-muted);
-  font-size: 0.75em;
-  font-weight: 300;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *:not(.keep-motion),
-  *:not(.keep-motion)::before,
-  *:not(.keep-motion)::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
 }

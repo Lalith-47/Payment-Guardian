@@ -10,20 +10,16 @@ import {
   Receipt,
   RefreshCw,
   Plus,
-  Sparkles,
   ExternalLink,
   CheckCircle,
   AlertCircle,
   Clock,
   ShieldAlert,
   X,
-  FileText,
-  User,
-  Mail,
-  Calendar,
   Send,
   ArrowRight,
-  ChevronDown,
+  Sparkles,
+  Search,
 } from "lucide-react";
 
 interface InvoiceItem {
@@ -170,7 +166,7 @@ function InvoicesContent() {
         if (data.missingFields && data.missingFields.length > 0) {
           setActionNotice({
             type: "warning",
-            text: `AI extracted partial fields. Missing: ${data.missingFields.join(", ")}. Please complete below.`,
+            text: `Fields requiring completion: ${data.missingFields.join(", ")}. Please review below.`,
           });
         }
       } else if (data.error) {
@@ -222,7 +218,7 @@ function InvoicesContent() {
       if (data.decision === "AUTO") {
         setActionNotice({
           type: "success",
-          text: `Invoice #${data.invoiceNumber || data.invoiceId} automatically created and dispatched via Executor!`,
+          text: `Invoice #${data.invoiceNumber || data.invoiceId} generated and dispatched via ActionExecutor.`,
         });
         await fetchInvoices();
         if (data.invoiceId) {
@@ -232,7 +228,7 @@ function InvoicesContent() {
       } else if (data.decision === "NEEDS_APPROVAL") {
         setActionNotice({
           type: "warning",
-          text: `Invoice exceeds auto-send limits (${data.ruleTriggered}). Approval request dispatched to Approvals Inbox!`,
+          text: `Invoice exceeds auto-send limits (${data.ruleTriggered}). Warrant created in Approval Inbox.`,
           approvalId: data.approvalId,
         });
         await fetchInvoices();
@@ -252,7 +248,7 @@ function InvoicesContent() {
         field: "invoiceNumber",
         width: 140,
         cellRenderer: (params: { value: string | null; data?: InvoiceItem }) => (
-          <span className="font-mono text-accent font-medium">
+          <span className="font-mono text-[#0070BA] font-bold">
             {params.value || params.data?.id.slice(0, 12) || "—"}
           </span>
         ),
@@ -260,70 +256,72 @@ function InvoicesContent() {
       {
         headerName: "Recipient",
         field: "customerName",
-        width: 160,
+        width: 190,
         cellRenderer: (params: { value: string | null; data?: InvoiceItem }) => (
           <div className="flex flex-col justify-center h-full">
-            <span className="text-board-type font-medium">{params.value || "Customer"}</span>
-            <span className="text-[11px] text-muted truncate">{params.data?.recipientEmail}</span>
+            <span className="text-ink font-semibold">{params.value || "Customer"}</span>
+            <span className="text-[11px] text-muted truncate font-mono">{params.data?.recipientEmail}</span>
           </div>
         ),
       },
       {
         headerName: "Amount",
-        width: 120,
+        width: 130,
         valueGetter: (params) =>
           params.data ? `${params.data.currency} ${parseFloat(params.data.amount).toFixed(2)}` : "—",
         cellRenderer: (params: { value: string }) => (
-          <span className="font-mono text-board-type font-semibold">{params.value}</span>
+          <span className="font-mono text-ink font-bold">{params.value}</span>
         ),
       },
       {
         headerName: "Status",
         field: "status",
-        width: 180,
+        width: 170,
         cellRenderer: (params: { value: string; data?: InvoiceItem }) => {
           const val = params.value || "DRAFT";
           if (val === "PAID_CONFIRMED_BY_POLLING") {
             return (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[11px] font-semibold bg-success/15 text-success border border-success/30">
-                PAID (Polling Confirmed)
+              <span className="badge-status badge-status--success">
+                PAID (Polled)
               </span>
             );
           }
           if (val === "PAID") {
             return (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[11px] font-semibold bg-success/15 text-success border border-success/30">
+              <span className="badge-status badge-status--success">
                 PAID (Webhook)
               </span>
             );
           }
           if (val === "SENT") {
             return (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[11px] font-semibold bg-info/15 text-info border border-info/30">
+              <span className="badge-status badge-status--info">
                 SENT
               </span>
             );
           }
           if (val === "CANCELLED") {
             return (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[11px] font-semibold bg-error/15 text-error border border-error/30">
+              <span className="badge-status badge-status--error">
                 CANCELLED
               </span>
             );
           }
           return (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-pill text-[11px] font-semibold bg-ink text-board-type border border-rule-2">
+            <span className="badge-status badge-status--info">
               {val}
             </span>
           );
         },
       },
       {
-        headerName: "Confirmation Source",
+        headerName: "Source",
         field: "confirmationSource",
-        width: 160,
+        width: 120,
         cellRenderer: (params: { value: string | null }) => (
-          <span className="text-muted font-mono text-[11px]">{params.value || "executor"}</span>
+          <span className="text-muted font-mono text-[11px] bg-paper-3 px-2 py-0.5 rounded-full">
+            {params.value || "executor"}
+          </span>
         ),
       },
       {
@@ -335,8 +333,8 @@ function InvoicesContent() {
       {
         headerName: "Created",
         field: "createdAt",
-        width: 170,
-        valueFormatter: (params) => (params.value ? new Date(params.value).toLocaleString() : "—"),
+        width: 140,
+        valueFormatter: (params) => (params.value ? new Date(params.value).toLocaleDateString() : "—"),
       },
     ],
     []
@@ -350,37 +348,37 @@ function InvoicesContent() {
 
   return (
     <DashboardShell>
-      <div className="space-y-6">
-        {/* Header and Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-rule">
           <div>
-            <h1 className="text-xl font-bold text-board-type flex items-center gap-2">
-              <Receipt className="h-5 w-5 text-accent" />
-              <span>PayPal Invoicing Grid</span>
+            <h1 className="text-2xl font-bold text-[#001C44] flex items-center gap-2.5">
+              <Receipt className="h-6 w-6 text-[#0070BA]" />
+              <span>PayPal Invoicing Ledger</span>
             </h1>
-            <p className="mt-1 text-xs text-muted">
-              Audited invoice issuance with AI extraction, guardrail policy enforcement, and honest state synchronization.
+            <p className="mt-1 text-sm text-muted">
+              Policy-bounded invoice generation with AI field extraction and deterministic due date calculation.
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => {
                 setIsModalOpen(true);
                 setActionNotice(null);
                 setMissingFields([]);
               }}
-              className="inline-flex items-center space-x-1.5 rounded-input bg-accent px-3.5 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
+              className="btn-paypal-primary"
             >
-              <Plus className="h-3.5 w-3.5" />
-              <span>New Invoice with AI</span>
+              <Plus className="h-4 w-4" />
+              <span>New Invoice</span>
             </button>
             <button
               onClick={fetchInvoices}
               disabled={loading}
-              className="inline-flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink/60 px-3 py-2 text-xs font-semibold text-board-type hover:bg-ink transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
+              className="btn-paypal-secondary"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
-              <span>Refresh Invoices</span>
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-[#0070BA]" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
         </div>
@@ -388,7 +386,7 @@ function InvoicesContent() {
         {/* Global Action Banner */}
         {actionNotice && (
           <div
-            className={`rounded-input p-3.5 text-xs flex items-center justify-between border ${
+            className={`rounded-2xl p-4 text-xs flex items-center justify-between border ${
               actionNotice.type === "success"
                 ? "bg-success/15 border-success/30 text-success"
                 : actionNotice.type === "warning"
@@ -396,7 +394,7 @@ function InvoicesContent() {
                 : "bg-error/15 border-error/30 text-error"
             }`}
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2.5 font-medium">
               {actionNotice.type === "success" ? (
                 <CheckCircle className="h-4 w-4 shrink-0 text-success" />
               ) : actionNotice.type === "warning" ? (
@@ -408,26 +406,26 @@ function InvoicesContent() {
             </div>
             {actionNotice.approvalId && (
               <Link
-                href={`/approvals`}
-                className="inline-flex items-center space-x-1 text-xs font-semibold underline text-warning hover:opacity-80"
+                href="/approvals"
+                className="btn-paypal-primary btn-sm inline-flex items-center gap-1 text-xs font-bold"
               >
-                <span>Go to Approvals</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                <span>View Warrant</span>
+                <ArrowRight className="h-3 w-3" />
               </Link>
             )}
           </div>
         )}
 
         {/* Main Grid & Side Panel Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Invoices AG Grid */}
           <div className={selectedInvoiceId ? "lg:col-span-7" : "lg:col-span-12"}>
-            <div className="rounded-card border border-rule-2 bg-ink-2 p-4 shadow-card space-y-3">
-              <div className="flex items-center justify-between text-xs text-muted pb-2 border-b border-rule-2">
-                <span>{invoices.length} Invoices Tracked</span>
-                <span>Click an invoice to inspect audit trail and state timeline</span>
+            <div className="card-paypal p-5 space-y-4">
+              <div className="flex items-center justify-between text-xs text-muted pb-3 border-b border-rule">
+                <span className="font-mono font-bold text-ink">{invoices.length} Invoices Tracked</span>
+                <span>Select any row to view audit timeline</span>
               </div>
-              <div className="ag-theme-quartz-dark w-full h-[520px] rounded-input overflow-hidden">
+              <div className="ag-theme-quartz w-full h-[540px] rounded-xl overflow-hidden border border-rule">
                 <AgGridReact<InvoiceItem>
                   rowData={invoices}
                   columnDefs={columnDefs}
@@ -443,103 +441,103 @@ function InvoicesContent() {
 
           {/* Side Detail Panel */}
           {selectedInvoiceId && (
-            <div className="lg:col-span-5 rounded-card border border-rule-2 bg-ink-2 p-5 shadow-card space-y-4">
-              <div className="flex items-center justify-between border-b border-rule-2 pb-3">
-                <div className="flex items-center space-x-2">
-                  <Receipt className="h-4 w-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-board-type">Invoice Audit Detail</h2>
+            <div className="lg:col-span-5 card-paypal p-6 space-y-5">
+              <div className="flex items-center justify-between border-b border-rule pb-4">
+                <div className="flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-[#0070BA]" />
+                  <h2 className="text-sm font-bold text-[#001C44]">Invoice Audit Record</h2>
                 </div>
                 <button
                   onClick={() => setSelectedInvoiceId(null)}
-                  className="text-muted hover:text-board-type p-1 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent rounded-input"
+                  className="text-muted hover:text-ink-2 p-1.5 rounded-full hover:bg-paper-3 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               {loadingDetail ? (
-                <div className="p-8 text-center text-xs text-muted">Loading invoice timeline…</div>
+                <div className="p-12 text-center text-xs text-muted">Loading invoice timeline…</div>
               ) : !detail ? (
-                <div className="p-8 text-center text-xs text-muted">Invoice details not found.</div>
+                <div className="p-12 text-center text-xs text-muted">Invoice record not found.</div>
               ) : (
-                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 text-xs">
+                <div className="space-y-5 max-h-[500px] overflow-y-auto pr-1 text-xs">
                   {/* Summary Card */}
-                  <div className="rounded-input border border-rule-2 bg-ink/40 p-3.5 space-y-2">
+                  <div className="rounded-2xl border border-rule bg-paper-3 p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-accent font-semibold">{detail.invoice.id}</span>
-                      <span className="rounded-input bg-ink px-2 py-0.5 text-[11px] font-medium text-board-type">
+                      <span className="font-mono text-[#0070BA] font-bold">{detail.invoice.id}</span>
+                      <span className="badge-status badge-status--info">
                         {detail.invoice.status}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                    <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
                       <div>
-                        <span className="text-muted block">Recipient:</span>
-                        <span className="text-board-type font-medium">{detail.invoice.customerName || "Customer"}</span>
+                        <span className="text-muted block text-[11px]">Recipient:</span>
+                        <span className="text-ink font-bold">{detail.invoice.customerName || "Customer"}</span>
                       </div>
                       <div>
-                        <span className="text-muted block">Email:</span>
-                        <span className="text-board-type font-mono">{detail.invoice.recipientEmail}</span>
+                        <span className="text-muted block text-[11px]">Email:</span>
+                        <span className="text-ink-2 font-mono">{detail.invoice.recipientEmail}</span>
                       </div>
                       <div>
-                        <span className="text-muted block">Total Amount:</span>
-                        <span className="text-board-type font-semibold font-mono">
+                        <span className="text-muted block text-[11px]">Total Amount:</span>
+                        <span className="text-ink font-extrabold font-mono text-sm">
                           {detail.invoice.currency} {parseFloat(detail.invoice.amount).toFixed(2)}
                         </span>
                       </div>
                       <div>
-                        <span className="text-muted block">Confirmation Source:</span>
-                        <span className="text-board-type font-mono">{detail.invoice.confirmationSource || "executor"}</span>
+                        <span className="text-muted block text-[11px]">Source:</span>
+                        <span className="text-ink-2 font-mono">{detail.invoice.confirmationSource || "executor"}</span>
                       </div>
                     </div>
 
                     {detail.invoice.payerViewUrl && (
-                      <div className="pt-2">
+                      <div className="pt-3 border-t border-rule">
                         <a
                           href={detail.invoice.payerViewUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1.5 text-accent hover:underline text-[11px]"
+                          className="btn-paypal-secondary btn-sm w-full inline-flex items-center justify-center gap-1.5"
                         >
-                          <ExternalLink className="h-3 w-3" />
-                          <span>Open PayPal Sandbox Payment View</span>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          <span>Open PayPal Sandbox View</span>
                         </a>
                       </div>
                     )}
                   </div>
 
-                  {/* Customer-Facing Text Stored as Draft Only */}
-                  <div className="rounded-input border border-rule-2 bg-ink/50 p-3 space-y-1.5">
-                    <span className="text-[11px] font-semibold text-muted block">
-                      Customer-facing message (draft only)
+                  {/* Customer Draft Message */}
+                  <div className="rounded-2xl border border-rule bg-white p-4 space-y-1.5">
+                    <span className="text-[11px] text-muted block font-bold uppercase tracking-wider">
+                      Customer notification note (draft):
                     </span>
-                    <p className="text-board-type italic bg-ink/40 p-2 rounded-input border border-rule-2">
+                    <p className="text-ink-2 italic bg-paper-3 p-3 rounded-xl border border-rule text-xs">
                       "{detail.invoice.draftMessage || detail.invoice.note || "No customer message attached."}"
                     </p>
                   </div>
 
                   {/* State Transition Timeline */}
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-semibold text-board-type flex items-center space-x-1.5">
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-ink flex items-center gap-2">
                       <Clock className="h-3.5 w-3.5 text-muted" />
                       <span>Audit Transition Timeline</span>
                     </h3>
 
                     {detail.timeline.length === 0 ? (
-                      <p className="text-xs text-muted">No timeline entries recorded yet.</p>
+                      <p className="text-xs text-muted">No timeline entries recorded.</p>
                     ) : (
-                      <div className="space-y-2 border-l-2 border-rule-2 pl-3 ml-1">
+                      <div className="space-y-3 border-l-2 border-rule pl-4 ml-2">
                         {detail.timeline.map((entry) => (
-                          <div key={entry.id} className="text-[11px] space-y-0.5">
+                          <div key={entry.id} className="text-xs space-y-1">
                             <div className="flex items-center justify-between text-muted">
-                              <span className="font-semibold text-board-type">{entry.action}</span>
-                              <span>{new Date(entry.timestamp).toLocaleTimeString()}</span>
+                              <span className="font-bold text-ink">{entry.action}</span>
+                              <span className="font-mono text-[11px]">{new Date(entry.timestamp).toLocaleTimeString()}</span>
                             </div>
-                            <p className="text-muted">
-                              Actor: <span className="font-mono text-board-type">{entry.actor}</span>
+                            <p className="text-muted text-[11px]">
+                              Actor: <span className="font-mono font-semibold text-ink-2">{entry.actor}</span>
                             </p>
                             {Boolean(entry.details?.from) && (
-                              <p className="text-muted text-[11px]">
+                              <p className="text-muted text-[11px] font-mono">
                                 Transition: {String(entry.details.from)} → {String(entry.details.to)}
                               </p>
                             )}
@@ -556,66 +554,66 @@ function InvoicesContent() {
 
         {/* Create Invoice Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/85 p-4 overflow-y-auto">
-            <div className="w-full max-w-xl rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4 my-8">
-              <div className="flex items-center justify-between border-b border-rule-2 pb-3">
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="h-4 w-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-board-type">Issue Invoice with AI Extraction</h2>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep backdrop-blur-xs p-4 overflow-y-auto">
+            <div className="w-full max-w-xl card-paypal-elevated p-6 sm:p-8 space-y-6 my-8">
+              <div className="flex items-center justify-between border-b border-rule pb-4">
+                <div className="flex items-center gap-2.5">
+                  <Receipt className="h-5 w-5 text-[#0070BA]" />
+                  <h2 className="text-lg font-bold text-[#001C44]">Issue Invoice via AI Brief</h2>
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="text-muted hover:text-board-type p-1 rounded-input"
+                  className="text-muted hover:text-ink-2 p-1.5 rounded-full hover:bg-paper-3 transition-colors"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
               {/* Natural language extraction prompt */}
               <div className="space-y-2">
-                <label className="block text-xs font-medium text-board-type">
-                  Natural Language Prompt (One Model Call)
+                <label className="block text-xs font-bold text-ink-2">
+                  Instruction Brief
                 </label>
-                <div className="flex gap-2">
+                <div className="space-y-2">
                   <textarea
                     rows={2}
                     value={promptText}
                     onChange={(e) => setPromptText(e.target.value)}
-                    placeholder="e.g. invoice Acme Corp $400 for website revamp, due in 15 days"
-                    className="block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type placeholder-muted focus:border-focus focus:outline-none"
+                    placeholder="e.g. invoice Vanguard Logistics GmbH $400 for quarterly consulting, due in 15 days"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 p-3 text-xs text-ink placeholder-slate-400 focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   />
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[11px] text-muted">
-                    Extracts customer name, email, amount, currency, due days, and notes. Missing fields returned null.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleExtract}
-                    disabled={extracting || !promptText.trim()}
-                    className="inline-flex items-center space-x-1.5 rounded-input bg-accent/20 border border-accent/40 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/30 disabled:opacity-50 transition-colors"
-                  >
-                    <Sparkles className={`h-3 w-3 ${extracting ? "motion-safe:animate-spin" : ""}`} />
-                    <span>{extracting ? "Extracting..." : "Extract with AI"}</span>
-                  </button>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] text-muted">
+                      Extracts recipient, amount, currency, and net terms into structured schema.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleExtract}
+                      disabled={extracting || !promptText.trim()}
+                      className="btn-paypal-secondary btn-sm"
+                    >
+                      <Sparkles className="h-3 w-3 text-[#0070BA]" />
+                      <span>{extracting ? "Extracting..." : "Extract Fields"}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {extractionReasoning && (
-                <div className="rounded-input border border-rule-2 bg-ink/60 p-2.5 text-[11px] text-muted space-y-1">
-                  <span className="font-semibold text-board-type">Model Reasoning:</span>
+                <div className="rounded-xl border border-rule bg-paper-3 p-3 text-xs text-ink-2 space-y-1">
+                  <span className="font-bold text-ink">Extraction Analysis:</span>
                   <p>{extractionReasoning}</p>
                 </div>
               )}
 
               {/* Form Fields */}
-              <form onSubmit={handleCreateSubmit} className="space-y-4 pt-2 border-t border-rule-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-board-type flex items-center justify-between">
+              <form onSubmit={handleCreateSubmit} className="space-y-4 pt-2 border-t border-rule">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink-2 flex items-center justify-between">
                       <span>Customer Name</span>
                       {missingFields.includes("customerName") && (
-                        <span className="text-[10px] text-warning">Required</span>
+                        <span className="text-[10px] text-warning font-bold">Required</span>
                       )}
                     </label>
                     <input
@@ -623,18 +621,18 @@ function InvoicesContent() {
                       required
                       value={formData.customerName}
                       onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                      placeholder="Acme Corp"
-                      className={`mt-1 block w-full rounded-input border ${
-                        missingFields.includes("customerName") ? "border-warning" : "border-rule-2"
-                      } bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none`}
+                      placeholder="Vanguard Logistics GmbH"
+                      className={`block w-full rounded-xl border ${
+                        missingFields.includes("customerName") ? "border-warning/30 bg-warning/15" : "border-rule bg-paper-3"
+                      } px-3 py-2 text-xs text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all`}
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-board-type flex items-center justify-between">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink-2 flex items-center justify-between">
                       <span>Customer Email</span>
                       {missingFields.includes("customerEmail") && (
-                        <span className="text-[10px] text-warning">Required</span>
+                        <span className="text-[10px] text-warning font-bold">Required</span>
                       )}
                     </label>
                     <input
@@ -643,19 +641,19 @@ function InvoicesContent() {
                       value={formData.customerEmail}
                       onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
                       placeholder="client@example.com"
-                      className={`mt-1 block w-full rounded-input border ${
-                        missingFields.includes("customerEmail") ? "border-warning" : "border-rule-2"
-                      } bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none`}
+                      className={`block w-full rounded-xl border ${
+                        missingFields.includes("customerEmail") ? "border-warning/30 bg-warning/15" : "border-rule bg-paper-3"
+                      } px-3 py-2 text-xs text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all`}
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-board-type flex items-center justify-between">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink-2 flex items-center justify-between">
                       <span>Amount</span>
                       {missingFields.includes("amount") && (
-                        <span className="text-[10px] text-warning">Required</span>
+                        <span className="text-[10px] text-warning font-bold">Required</span>
                       )}
                     </label>
                     <input
@@ -671,18 +669,18 @@ function InvoicesContent() {
                         })
                       }
                       placeholder="400.00"
-                      className={`mt-1 block w-full rounded-input border ${
-                        missingFields.includes("amount") ? "border-warning" : "border-rule-2"
-                      } bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none`}
+                      className={`block w-full rounded-xl border ${
+                        missingFields.includes("amount") ? "border-warning/30 bg-warning/15" : "border-rule bg-paper-3"
+                      } px-3 py-2 text-xs text-ink font-mono font-bold focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all`}
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-board-type">Currency</label>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink-2">Currency</label>
                     <select
                       value={formData.currency}
                       onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                      className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                      className="block w-full rounded-xl border border-rule bg-paper-3 px-3 py-2 text-xs font-bold text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                     >
                       <option value="USD">USD ($)</option>
                       <option value="EUR">EUR (€)</option>
@@ -691,8 +689,8 @@ function InvoicesContent() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-board-type">Due Days</label>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-ink-2">Due Window (Days)</label>
                     <input
                       type="number"
                       min="1"
@@ -700,39 +698,39 @@ function InvoicesContent() {
                       required
                       value={formData.dueDays}
                       onChange={(e) => setFormData({ ...formData, dueDays: parseInt(e.target.value, 10) || 15 })}
-                      className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                      className="block w-full rounded-xl border border-rule bg-paper-3 px-3 py-2 text-xs text-ink font-mono font-bold focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-board-type">Line Item Description</label>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Line Item Description</label>
                   <input
                     type="text"
                     value={formData.lineItemDescription}
                     onChange={(e) => setFormData({ ...formData, lineItemDescription: e.target.value })}
-                    placeholder="e.g. Logo design & brand strategy"
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    placeholder="e.g. Quarterly consulting retainer"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3 py-2 text-xs text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-board-type">Customer Note (Stored as Draft)</label>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-ink-2">Customer Note (Stored as Draft)</label>
                   <input
                     type="text"
                     value={formData.note}
                     onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                    placeholder="e.g. Thank you for your business!"
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    placeholder="e.g. Thank you for your business"
+                    className="block w-full rounded-xl border border-rule bg-paper-3 px-3 py-2 text-xs text-ink focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all"
                   />
                 </div>
 
-                {/* Policy Decision Preview */}
-                <div className="rounded-input border border-rule-2 bg-ink/40 p-3 text-xs space-y-1">
+                {/* Policy Preview */}
+                <div className="rounded-xl border border-rule bg-paper-3 p-3.5 text-xs space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted">Guardrail Policy Preview:</span>
+                    <span className="text-muted font-medium">Guardrail Evaluation:</span>
                     <span
-                      className={`font-semibold ${
+                      className={`font-bold ${
                         typeof formData.amount === "number" && formData.amount > 500
                           ? "text-warning"
                           : "text-success"
@@ -740,29 +738,29 @@ function InvoicesContent() {
                     >
                       {typeof formData.amount === "number" && formData.amount > 500
                         ? "NEEDS_APPROVAL (> $500 threshold)"
-                        : "AUTO (Direct send via Executor)"}
+                        : "AUTO (Direct send via ActionExecutor)"}
                     </span>
                   </div>
                   <p className="text-[11px] text-muted">
-                    Under $500 auto-sends sandbox invoice. Above threshold creates single-use token in Approvals Inbox.
+                    Invoices under threshold send automatically in sandbox. Amounts exceeding limit generate an approval warrant.
                   </p>
                 </div>
 
-                <div className="pt-2 flex justify-end space-x-3">
+                <div className="pt-3 flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="rounded-input border border-rule-2 bg-ink px-4 py-2 text-xs font-medium text-board-type hover:bg-ink/60 transition-colors"
+                    className="btn-paypal-secondary btn-sm"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="inline-flex items-center space-x-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 disabled:opacity-50 transition-colors"
+                    className="btn-paypal-primary btn-sm"
                   >
                     <Send className="h-3.5 w-3.5" />
-                    <span>{submitting ? "Processing..." : "Create & Dispatch Invoice"}</span>
+                    <span>{submitting ? "Processing..." : "Issue Invoice"}</span>
                   </button>
                 </div>
               </form>
@@ -776,7 +774,7 @@ function InvoicesContent() {
 
 export default function InvoicesPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-ink text-muted p-8">Loading Invoices...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#F8FAFC] text-muted p-8 text-xs font-mono">Loading Invoices...</div>}>
       <InvoicesContent />
     </Suspense>
   );

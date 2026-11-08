@@ -24,3 +24,9 @@ docs/checklist.md
 docker-compose.override.yml
 backups/
 AGENTS.md
+reference-for-frontend/
+videos/
+traces/
+docs/qa/videos/
+docs/qa/traces/
+

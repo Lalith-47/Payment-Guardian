@@ -1,22 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import { ShieldAlert, Lock, Mail, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
-import { gsap } from "gsap";
-import Lenis from "lenis";
-
-const LoginCanvas = dynamic(() => import("@/components/3d/LoginCanvas").then((mod) => mod.LoginCanvas), {
-  ssr: false,
-  loading: () => <CanvasLoading />,
-});
-
-function CanvasLoading() {
-  return (
-    <div className="fixed inset-0 -z-10 bg-[var(--color-deep)]" aria-hidden="true" />
-  );
-}
+import Link from "next/link";
+import { Shield, Lock, Mail, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,21 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    const lenis = new Lenis({ duration: 1 });
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
-
-  useEffect(() => {
-    gsap.fromTo(".login-card", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out", delay: 0.2 });
-    gsap.fromTo(".login-title", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out", delay: 0.3 });
-    gsap.fromTo(".login-field", { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out", delay: 0.4, stagger: 0.1 });
-    gsap.fromTo(".login-submit", { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out", delay: 0.7 });
-  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -60,57 +32,60 @@ export default function LoginPage() {
       }
 
       setSuccess(true);
-      gsap.to(".login-card", { scale: 1.02, duration: 0.15, yoyo: true, repeat: 1, ease: "power2.out" });
-      setTimeout(() => router.push("/dashboard"), 600);
+      setTimeout(() => router.push("/dashboard"), 300);
     } catch (err) {
       setError((err as Error).message);
-      gsap.fromTo(formRef.current!, { x: -10 }, { x: 10, duration: 0.1, repeat: 3, yoyo: true, ease: "power2.out" });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-ink text-paper overflow-hidden">
-      <LoginCanvas fallback={<CanvasFallback />} />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8FAFC] text-[#0F172A] p-4 selection:bg-[#0070BA]/20 selection:text-[#001C44] relative overflow-hidden">
+      {/* Background ambient lighting */}
+      <div className="absolute top-1/4 -left-20 w-96 h-96 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-96 h-96 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
 
-      <main className="relative z-10 w-full max-w-md px-6 py-20">
-        <div className="relative login-card rounded-card border border-rule-2 bg-ink-2/80 backdrop-blur-xl p-8 shadow-card">
-          {/* Subtle corner accents */}
-          <div className="absolute -top-0.5 -left-0.5 h-4 w-4 border-t-2 border-l-2 border-accent/50 rounded-tl-card" />
-          <div className="absolute -top-0.5 -right-0.5 h-4 w-4 border-t-2 border-r-2 border-accent/50 rounded-tr-card" />
-          <div className="absolute -bottom-0.5 -left-0.5 h-4 w-4 border-b-2 border-l-2 border-accent/50 rounded-bl-card" />
-          <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 border-b-2 border-r-2 border-accent/50 rounded-br-card" />
-
-          <div className="mb-8 text-center">
-            <div className="login-title inline-flex items-center justify-center gap-2 mx-auto mb-4 flex h-14 w-14 rounded-input bg-accent text-accent-ink">
-              <ShieldAlert className="h-7 w-7" />
+      <main className="w-full max-w-md relative z-10">
+        <div className="card-paypal-elevated p-8 sm:p-10 space-y-7">
+          {/* Brand Header */}
+          <div className="space-y-3 text-center">
+            <Link href="/" className="inline-flex items-center justify-center mx-auto group">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#003087] to-[#0070BA] text-white shadow-lg shadow-[#003087]/25 group-hover:scale-105 transition-transform">
+                <span className="font-extrabold text-2xl tracking-tight font-serif italic">P</span>
+              </span>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-[#001C44]">
+                PayPal Business Guardian
+              </h1>
+              <p className="text-xs text-muted mt-1">
+                Merchant Back-Office & Deterministic Ledger Authentication
+              </p>
             </div>
-            <h1 className="login-title text-2xl font-bold tracking-tight text-board-type">Revenue Guardian</h1>
-            <p className="mt-2 text-sm text-muted">Owner Back-Office Access</p>
           </div>
 
           {success && (
-            <div className="mb-6 rounded-input bg-success/10 border border-success/30 p-3 flex items-center gap-2 text-sm text-success animate-in fade-in slide-in-from-top-2">
-              <CheckCircle className="h-4 w-4 shrink-0" />
-              <span>Authentication successful. Redirecting…</span>
+            <div className="rounded-xl bg-success/15 border border-success/30 p-3.5 flex items-center gap-2.5 text-xs text-success font-medium">
+              <CheckCircle className="h-4 w-4 shrink-0 text-success" />
+              <span>Authentication verified. Opening merchant dashboard…</span>
             </div>
           )}
 
           {error && (
-            <div className="mb-6 rounded-input bg-error/10 border border-error/30 p-3 flex items-center gap-2 text-sm text-error animate-in fade-in slide-in-from-top-2">
-              <AlertCircle className="h-4 w-4 shrink-0" />
+            <div className="rounded-xl bg-error/15 border border-error/30 p-3.5 flex items-center gap-2.5 text-xs text-error font-medium">
+              <AlertCircle className="h-4 w-4 shrink-0 text-error" />
               <span>{error}</span>
             </div>
           )}
 
-          <form ref={formRef} onSubmit={handleLogin} className="space-y-5">
-            <div className="login-field">
-              <label htmlFor="email" className="block text-xs font-semibold text-board-type mb-1.5">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="block text-xs font-bold text-ink-2">
                 Owner Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted pointer-events-none" />
                 <input
                   id="email"
                   type="email"
@@ -119,18 +94,18 @@ export default function LoginPage() {
                   required
                   autoComplete="email"
                   disabled={loading || success}
-                  className="block w-full rounded-input border border-rule-2 bg-ink pl-10 pr-3 py-2.5 text-board-type placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50 transition-colors"
+                  className="block w-full rounded-xl border border-rule bg-paper-3 pl-10 pr-3.5 py-2.5 text-xs text-ink placeholder-slate-400 focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all disabled:opacity-50"
                   placeholder="owner@revenueguardian.local"
                 />
               </div>
             </div>
 
-            <div className="login-field">
-              <label htmlFor="password" className="block text-xs font-semibold text-board-type mb-1.5">
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="block text-xs font-bold text-ink-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted pointer-events-none" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -139,17 +114,21 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   disabled={loading || success}
-                  className="block w-full rounded-input border border-rule-2 bg-ink pl-10 pr-12 py-2.5 text-board-type placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50 transition-colors"
-                  placeholder="••••••••"
+                  className="block w-full rounded-xl border border-rule bg-paper-3 pl-10 pr-10 py-2.5 text-xs text-ink placeholder-slate-400 focus:border-[#0070BA] focus:bg-white focus:outline-none transition-all disabled:opacity-50"
+                  placeholder="••••••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading || success}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-board-type transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink-2 p-0.5"
+                  tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -157,39 +136,25 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || success}
-              className="login-submit w-full rounded-input bg-accent px-4 py-3 font-semibold text-accent-ink hover:opacity-90 active:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full btn-paypal-primary font-bold mt-2"
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" aria-hidden="true"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-                  Signing in…
-                </span>
-              ) : (
-                "Sign in to Dashboard"
-              )}
+              <span>{loading ? "Verifying Credentials…" : "Sign In to Business Guardian"}</span>
+              <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-muted">
-            Demo credentials: <code className="text-board-type font-mono">owner@revenueguardian.local</code> / <code className="text-board-type font-mono">demo123</code>
-          </p>
+          {/* Trust strip */}
+          <div className="pt-4 border-t border-rule flex items-center justify-between text-xs text-muted font-mono">
+            <span className="flex items-center gap-1.5">
+              <Shield className="h-3.5 w-3.5 text-success" />
+              <span>TLS 1.3 Vault</span>
+            </span>
+            <Link href="/" className="text-[#0070BA] hover:underline font-sans font-semibold">
+              Public 3D Experience
+            </Link>
+          </div>
         </div>
-
-        <p className="mt-8 text-center text-xs text-muted max-w-md mx-auto">
-          This is a hackathon demo. All data lives in your Postgres. PayPal Sandbox only, no real money moves.
-        </p>
       </main>
-    </div>
-  );
-}
-
-function CanvasFallback() {
-  return (
-    <div
-      className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--color-board)_0%,_var(--color-deep)_100%)]"
-      aria-hidden="true"
-    >
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--color-accent)_0%,_transparent_50%)] opacity-10" />
     </div>
   );
 }
