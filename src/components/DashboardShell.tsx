@@ -14,15 +14,20 @@ import {
   LogOut,
   RefreshCw,
   Receipt,
+  Sparkles,
+  Zap,
 } from "lucide-react";
+import { DashboardBackground } from "@/components/3d/DashboardBackground";
 
 interface ReadyzData {
   status: string;
   checks: {
-    postgres: boolean;
-    redis: boolean;
+    postgres: boolean | { status: string };
+    redis: boolean | { status: string };
     paypal: { authReachable: boolean; mode: string };
+    paypalAuth?: { status: string };
     models: { primaryReachable: boolean; fallbackReachable: boolean };
+    modelReachability?: { status: string };
     llmQuota: {
       budgetUsedToday: number;
       budgetRemaining: number;
@@ -48,6 +53,7 @@ export function DashboardShell({
   const router = useRouter();
   const [readyz, setReadyz] = useState<ReadyzData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
 
   const fetchReadyz = async () => {
     try {
@@ -64,9 +70,28 @@ export function DashboardShell({
     }
   };
 
+  const fetchPendingApprovals = async () => {
+    try {
+      const res = await fetch("/api/approvals");
+      if (res.ok) {
+        const data = await res.json();
+        const pending = (data.approvals || []).filter(
+          (a: { status: string }) => a.status === "PENDING"
+        );
+        setPendingApprovalsCount(pending.length);
+      }
+    } catch {
+      // Ignore
+    }
+  };
+
   useEffect(() => {
     fetchReadyz();
-    const interval = setInterval(fetchReadyz, 15000);
+    fetchPendingApprovals();
+    const interval = setInterval(() => {
+      fetchReadyz();
+      fetchPendingApprovals();
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -85,7 +110,12 @@ export function DashboardShell({
     { href: "/policies", label: "Policies", icon: Sliders },
     { href: "/checkout", label: "Checkout Test", icon: CreditCard },
     { href: "/events", label: "Events", icon: ListOrdered },
-    { href: "/approvals", label: "Approval Inbox", icon: Inbox },
+    {
+      href: "/approvals",
+      label: "Approval Inbox",
+      icon: Inbox,
+      badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined,
+    },
     { href: "/audit", label: "Audit Log", icon: FileText },
   ];
 
@@ -110,20 +140,32 @@ export function DashboardShell({
   const quotaPct = Math.min(100, Math.round((budgetUsed / Math.max(1, dailyBudget)) * 100));
 
   return (
-    <div className="min-h-screen bg-ink text-paper flex flex-col font-body">
-      {/* Top Navigation */}
-      <header className="border-b border-rule-2 bg-ink-2/80 backdrop-blur-xl sticky top-0 z-30">
-        <div className="container px-6">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="flex items-center space-x-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-card bg-accent text-accent-ink font-bold">
+    <div className="min-h-screen bg-paper text-ink flex flex-col font-body relative selection:bg-accent/20 selection:text-accent">
+      {/* Dynamic 3D / Ambient Canvas Background */}
+      <DashboardBackground />
+
+      {/* Top Glassmorphic Navigation Bar */}
+      <header className="border-b border-rule/60 bg-paper-2/80 backdrop-blur-2xl sticky top-0 z-30 transition-colors duration-short">
+        <div className="container max-w-7xl px-4 sm:px-6">
+          <div className="flex h-16 items-center justify-between gap-4">
+            {/* Brand Logo & Tag */}
+            <div className="flex items-center gap-6">
+              <Link href="/dashboard" className="flex items-center gap-2.5 group">
+                <span className="relative flex h-9 w-9 items-center justify-center rounded-card bg-accent text-accent-ink font-bold group-hover:scale-105 transition-transform duration-short">
                   <ShieldAlert className="h-5 w-5" />
                 </span>
-                <span className="text-lg font-bold text-board-type">Revenue Guardian</span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold tracking-tight text-ink group-hover:text-accent transition-colors duration-short">
+                    Revenue Guardian
+                  </span>
+                  <span className="text-[10px] text-muted font-normal">
+                    PayPal sandbox sentry
+                  </span>
+                </div>
               </Link>
 
-              <nav className="hidden md:flex space-x-1">
+              {/* Desktop Navigation Links */}
+              <nav className="hidden lg:flex items-center gap-1.5 pl-4 border-l border-rule/60">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
@@ -131,99 +173,177 @@ export function DashboardShell({
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-card text-sm font-medium transition-colors ${
+                      className={`relative flex items-center gap-2 px-3 py-1.5 rounded-card text-xs font-medium transition-colors duration-short ${
                         isActive
-                          ? "bg-accent/15 text-accent border border-accent/30"
-                          : "text-muted hover:bg-board/50 hover:text-board-type"
+                          ? "bg-accent/15 text-accent border border-accent/40"
+                          : "text-muted hover:bg-paper-3/70 hover:text-ink border border-transparent"
                       }`}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-3.5 w-3.5 shrink-0" />
                       <span>{item.label}</span>
+                      {item.badge !== undefined && (
+                        <span className="ml-0.5 px-1.5 py-0.2 rounded-pill bg-warning text-paper text-[10px] font-bold animate-pulse">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
               </nav>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <span className="text-xs text-muted hidden sm:inline">
-                {ownerEmail || "owner@revenueguardian.local"}
-              </span>
+            {/* Quick Actions & Session */}
+            <div className="flex items-center gap-3">
+              <Link
+                href="/checkout"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-card bg-accent text-accent-ink text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform"
+              >
+                <Zap className="h-3.5 w-3.5 fill-current" />
+                <span>Simulate Decline</span>
+              </Link>
+
+              <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-card bg-paper-3/60 border border-rule/40 text-xs text-muted">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                <span className="truncate max-w-[160px]">
+                  {ownerEmail || "owner@revenueguardian.local"}
+                </span>
+              </div>
+
               <button
                 onClick={handleSignOut}
-                className="flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink/60 px-3 py-1.5 text-xs font-medium text-board-type hover:bg-ink hover:text-board-type transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
+                className="inline-flex items-center gap-1.5 rounded-card border border-rule/80 bg-paper-2 px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-paper-3 hover:text-ink transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
                 title="Sign out of owner session"
               >
                 <LogOut className="h-3.5 w-3.5" />
-                <span>Sign Out</span>
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Status Strip (/readyz telemetry) */}
-        <div className="bg-ink/60 border-t border-rule-2 px-6 py-2">
-          <div className="container flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex flex-wrap items-center gap-4">
+        {/* Live System Telemetry Strip */}
+        <div className="bg-paper/80 border-t border-rule/50 px-4 sm:px-6 py-2">
+          <div className="container max-w-7xl flex flex-wrap items-center justify-between gap-3 text-xs">
+            {/* Live Service Pulse Status */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               {/* Postgres */}
-              <div className="flex items-center space-x-1.5">
-                <span className={`h-2 w-2 rounded-full ${pgOk ? "bg-success" : "bg-error"}`} />
-                <span className="text-muted">Postgres:</span>
-                <span className="font-medium text-board-type">{pgOk ? "Ready" : "Offline"}</span>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  {pgOk && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                  )}
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      pgOk ? "bg-success" : "bg-error"
+                    }`}
+                  />
+                </span>
+                <span className="text-muted text-[11px]">Postgres:</span>
+                <span className="font-medium text-ink text-[11px]">
+                  {pgOk ? "Ready" : "Offline"}
+                </span>
               </div>
 
               {/* Redis */}
-              <div className="flex items-center space-x-1.5">
-                <span className={`h-2 w-2 rounded-full ${redisOk ? "bg-success" : "bg-error"}`} />
-                <span className="text-muted">Redis:</span>
-                <span className="font-medium text-board-type">{redisOk ? "Ready" : "Offline"}</span>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  {redisOk && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                  )}
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      redisOk ? "bg-success" : "bg-error"
+                    }`}
+                  />
+                </span>
+                <span className="text-muted text-[11px]">Redis:</span>
+                <span className="font-medium text-ink text-[11px]">
+                  {redisOk ? "Ready" : "Offline"}
+                </span>
               </div>
 
               {/* PayPal Sandbox */}
-              <div className="flex items-center space-x-1.5">
-                <span className={`h-2 w-2 rounded-full ${ppOk ? "bg-success" : "bg-error"}`} />
-                <span className="text-muted">PayPal:</span>
-                <span className="font-medium text-board-type">{ppOk ? "Sandbox OK" : "Unreachable"}</span>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  {ppOk && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                  )}
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      ppOk ? "bg-success" : "bg-error"
+                    }`}
+                  />
+                </span>
+                <span className="text-muted text-[11px]">PayPal:</span>
+                <span className="font-medium text-ink text-[11px]">
+                  {ppOk ? "Sandbox Connected" : "Unreachable"}
+                </span>
               </div>
 
               {/* Model Reachability */}
-              <div className="flex items-center space-x-1.5">
-                <span className={`h-2 w-2 rounded-full ${modelsOk ? "bg-success" : "bg-error"}`} />
-                <span className="text-muted">Model:</span>
-                <span className="font-medium text-board-type">{modelsOk ? "Online" : "Waiting"}</span>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  {modelsOk && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                  )}
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      modelsOk ? "bg-success" : "bg-warning"
+                    }`}
+                  />
+                </span>
+                <span className="text-muted text-[11px]">Model:</span>
+                <span className="font-medium text-ink text-[11px]">
+                  {modelsOk ? "Online" : "Waiting"}
+                </span>
               </div>
             </div>
 
-            {/* LLM Quota & Refresh */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-muted">LLM Budget:</span>
-                <span className="font-medium text-board-type tabular-nums">
+            {/* LLM Quota Gauge & Quick Refresh */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-muted text-[11px]">LLM Budget:</span>
+                <span className="font-medium text-ink text-[11px] tabular-nums">
                   {budgetUsed} / {dailyBudget} calls
                 </span>
-                <div className="w-20 h-1.5 bg-ink rounded-pill overflow-hidden">
+                <div className="w-20 h-1.5 bg-paper-3 rounded-pill overflow-hidden border border-rule/40">
                   <div
-                    className={`h-full ${quotaPct > 80 ? "bg-warning" : quotaPct > 60 ? "bg-accent" : "bg-info"}`}
+                    className={`h-full transition-opacity duration-short ${
+                      quotaPct > 80
+                        ? "bg-warning"
+                        : quotaPct > 50
+                        ? "bg-accent"
+                        : "bg-info"
+                    }`}
                     style={{ width: `${quotaPct}%` }}
                   />
                 </div>
               </div>
 
               <button
-                onClick={fetchReadyz}
+                onClick={() => {
+                  fetchReadyz();
+                  fetchPendingApprovals();
+                }}
                 disabled={refreshing}
-                className="text-muted hover:text-board-type p-1 rounded-input focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent transition-colors"
+                className="text-muted hover:text-ink p-1 rounded-card hover:bg-paper-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Refresh system status"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "motion-safe:animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${
+                    refreshing ? "motion-safe:animate-spin text-accent" : ""
+                  }`}
+                />
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Page Area */}
-      <main className="flex-1 container px-6 py-6 lg:py-8">{children}</main>
+      {/* Main Page Content Container */}
+      <main className="flex-1 container max-w-7xl px-4 sm:px-6 py-6 lg:py-8 relative z-10">
+        {children}
+      </main>
     </div>
   );
 }

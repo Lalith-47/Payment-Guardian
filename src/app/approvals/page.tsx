@@ -8,10 +8,15 @@ import {
   XCircle,
   AlertTriangle,
   Clock,
-  ShieldAlert,
+  ShieldCheck,
   RefreshCw,
-  HelpCircle,
+  Zap,
+  Sparkles,
+  Sliders,
+  Lock,
+  ArrowUpRight,
 } from "lucide-react";
+import Link from "next/link";
 
 interface ApprovalItem {
   id: string;
@@ -47,6 +52,7 @@ interface ApprovalItem {
 export default function ApprovalsPage() {
   const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [simulating, setSimulating] = useState(false);
   const [filter, setFilter] = useState<"PENDING" | "ALL">("PENDING");
   const [actingToken, setActingToken] = useState<string | null>(null);
   const [rejectingItem, setRejectingItem] = useState<ApprovalItem | null>(null);
@@ -76,8 +82,63 @@ export default function ApprovalsPage() {
     fetchApprovals();
   }, []);
 
+  const handleSimulateDecline = async (amount: string = "85.00") => {
+    try {
+      setSimulating(true);
+      setStatusMsg(null);
+
+      // Step 1: Create Order
+      const createRes = await fetch("/api/paypal/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          currency: "USD",
+          description: "High-value order for approval demonstration",
+        }),
+      });
+
+      const orderData = await createRes.json();
+      if (!createRes.ok || !orderData.orderId) {
+        throw new Error(orderData.error || "Failed to create sandbox order");
+      }
+
+      // Step 2: Trigger Capture with Decline
+      const capRes = await fetch("/api/paypal/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: orderData.orderId,
+          mockCode: "INSTRUMENT_DECLINED",
+        }),
+      });
+
+      const capData = await capRes.json();
+      if (!capRes.ok) {
+        throw new Error(capData.error || "Failed to capture declined payment");
+      }
+
+      setStatusMsg({
+        type: "success",
+        text: `Simulated checkout decline of $${amount} USD for order ${orderData.orderId}. Policy guardrail triggered owner review.`,
+      });
+
+      // Poll approvals to show newly spawned approval
+      await new Promise((r) => setTimeout(r, 1200));
+      await fetchApprovals();
+    } catch (err) {
+      setStatusMsg({ type: "error", text: (err as Error).message });
+    } finally {
+      setSimulating(false);
+    }
+  };
+
   const handleApprove = async (appr: ApprovalItem) => {
-    if (!confirm(`Are you sure you want to APPROVE execution of ${appr.proposal?.action}? This will dispatch mutating API calls via ActionExecutor.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to APPROVE execution of ${appr.proposal?.action}? This will dispatch mutating API calls via ActionExecutor.`
+      )
+    ) {
       return;
     }
 
@@ -155,56 +216,124 @@ export default function ApprovalsPage() {
     return true;
   });
 
+  const pendingCount = approvals.filter((a) => a.status === "PENDING").length;
+
   return (
     <DashboardShell>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-board-type flex items-center gap-2">
-              <Inbox className="h-5 w-5 text-warning" />
+      <div className="space-y-8">
+        {/* Top Header & Simulation Trigger Bar */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-6 border-b border-rule/50">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-pill bg-warning/10 border border-warning/30 text-xs font-medium text-warning">
+              <span className="w-1.5 h-1.5 rounded-full bg-warning animate-ping" />
+              <span>Deterministic Human Consent Gate</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-ink flex items-center gap-3">
+              <Inbox className="h-6 w-6 text-accent" />
               <span>Owner Approval Inbox</span>
             </h1>
-            <p className="mt-1 text-xs text-muted">
+            <p className="text-xs text-muted max-w-2xl leading-relaxed">
               High-risk actions, policy threshold exceptions, or low-confidence AI proposals requiring explicit human consent.
             </p>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex rounded-card border border-rule-2 bg-ink-2 p-1 text-xs">
+
+          {/* Quick Actions Cluster */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => handleSimulateDecline("85.00")}
+              disabled={simulating}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-input bg-accent text-accent-ink text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              <Zap className="h-3.5 w-3.5 fill-current" />
+              <span>{simulating ? "Generating Decline..." : "Simulate $85.00 Decline"}</span>
+            </button>
+
+            <div className="flex rounded-input border border-rule/60 bg-paper-2 p-1 text-xs">
               <button
                 onClick={() => setFilter("PENDING")}
                 className={`rounded-input px-3 py-1 font-medium transition-colors ${
-                  filter === "PENDING" ? "bg-ink text-board-type" : "text-muted hover:text-board-type"
+                  filter === "PENDING"
+                    ? "bg-accent/15 text-accent border border-accent/30"
+                    : "text-muted hover:text-ink"
                 }`}
               >
-                Pending Review
+                Pending Review {pendingCount > 0 && `(${pendingCount})`}
               </button>
               <button
                 onClick={() => setFilter("ALL")}
                 className={`rounded-input px-3 py-1 font-medium transition-colors ${
-                  filter === "ALL" ? "bg-ink text-board-type" : "text-muted hover:text-board-type"
+                  filter === "ALL"
+                    ? "bg-accent/15 text-accent border border-accent/30"
+                    : "text-muted hover:text-ink"
                 }`}
               >
-                All History
+                All History ({approvals.length})
               </button>
             </div>
+
             <button
               onClick={fetchApprovals}
               disabled={loading}
-              className="inline-flex items-center space-x-1.5 rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink/60 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-focus active:opacity-80"
+              className="inline-flex items-center gap-1.5 rounded-input border border-rule/80 bg-paper-2 px-3 py-2 text-xs font-medium text-ink-2 hover:bg-paper-3 hover:text-ink transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh inbox"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin" : ""}`} />
-              <span>Refresh</span>
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "motion-safe:animate-spin text-accent" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
         </div>
 
+        {/* 4 Key Guardrail Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-4 space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted">
+              <span>Pending Decisions</span>
+              <Inbox className="h-4 w-4 text-warning" />
+            </div>
+            <div className="text-2xl font-bold text-ink num">{pendingCount}</div>
+            <div className="text-[11px] text-muted">
+              {pendingCount > 0 ? "Requires owner signature" : "All approvals resolved"}
+            </div>
+          </div>
+
+          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-4 space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted">
+              <span>Auto-Refund Limit</span>
+              <Sliders className="h-4 w-4 text-accent" />
+            </div>
+            <div className="text-2xl font-bold text-accent num">$25.00 USD</div>
+            <div className="text-[11px] text-muted">Configured in PostgreSQL</div>
+          </div>
+
+          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-4 space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted">
+              <span>Token Security</span>
+              <Lock className="h-4 w-4 text-accent" />
+            </div>
+            <div className="text-base font-bold text-ink tracking-tight">HMAC-SHA256</div>
+            <div className="text-[11px] text-muted">Hashed zero-knowledge storage</div>
+          </div>
+
+          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-4 space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted">
+              <span>Sentry Engine</span>
+              <ShieldCheck className="h-4 w-4 text-success" />
+            </div>
+            <div className="text-base font-bold text-success flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-success" />
+              <span>Active Protection</span>
+            </div>
+            <div className="text-[11px] text-muted">Sub-4s autonomous recovery</div>
+          </div>
+        </div>
+
+        {/* Status Feedback Toast Banner */}
         {statusMsg && (
           <div
-            className={`rounded-input p-3 text-xs flex items-center space-x-2 border ${
+            className={`rounded-card p-3.5 text-xs flex items-center gap-2.5 border transition-opacity duration-short ${
               statusMsg.type === "success"
-                ? "bg-success/15 border-success/30 text-success"
-                : "bg-error/15 border-error/30 text-error"
+                ? "bg-success/10 border-success/30 text-success"
+                : "bg-error/10 border-error/30 text-error"
             }`}
           >
             {statusMsg.type === "success" ? (
@@ -212,67 +341,40 @@ export default function ApprovalsPage() {
             ) : (
               <AlertTriangle className="h-4 w-4 shrink-0 text-error" />
             )}
-            <span>{statusMsg.text}</span>
+            <span className="font-medium">{statusMsg.text}</span>
           </div>
         )}
 
-        {/* Rejection Reason Modal */}
-        {rejectingItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="w-full max-w-md rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
-              <div className="flex items-center space-x-2 text-error">
-                <XCircle className="h-5 w-5" />
-                <h3 className="text-sm font-semibold text-board-type">Reject Proposed Action</h3>
+        {/* Empty State / Interactive Sentry Display */}
+        {displayedApprovals.length === 0 ? (
+          <div className="ticks rounded-card border border-rule/70 bg-paper-2/80 backdrop-blur-2xl p-12 text-center space-y-6">
+            <div className="relative flex h-20 w-20 items-center justify-center mx-auto">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent/20 opacity-75" />
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-paper-3 border border-accent/40 text-accent">
+                <ShieldCheck className="h-8 w-8" />
               </div>
-              <p className="text-xs text-muted">
-                Provide a justification for rejecting the AI proposal for{" "}
-                <span className="font-mono text-board-type">{rejectingItem.eventId}</span>. This will be archived in the append-only audit log.
+            </div>
+
+            <div className="space-y-2 max-w-md mx-auto">
+              <h3 className="text-lg font-bold text-ink">Approval Inbox Clear</h3>
+              <p className="text-xs text-muted leading-relaxed">
+                There are currently no actions requiring manual owner review. Autonomous policy guardrails are enforcing routine recovery.
               </p>
+            </div>
 
-              <form onSubmit={handleRejectSubmit} className="space-y-4">
-                <textarea
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="e.g. Order was already fulfilled or customer contacted support directly."
-                  required
-                  rows={3}
-                  className="w-full rounded-input border border-rule-2 bg-ink p-2.5 text-xs text-board-type placeholder-muted focus:border-error focus:outline-none"
-                />
-
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRejectingItem(null);
-                      setRejectReason("");
-                    }}
-                    className="rounded-input border border-rule-2 bg-ink px-3 py-1.5 text-xs font-semibold text-board-type hover:bg-ink/60 active:opacity-80"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={actingToken !== null}
-                    className="rounded-input bg-error px-3 py-1.5 text-xs font-semibold text-board-type hover:opacity-90 active:opacity-100 disabled:opacity-50"
-                  >
-                    Confirm Rejection
-                  </button>
-                </div>
-              </form>
+            <div className="pt-2">
+              <button
+                onClick={() => handleSimulateDecline("85.00")}
+                disabled={simulating}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-input bg-accent text-accent-ink text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                <Zap className="h-3.5 w-3.5 fill-current" />
+                <span>Simulate decline</span>
+              </button>
             </div>
           </div>
-        )}
-
-        {/* Approvals List */}
-        {displayedApprovals.length === 0 ? (
-          <div className="rounded-card border border-dashed border-rule-2 bg-ink-2/40 p-12 text-center space-y-2">
-            <ShieldAlert className="h-8 w-8 text-muted mx-auto" />
-            <h3 className="text-sm font-semibold text-board-type">Approval Inbox Clear</h3>
-            <p className="text-xs text-muted max-w-sm mx-auto">
-              There are currently no actions requiring manual owner review. Autonomous policy guardrails are enforcing routine recovery.
-            </p>
-          </div>
         ) : (
+          /* List of Approval Cards */
           <div className="space-y-4">
             {displayedApprovals.map((appr) => {
               const isPending = appr.status === "PENDING";
@@ -281,66 +383,77 @@ export default function ApprovalsPage() {
               return (
                 <div
                   key={appr.id}
-                  className="rounded-card border border-rule-2 bg-ink-2 p-5 shadow-card space-y-4"
+                  className="rounded-card ticks border border-rule/80 bg-paper-2/95 backdrop-blur-xl p-5 sm:p-6 space-y-5 hover:border-accent/40 transition-colors duration-short"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-rule-2 pb-3">
-                    <div className="flex items-center space-x-3">
-                      <span className="font-mono text-xs font-semibold text-warning">{appr.id}</span>
+                  {/* Card Header Strip */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-rule/50">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs font-bold text-ink px-2.5 py-0.5 rounded-pill bg-paper-3 border border-rule/60">
+                        {appr.id}
+                      </span>
                       <span
-                        className={`rounded-pill px-2 py-0.5 text-[11px] font-semibold border ${
+                        className={`rounded-pill px-2.5 py-0.5 text-[11px] font-bold border ${
                           appr.status === "PENDING"
-                            ? "bg-warning/15 text-warning border-warning/30"
+                            ? "bg-warning/15 text-warning border-warning/40 animate-pulse"
                             : appr.status === "APPROVED"
-                            ? "bg-success/15 text-success border-success/30"
-                            : "bg-error/15 text-error border-error/30"
+                            ? "bg-success/15 text-success border-success/40"
+                            : "bg-error/15 text-error border-error/40"
                         }`}
                       >
                         {appr.status}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-3 text-xs text-muted">
-                      <span className="flex items-center space-x-1">
-                        <Clock className="h-3.5 w-3.5" />
+
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-accent" />
                         <span>Expires: {new Date(appr.expiresAt).toLocaleTimeString()}</span>
                       </span>
-                      <span>Event: {appr.eventId}</span>
+                      <span className="text-[11px]">Event: <span className="font-mono">{appr.eventId}</span></span>
                     </div>
                   </div>
 
-                  {/* Trigger rule reason */}
+                  {/* Authoritative Trigger Rule Banner */}
                   {appr.triggerRule && (
-                    <div className="rounded-input border border-warning/30 bg-warning/15 p-2.5 text-xs text-warning flex items-center space-x-2">
+                    <div className="rounded-input border border-warning/30 bg-warning/10 p-3 text-xs text-warning flex items-center gap-2.5">
                       <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
                       <span>
-                        Policy Engine Reason (Authoritative): <strong className="font-mono">{appr.triggerRule}</strong>
+                        Policy Engine Reason (Authoritative):{" "}
+                        <strong className="font-mono font-semibold">{appr.triggerRule}</strong>
                       </span>
                     </div>
                   )}
 
-                  {/* Proposal Details */}
+                  {/* Proposal Details Grid */}
                   {appr.proposal ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                      <div className="space-y-1">
-                        <span className="text-muted">Proposed Action</span>
-                        <p className="text-sm font-bold text-board-type capitalize">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+                      {/* Left: Action & Amount */}
+                      <div className="space-y-2 p-3.5 rounded-input bg-paper-3/60 border border-rule/40">
+                        <span className="text-[11px] text-muted">Proposed Action</span>
+                        <p className="text-base font-bold text-ink capitalize">
                           {appr.proposal.action}{" "}
                           {appr.proposal.amount ? `($${appr.proposal.amount} ${appr.proposal.currency || "USD"})` : ""}
                         </p>
-                        <p className="text-muted text-[11px]">Model: {appr.proposal.modelUsed}</p>
+                        <div className="text-[11px] text-muted pt-1 border-t border-rule/30">
+                          Model: <span className="font-mono">{appr.proposal.modelUsed}</span>
+                        </div>
                       </div>
 
-                      <div className="md:col-span-2 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted">AI note (unverified)</span>
-                          <span className="text-success font-medium">
+                      {/* Right: AI Analysis & Draft Notice */}
+                      <div className="md:col-span-2 space-y-2.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted text-[11px]">AI Reasoning Analysis</span>
+                          <span className="text-accent font-semibold text-[11px]">
                             Confidence: {Math.round(parseFloat(appr.proposal.confidence) * 100)}%
                           </span>
                         </div>
-                        <p className="text-board-type italic">{appr.proposal.reasoning}</p>
+                        <p className="text-xs text-ink-2 leading-relaxed bg-paper/50 p-2.5 rounded-input border border-rule/30">
+                          {appr.proposal.reasoning}
+                        </p>
                         {appr.proposal.message && (
-                          <div className="rounded-input bg-ink/60 p-2 border border-rule-2/60 mt-1">
-                            <span className="text-muted text-[11px]">Draft Customer Notice (Unsent):</span>
-                            <p className="text-board-type text-[11px] mt-0.5">{appr.proposal.message}</p>
+                          <div className="rounded-input bg-paper/70 p-2.5 border border-rule/40">
+                            <span className="text-muted text-[11px]">Draft Customer Notification:</span>
+                            <p className="text-ink text-xs mt-1 italic">{appr.proposal.message}</p>
                           </div>
                         )}
                       </div>
@@ -351,8 +464,8 @@ export default function ApprovalsPage() {
 
                   {/* Decision summary if already decided */}
                   {!isPending && (
-                    <div className="rounded-input bg-ink/40 p-2.5 text-xs border border-rule-2 text-muted">
-                      Decided by <span className="text-board-type">{appr.decidedBy || "owner"}</span> at{" "}
+                    <div className="rounded-input bg-paper-3/70 p-3 text-xs border border-rule/60 text-muted">
+                      Decided by <span className="text-ink font-semibold">{appr.decidedBy || "owner"}</span> at{" "}
                       {appr.decidedAt ? new Date(appr.decidedAt).toLocaleString() : "—"}.
                       {appr.rejectionReason && (
                         <p className="text-error mt-1">Rejection reason: {appr.rejectionReason}</p>
@@ -362,11 +475,11 @@ export default function ApprovalsPage() {
 
                   {/* Actions (Approve / Reject) */}
                   {isPending && (
-                    <div className="flex items-center justify-end space-x-3 pt-2 border-t border-rule-2">
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-rule/50">
                       <button
                         onClick={() => setRejectingItem(appr)}
                         disabled={isActing}
-                        className="inline-flex items-center space-x-1.5 rounded-input border border-error/30 bg-error/15 px-3.5 py-1.5 text-xs font-semibold text-error hover:bg-error/25 disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-error active:opacity-80"
+                        className="inline-flex items-center gap-1.5 rounded-input border border-error/40 bg-error/15 px-3.5 py-2 text-xs font-semibold text-error hover:bg-error/25 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-error disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <XCircle className="h-3.5 w-3.5" />
                         <span>Reject</span>
@@ -375,7 +488,7 @@ export default function ApprovalsPage() {
                       <button
                         onClick={() => handleApprove(appr)}
                         disabled={isActing}
-                        className="inline-flex items-center space-x-1.5 rounded-input bg-success px-4 py-1.5 text-xs font-semibold text-board-type hover:opacity-90 disabled:opacity-50 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-success active:opacity-80"
+                        className="inline-flex items-center gap-1.5 rounded-input bg-accent text-accent-ink px-4 py-2 text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <CheckCircle className="h-3.5 w-3.5" />
                         <span>{isActing ? "Executing..." : "Approve & Execute via Executor"}</span>
@@ -385,6 +498,53 @@ export default function ApprovalsPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Rejection Justification Modal */}
+        {rejectingItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-paper/90 p-4">
+            <div className="w-full max-w-md rounded-card border border-rule/80 bg-paper-2 p-6 space-y-4">
+              <div className="flex items-center gap-2 text-error">
+                <XCircle className="h-5 w-5" />
+                <h3 className="text-sm font-semibold text-ink">Reject Proposed Action</h3>
+              </div>
+              <p className="text-xs text-muted leading-relaxed">
+                Provide a justification for rejecting the AI proposal for{" "}
+                <span className="font-mono text-ink font-semibold">{rejectingItem.eventId}</span>. This will be archived in the append-only audit log.
+              </p>
+
+              <form onSubmit={handleRejectSubmit} className="space-y-4">
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="e.g. Order was already fulfilled or customer contacted support directly."
+                  required
+                  rows={3}
+                  className="w-full rounded-input border border-rule/70 bg-paper p-3 text-xs text-ink placeholder-muted focus:border-accent focus:outline-none"
+                />
+
+                <div className="flex justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRejectingItem(null);
+                      setRejectReason("");
+                    }}
+                    className="rounded-input border border-rule/70 bg-paper px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-paper-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actingToken !== null}
+                    className="rounded-input bg-error text-ink px-4 py-1.5 text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Confirm Rejection
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>

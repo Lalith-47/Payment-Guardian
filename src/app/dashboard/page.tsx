@@ -14,9 +14,8 @@ import {
   Sliders,
   ExternalLink,
   TrendingUp,
-  AlertTriangle,
-  Clock,
   Receipt,
+  Zap,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -53,32 +52,31 @@ export default async function DashboardPage() {
     <DashboardShell ownerEmail={env.OWNER_EMAIL}>
       <div className="space-y-6">
         {/* Banner */}
-        <div className="relative rounded-card border border-rule-2 bg-gradient-to-br from-ink-2 to-ink/80 p-6 md:p-8 shadow-card overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--color-accent)_0%,_transparent_60%)] opacity-10" />
-          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-pill bg-accent/10 border border-accent/20 px-3 py-1 mb-4 text-sm font-semibold text-accent">
-                <ShieldAlert className="h-3.5 w-3.5" />
+        <div className="relative ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-6 sm:p-8 space-y-4">
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="max-w-2xl space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-pill bg-accent/10 border border-accent/30 px-3 py-1 text-xs font-semibold text-accent">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent motion-safe:animate-ping" />
                 <span>Autonomous Back-Office Recovery</span>
               </div>
-              <h1 className="text-section font-bold tracking-tight text-board-type leading-[1.05] max-w-none">
-                Autonomous Back-Office Recovery
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink leading-tight">
+                Autonomous Financial Sentry for PayPal
               </h1>
-              <p className="mt-3 text-lead text-muted max-w-xl">
+              <p className="text-xs text-muted max-w-xl leading-relaxed">
                 Every money action passes through owner-defined limits. The AI proposes, deterministic code decides, PayPal executes, everything is logged.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:ml-auto">
+            <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/checkout"
-                className="inline-flex items-center space-x-2 rounded-input bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink hover:opacity-90 active:opacity-100 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent shadow-card"
+                className="inline-flex items-center gap-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:scale-95 transition-transform"
               >
                 <CreditCard className="h-4 w-4" />
                 <span>Simulate Checkout</span>
               </Link>
               <Link
                 href="/policies"
-                className="inline-flex items-center space-x-2 rounded-input border border-rule-2 bg-ink/60 px-5 py-2.5 text-sm font-semibold text-board-type hover:bg-ink hover:text-board-type transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-accent"
+                className="inline-flex items-center gap-2 rounded-input border border-rule/80 bg-paper px-4 py-2 text-xs font-medium text-ink-2 hover:bg-paper-3 transition-colors"
               >
                 <Sliders className="h-4 w-4" />
                 <span>Configure Policy</span>
@@ -135,8 +133,8 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Quick Actions */}
           <div className="lg:col-span-1 space-y-4">
-            <div className="rounded-card border border-rule-2 bg-ink-2 p-5 shadow-card space-y-3">
-              <h3 className="text-sm font-semibold text-board-type flex items-center gap-2">
+            <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-5 space-y-3">
+              <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-accent" />
                 <span>Quick Actions</span>
               </h3>
@@ -163,8 +161,8 @@ export default async function DashboardPage() {
             </div>
 
             {/* System Health */}
-            <div className="rounded-card border border-rule-2 bg-ink-2 p-5 shadow-card space-y-3">
-              <h3 className="text-sm font-semibold text-board-type flex items-center gap-2">
+            <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-5 space-y-3">
+              <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-success" />
                 <span>System Health</span>
               </h3>
@@ -178,10 +176,10 @@ export default async function DashboardPage() {
           </div>
 
           {/* Recent Events Table Preview */}
-          <div className="lg:col-span-2 rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
+          <div className="lg:col-span-2 ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-semibold text-board-type flex items-center gap-2">
+                <h2 className="text-base font-semibold text-ink flex items-center gap-2">
                   <ListOrdered className="h-4 w-4 text-accent" />
                   <span>Recent Payment Events</span>
                 </h2>
@@ -197,7 +195,7 @@ export default async function DashboardPage() {
             </div>
 
             {recentEvents.length === 0 ? (
-              <div className="rounded-input border border-dashed border-rule-2 p-8 text-center text-muted text-sm">
+              <div className="rounded-input border border-dashed border-rule/60 p-8 text-center text-muted text-xs">
                 No events ingested yet. Try simulating a declined payment in the{" "}
                 <Link href="/checkout" className="text-accent underline">
                   Checkout Test
@@ -206,30 +204,30 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-board-type">
-                  <thead className="border-b border-rule-2 bg-ink/40 text-muted">
+                <table className="w-full text-left text-xs text-ink">
+                  <thead className="border-b border-rule/50 bg-paper-3/60 text-muted">
                     <tr>
-                      <th className="px-4 py-3 font-medium">Event ID</th>
-                      <th className="px-4 py-3 font-medium">Type</th>
-                      <th className="px-4 py-3 font-medium">Source</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium">Created At</th>
-                      <th className="px-4 py-3 font-medium text-right">Action</th>
+                      <th className="px-4 py-2.5 font-medium">Event ID</th>
+                      <th className="px-4 py-2.5 font-medium">Type</th>
+                      <th className="px-4 py-2.5 font-medium">Source</th>
+                      <th className="px-4 py-2.5 font-medium">Status</th>
+                      <th className="px-4 py-2.5 font-medium">Created At</th>
+                      <th className="px-4 py-2.5 font-medium text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-rule-2/60">
+                  <tbody className="divide-y divide-rule/40">
                     {recentEvents.map((ev) => (
-                      <tr key={ev.id} className="hover:bg-ink/30 transition-colors">
-                        <td className="px-4 py-3 font-mono text-board-type">{ev.id}</td>
-                        <td className="px-4 py-3">{ev.type}</td>
-                        <td className="px-4 py-3">
-                          <span className="rounded-input bg-ink px-2 py-0.5 text-[11px] text-board-type border border-rule-2">
+                      <tr key={ev.id} className="hover:bg-paper-3/40 transition-colors">
+                        <td className="px-4 py-2.5 font-mono text-ink text-[11px]">{ev.id}</td>
+                        <td className="px-4 py-2.5 text-[11px]">{ev.type}</td>
+                        <td className="px-4 py-2.5">
+                          <span className="rounded-pill bg-paper-3 px-2 py-0.5 text-[10px] text-ink border border-rule/60">
                             {ev.source}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-2.5">
                           <span
-                            className={`inline-flex items-center rounded-pill px-2 py-0.5 text-xs font-medium border ${
+                            className={`inline-flex items-center rounded-pill px-2 py-0.5 text-[10px] font-medium border ${
                               ev.status === "EXECUTED" || ev.status === "COMPLETED" || ev.status === "RECOVERED"
                                 ? "bg-success/15 text-success border-success/30"
                                 : ev.status === "EXECUTED_CONFIRMED_BY_POLLING"
@@ -238,22 +236,22 @@ export default async function DashboardPage() {
                                 ? "bg-warning/15 text-warning border-warning/30"
                                 : ev.status === "WAITING_FOR_AI"
                                 ? "bg-info/15 text-info border-info/30"
-                                : "bg-ink text-board-type border-rule-2"
+                                : "bg-paper-3 text-ink border-rule/50"
                             }`}
                           >
                             {ev.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-muted">
+                        <td className="px-4 py-2.5 text-muted text-[11px]">
                           {new Date(ev.createdAt).toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-2.5 text-right">
                           <Link
                             href={`/events?id=${ev.id}`}
-                            className="inline-flex items-center space-x-1 text-accent hover:underline font-medium"
+                            className="inline-flex items-center gap-1 text-accent hover:underline font-medium text-[11px]"
                           >
                             <span>Inspect</span>
-                            <ExternalLink className="h-3.5 w-3.5" />
+                            <ExternalLink className="h-3 w-3" />
                           </Link>
                         </td>
                       </tr>
@@ -287,16 +285,16 @@ function MetricCard({
   isTextValue?: boolean;
 }) {
   return (
-    <div className="rounded-card border border-rule-2 bg-ink-2 p-5 shadow-card space-y-3">
+    <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-5 space-y-3 hover:border-accent/40 transition-colors duration-short">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted">{title}</span>
         <span className={`flex h-9 w-9 items-center justify-center rounded-input ${iconBg}`}>{icon}</span>
       </div>
       <div className="flex items-baseline space-x-2">
         {isTextValue ? (
-          <p className="text-base font-semibold text-board-type truncate">{value}</p>
+          <p className="text-base font-semibold text-ink truncate">{value}</p>
         ) : (
-          <p className="text-2xl font-bold text-board-type tabular-nums">{value}</p>
+          <p className="text-2xl font-bold text-ink num">{value}</p>
         )}
         <span className="text-xs text-muted">{subtitle}</span>
       </div>
@@ -319,13 +317,13 @@ function QuickActionLink({
   return (
     <Link
       href={href}
-      className="flex items-center space-x-3 rounded-input border border-rule-2 bg-ink/40 p-3 text-sm hover:bg-ink/60 hover:border-rule-2/60 transition-colors"
+      className="flex items-center space-x-3 rounded-input border border-rule/50 bg-paper-3/50 p-3 text-xs hover:bg-paper-3 hover:border-accent/40 transition-colors"
     >
       <span className="flex h-8 w-8 items-center justify-center rounded-input bg-accent/10 text-accent shrink-0">
         {icon}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-board-type truncate">{label}</p>
+        <p className="font-semibold text-ink truncate">{label}</p>
         <p className="text-[11px] text-muted truncate">{desc}</p>
       </div>
     </Link>
@@ -343,7 +341,7 @@ function HealthRow({ label, status }: { label: string; status: "ok" | "warn" | "
       <span className="text-muted">{label}</span>
       <div className="flex items-center space-x-1.5">
         <span className={`h-2 w-2 rounded-full ${colors[status]}`} />
-        <span className="font-medium text-board-type capitalize">{status}</span>
+        <span className="font-medium text-ink capitalize">{status}</span>
       </div>
     </div>
   );

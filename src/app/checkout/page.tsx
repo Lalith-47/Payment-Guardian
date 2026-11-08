@@ -146,18 +146,18 @@ export default function CheckoutTestPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Step 1: Create Order */}
-          <div className="rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
-            <div className="flex items-center space-x-2 border-b border-rule-2 pb-3">
+          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-6 space-y-4">
+            <div className="flex items-center space-x-2 border-b border-rule/50 pb-3">
               <span className="flex h-6 w-6 items-center justify-center rounded-pill bg-accent text-xs font-bold text-accent-ink">
                 1
               </span>
-              <h2 className="text-sm font-semibold text-board-type">Create Sandbox Order</h2>
+              <h2 className="text-sm font-semibold text-ink">Create Sandbox Order</h2>
             </div>
 
             <form onSubmit={handleCreateOrder} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-board-type">Amount</label>
+                  <label className="block text-xs font-medium text-ink">Amount</label>
                   <input
                     type="number"
                     step="0.01"
@@ -165,15 +165,15 @@ export default function CheckoutTestPage() {
                     value={createAmount}
                     onChange={(e) => setCreateAmount(e.target.value)}
                     required
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs text-ink focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-board-type">Currency</label>
+                  <label className="block text-xs font-medium text-ink">Currency</label>
                   <select
                     value={createCurrency}
                     onChange={(e) => setCreateCurrency(e.target.value)}
-                    className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                    className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs text-ink focus:border-accent focus:outline-none"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -183,26 +183,26 @@ export default function CheckoutTestPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-board-type">Item Description</label>
+                <label className="block text-xs font-medium text-ink">Item Description</label>
                 <input
                   type="text"
                   value={createDesc}
                   onChange={(e) => setCreateDesc(e.target.value)}
-                  className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                  className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs text-ink focus:border-accent focus:outline-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full inline-flex items-center justify-center space-x-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:opacity-100 disabled:opacity-50 transition-colors"
+                className="w-full inline-flex items-center justify-center space-x-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:scale-95 disabled:opacity-50 transition-colors"
               >
                 <span>{creating ? "Generating Order..." : "Create PayPal Sandbox Order"}</span>
               </button>
             </form>
 
             {createdOrder && (
-              <div className="rounded-input border border-rule-2 bg-ink/40 p-4 space-y-3 text-xs">
+              <div className="rounded-input border border-rule/60 bg-paper-3/60 p-4 space-y-3 text-xs">
                 <div>
                   <span className="text-muted">Order ID:</span>
                   <p className="font-mono font-medium text-success mt-0.5">{createdOrder.orderId}</p>
@@ -229,30 +229,30 @@ export default function CheckoutTestPage() {
           </div>
 
           {/* Step 2: Capture Order & Negative Testing */}
-          <div className="rounded-card border border-rule-2 bg-ink-2 p-6 shadow-card space-y-4">
-            <div className="flex items-center space-x-2 border-b border-rule-2 pb-3">
+          <div className="ticks rounded-card border border-rule/70 bg-paper-2/90 backdrop-blur-xl p-6 space-y-4">
+            <div className="flex items-center space-x-2 border-b border-rule/50 pb-3">
               <span className="flex h-6 w-6 items-center justify-center rounded-pill bg-accent text-xs font-bold text-accent-ink">
                 2
               </span>
-              <h2 className="text-sm font-semibold text-board-type">Capture Order & Decline Injection</h2>
+              <h2 className="text-sm font-semibold text-ink">Capture Order & Decline Injection</h2>
             </div>
 
             <form onSubmit={handleCapture} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-board-type">PayPal Order ID</label>
+                <label className="block text-xs font-medium text-ink">PayPal Order ID</label>
                 <input
                   type="text"
                   value={captureOrderId}
                   onChange={(e) => setCaptureOrderId(e.target.value)}
                   placeholder="e.g. 5C384813XW744883S"
                   required
-                  className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs font-mono text-board-type focus:border-focus focus:outline-none"
+                  className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs font-mono text-ink focus:border-accent focus:outline-none"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-medium text-board-type">
+                  <label className="block text-xs font-medium text-ink">
                     Negative Testing Scenario
                   </label>
                   <span className="text-[11px] text-warning">Sandbox Header Injected</span>
@@ -260,7 +260,7 @@ export default function CheckoutTestPage() {
                 <select
                   value={mockCode}
                   onChange={(e) => setMockCode(e.target.value)}
-                  className="mt-1 block w-full rounded-input border border-rule-2 bg-ink px-3 py-2 text-xs text-board-type focus:border-focus focus:outline-none"
+                  className="mt-1 block w-full rounded-input border border-rule/70 bg-paper px-3 py-2 text-xs text-ink focus:border-accent focus:outline-none"
                 >
                   <option value="INSTRUMENT_DECLINED">
                     INSTRUMENT_DECLINED (Card / Instrument declined by bank)
@@ -278,7 +278,7 @@ export default function CheckoutTestPage() {
               <button
                 type="submit"
                 disabled={capturing || !captureOrderId}
-                className="w-full inline-flex items-center justify-center space-x-2 rounded-input bg-success px-4 py-2 text-xs font-semibold text-board-type hover:opacity-90 active:opacity-100 disabled:opacity-50 transition-colors"
+                className="w-full inline-flex items-center justify-center space-x-2 rounded-input bg-accent px-4 py-2 text-xs font-semibold text-accent-ink hover:opacity-90 active:scale-95 disabled:opacity-50 transition-colors"
               >
                 <span>{capturing ? "Capturing Order..." : "Capture PayPal Order"}</span>
               </button>
@@ -307,9 +307,9 @@ export default function CheckoutTestPage() {
 
                 {captureResult.eventId && (
                   <div className="pt-2 border-t border-warning/30 space-y-2">
-                    <p className="text-board-type">
+                    <p className="text-ink">
                       Resulting Event ID:{" "}
-                      <span className="font-mono text-board-type font-medium">{captureResult.eventId}</span>
+                      <span className="font-mono text-ink font-medium">{captureResult.eventId}</span>
                     </p>
                     <Link
                       href={`/events?id=${captureResult.eventId}`}
