@@ -308,10 +308,10 @@ export function AppleLiquidScrollytelling() {
         />
 
         {/* Top Header: Apple Editorial Typography */}
-        <div className="w-full max-w-6xl mx-auto flex items-center justify-between z-20 pt-2">
+        <div className="w-full max-w-6xl mx-auto flex items-center justify-between z-20 pt-20 sm:pt-24">
           <div className="flex items-center gap-2">
-            <span className="glass-pill px-3 py-1 text-[11px] font-bold tracking-wider text-[#003087] uppercase flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#0070BA] animate-pulse" />
+            <span className="glass-pill px-3 py-1 text-[11px] font-bold tracking-wider text-[#003087] dark:text-[#38BDF8] uppercase flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#0070BA] dark:bg-[#38BDF8] animate-pulse" />
               <span>Scroll to Transition // Scrollytelling</span>
             </span>
           </div>
@@ -366,16 +366,16 @@ export function AppleLiquidScrollytelling() {
 
             {/* Active Floating Liquid Narrative Overlay */}
             <div className="absolute top-4 left-4 sm:top-6 sm:left-6 max-w-sm pointer-events-none z-20 transition-all duration-500">
-              <div className="glass-liquid p-4 sm:p-5 rounded-2xl border border-white/60 shadow-xl backdrop-blur-2xl">
+              <div className="glass-liquid p-4 sm:p-5 rounded-2xl border border-rule/80 shadow-xl backdrop-blur-2xl">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0070BA]/10 text-[#0070BA]">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0070BA]/10 text-[#0070BA] dark:text-[#38BDF8]">
                     {currentMilestone.badge}
                   </span>
                   <span className="text-[11px] font-mono text-muted">
                     {currentMilestone.time}
                   </span>
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-[#001C44] tracking-tight leading-snug">
+                <h3 className="text-base sm:text-lg font-bold text-ink tracking-tight leading-snug">
                   {currentMilestone.title}
                 </h3>
                 <p className="text-xs text-ink-2 mt-1 leading-relaxed">
@@ -383,15 +383,15 @@ export function AppleLiquidScrollytelling() {
                 </p>
                 <div className="mt-3 pt-2.5 border-t border-rule flex items-center justify-between text-xs font-mono">
                   <span className="text-muted text-[11px]">{currentMilestone.metricLabel}:</span>
-                  <span className="font-bold text-[#003087]">{currentMilestone.metricValue}</span>
+                  <span className="font-bold text-[#0070BA] dark:text-[#38BDF8]">{currentMilestone.metricValue}</span>
                 </div>
               </div>
             </div>
 
             {/* Floating Live Telemetry Badge (Bottom Left) */}
             <div className="hidden sm:flex absolute bottom-6 left-6 items-center gap-2 pointer-events-none z-20">
-              <div className="glass-pill px-3 py-1.5 text-[11px] font-mono font-semibold text-[#001C44] flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-success/15" />
+              <div className="glass-pill px-3 py-1.5 text-[11px] font-mono font-semibold text-ink flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
                 <span>FRAME {String(currentFrame).padStart(3, "0")} / 240</span>
                 <span className="text-muted">|</span>
                 <span>{((currentFrame / TOTAL_FRAMES) * 10).toFixed(1)}s</span>

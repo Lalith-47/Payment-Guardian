@@ -142,6 +142,7 @@ export async function GET() {
       const webhooks = await paypalClient.listWebhooks();
       const matched = webhooks.find((w) => w.id === env.PAYPAL_WEBHOOK_ID);
       const expectedUrl = `${env.APP_URL!.replace(/\/+$/, "")}/api/webhooks/paypal`;
+      const expectedBase = env.APP_URL!.replace(/\/+$/, "");
 
       if (!matched) {
         isReady = false;
@@ -150,7 +151,7 @@ export async function GET() {
           latencyMs: Date.now() - whStart,
           error: `Configured PAYPAL_WEBHOOK_ID '${env.PAYPAL_WEBHOOK_ID}' is NOT among registered sandbox webhooks.`,
         };
-      } else if (matched.url !== expectedUrl) {
+      } else if (matched.url !== expectedUrl && matched.url !== expectedBase) {
         isReady = false;
         checks.paypalWebhook = {
           status: "DOWN",

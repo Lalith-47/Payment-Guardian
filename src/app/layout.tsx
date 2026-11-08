@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AppProviders } from "@/components/AppProviders";
 
 export const metadata: Metadata = {
   title: "Revenue Guardian | Autonomous Payment Guardrails for PayPal Merchants",
@@ -12,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -27,13 +28,25 @@ export default function RootLayout({
                 var p = new URLSearchParams(window.location.search);
                 if (p.get("disableCanvas") === "1") document.documentElement.dataset.disableCanvas = "1";
                 if (p.get("disableGlass") === "1") document.documentElement.dataset.disableGlass = "1";
+                var t = localStorage.getItem("paypal-theme");
+                if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+                  document.documentElement.classList.add("dark");
+                  document.documentElement.dataset.theme = "dark";
+                  document.documentElement.style.colorScheme = "dark";
+                } else {
+                  document.documentElement.classList.remove("dark");
+                  document.documentElement.dataset.theme = "light";
+                  document.documentElement.style.colorScheme = "light";
+                }
+                var l = localStorage.getItem("paypal-lang");
+                if (l) document.documentElement.lang = l;
               } catch(e){}
             })()`,
           }}
         />
       </head>
-      <body className="antialiased min-h-screen bg-paper text-ink font-body">
-        {children}
+      <body className="antialiased min-h-screen bg-paper text-ink font-body transition-colors duration-200">
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

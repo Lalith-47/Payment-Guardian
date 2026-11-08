@@ -117,6 +117,60 @@
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   DARK MODE TOKENS (WCAG AA Compliant Deep FinTech Navy)
+   ══════════════════════════════════════════════════════════════════ */
+html.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces & Canvas */
+  --color-paper: #000E26;
+  --color-paper-2: #00173D;
+  --color-paper-3: #002255;
+  --color-paper-subtle: #0B2A6B;
+  --color-deep: #000814;
+
+  /* Inks & Text */
+  --color-ink: #F8FAFC;
+  --color-ink-2: #CBD5E1;
+  --color-muted: #94A3B8;
+  --color-muted-light: #64748B;
+
+  /* Rules & Hairlines */
+  --color-rule: #1E293B;
+  --color-rule-2: #334155;
+  --color-rule-subtle: rgba(255, 255, 255, 0.08);
+
+  /* Accents & States */
+  --color-accent: #0070BA;
+  --color-accent-hi: #38BDF8;
+  --color-accent-ink: #FFFFFF;
+  --color-focus: #38BDF8;
+
+  --color-success: #34D399;
+  --color-success-bg: rgba(6, 78, 59, 0.4);
+  --color-success-border: #059669;
+
+  --color-warning: #FBBF24;
+  --color-warning-bg: rgba(120, 53, 15, 0.4);
+  --color-warning-border: #D97706;
+
+  --color-error: #F87171;
+  --color-error-bg: rgba(127, 29, 29, 0.4);
+  --color-error-border: #DC2626;
+
+  --color-info: #38BDF8;
+  --color-info-bg: rgba(12, 74, 110, 0.4);
+  --color-info-border: #0284C7;
+
+  /* Shadows (Dark Mode) */
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.5), 0 8px 32px -4px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 12px 40px -4px rgba(0, 0, 0, 0.7);
+  --shadow-modal: 0 24px 60px -8px rgba(0, 0, 0, 0.85);
+}
+
 @theme {
   --color-paper: var(--color-paper);
   --color-paper-2: var(--color-paper-2);

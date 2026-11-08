@@ -19,6 +19,9 @@ import {
   ChevronRight,
   Lock,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
+import { ThemeToggle } from "./ThemeToggle";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface ReadyzData {
   status: string;
@@ -56,13 +59,14 @@ export function DashboardShell({
   const [refreshing, setRefreshing] = useState(false);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useI18n();
 
   const fetchReadyz = async () => {
     try {
       setRefreshing(true);
       const res = await fetch("/readyz");
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json().catch(() => null);
+      if (data && data.checks) {
         setReadyz(data);
       }
     } catch {
@@ -111,18 +115,18 @@ export function DashboardShell({
   };
 
   const navItems = [
-    { href: "/dashboard", label: "Overview", icon: Activity },
-    { href: "/invoices", label: "Invoices", icon: Receipt },
-    { href: "/policies", label: "Policies", icon: Sliders },
-    { href: "/checkout", label: "Checkout Test", icon: CreditCard },
-    { href: "/events", label: "Events", icon: ListOrdered },
+    { href: "/dashboard", label: t("nav.overview"), icon: Activity },
+    { href: "/invoices", label: t("nav.invoices"), icon: Receipt },
+    { href: "/policies", label: t("nav.policies"), icon: Sliders },
+    { href: "/checkout", label: t("nav.checkout"), icon: CreditCard },
+    { href: "/events", label: t("nav.events"), icon: ListOrdered },
     {
       href: "/approvals",
-      label: "Approvals",
+      label: t("nav.warrants"),
       icon: Inbox,
       badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined,
     },
-    { href: "/audit", label: "Audit Log", icon: FileText },
+    { href: "/audit", label: t("nav.audit"), icon: FileText },
   ];
 
   const checksAny = readyz?.checks as Record<string, any> | undefined;
@@ -146,34 +150,34 @@ export function DashboardShell({
   const quotaPct = Math.min(100, Math.round((budgetUsed / Math.max(1, dailyBudget)) * 100));
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col font-sans selection:bg-[#0070BA]/20 selection:text-[#001C44]">
+    <div className="min-h-screen bg-paper text-ink flex flex-col font-sans selection:bg-[#0070BA]/20 selection:text-[#001C44] transition-colors duration-150">
       {/* Top Main Navigation Bar */}
-      <header className="border-b border-[#E2E8F0] bg-[#FFFFFF] sticky top-0 z-40 shadow-xs">
+      <header className="border-b border-rule bg-paper-2/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between gap-4">
+          <div className="flex h-16 items-center justify-between gap-3">
             {/* Brand Logo & Name */}
-            <div className="flex items-center gap-6">
-              <Link href="/dashboard" className="flex items-center gap-3 group">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#003087] to-[#0070BA] text-white shadow-md shadow-[#003087]/20 group-hover:scale-105 transition-transform">
+            <div className="flex items-center gap-4 xl:gap-6 shrink-0">
+              <Link href="/dashboard" className="flex items-center gap-2.5 group shrink-0">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#003087] to-[#0070BA] text-white shadow-md shadow-[#003087]/20 group-hover:scale-105 transition-transform shrink-0">
                   <span className="font-extrabold text-base tracking-tight font-serif italic">P</span>
                 </span>
-                <div>
-                  <div className="text-sm font-bold tracking-tight text-[#001C44] flex items-center gap-1.5">
-                    <span>PayPal</span>
-                    <span className="font-semibold text-muted">Guardian</span>
+                <div className="shrink-0">
+                  <div className="text-sm font-bold tracking-tight text-ink flex items-center gap-1.5">
+                    <span>{t("brand.name")}</span>
+                    <span className="font-semibold text-muted">{t("brand.guardian")}</span>
                   </div>
-                  <div className="text-[10px] text-muted font-medium">Deterministic Sentry</div>
+                  <div className="text-[10px] text-muted font-medium">{t("brand.subtitle")}</div>
                 </div>
               </Link>
 
               {/* Desktop Navigation Links */}
-              <nav className="hidden lg:flex items-center gap-1 pl-4 border-l border-rule">
+              <nav className="hidden lg:flex items-center gap-1 pl-3 border-l border-rule overflow-x-auto no-scrollbar py-1">
                 <Link
                   href="/"
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs text-muted hover:text-ink hover:bg-paper-3 transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs text-muted hover:text-ink hover:bg-paper-3 transition-colors shrink-0 whitespace-nowrap"
                   title="View Public 3D Presentation"
                 >
-                  <span>Public 3D</span>
+                  <span>{t("nav.public3d")}</span>
                   <ExternalLink className="h-3 w-3 opacity-60" />
                 </Link>
 
@@ -184,14 +188,14 @@ export function DashboardShell({
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`relative flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 whitespace-nowrap ${
                         isActive
-                          ? "bg-[#0070BA]/10 text-[#0070BA] font-semibold"
+                          ? "bg-[#0070BA]/12 text-[#0070BA] dark:text-[#38BDF8] font-semibold"
                           : "text-ink-2 hover:text-ink hover:bg-paper-3"
                       }`}
                     >
                       <Icon className="h-3.5 w-3.5 shrink-0" />
-                      <span>{item.label}</span>
+                      <span className="whitespace-nowrap">{item.label}</span>
                       {item.badge !== undefined && (
                         <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-warning/15 text-warning text-[10px] font-mono font-bold">
                           {item.badge}
@@ -204,27 +208,30 @@ export function DashboardShell({
             </div>
 
             {/* Quick Actions & Session User */}
-            <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-paper-3 border border-rule text-xs text-ink-2">
-                <span className="w-2 h-2 rounded-full bg-success/15 animate-pulse" />
-                <span className="truncate max-w-[170px] font-mono text-[11px] font-medium">
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+              <LanguageSwitcher />
+              <ThemeToggle />
+
+              <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-paper-3 border border-rule text-xs text-ink-2 shrink-0">
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shrink-0" />
+                <span className="truncate max-w-[120px] font-mono text-[11px] font-medium">
                   {ownerEmail || "owner@paypal.local"}
                 </span>
               </div>
 
               <button
                 onClick={handleSignOut}
-                className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-white px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-paper-3 hover:text-ink transition-colors shadow-2xs"
+                className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-paper-2 hover:bg-paper-3 px-3 py-1.5 text-xs font-semibold text-ink-2 hover:text-ink transition-colors shadow-2xs shrink-0 whitespace-nowrap"
                 title="Sign out of owner session"
               >
-                <LogOut className="h-3.5 w-3.5 text-muted" />
-                <span className="hidden sm:inline">Sign Out</span>
+                <LogOut className="h-3.5 w-3.5 text-muted shrink-0" />
+                <span className="hidden sm:inline whitespace-nowrap">{t("nav.signOut")}</span>
               </button>
 
               {/* Mobile menu button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-lg text-ink-2 hover:bg-paper-3"
+                className="lg:hidden p-2 rounded-lg text-ink-2 hover:bg-paper-3 shrink-0"
                 aria-label="Toggle navigation menu"
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -234,65 +241,65 @@ export function DashboardShell({
         </div>
 
         {/* Live System Telemetry Strip */}
-        <div className="bg-[#F8FAFC] border-t border-rule px-4 sm:px-6 py-2">
+        <div className="bg-paper-3/80 border-t border-rule px-4 sm:px-6 py-2">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
             {/* Live Service Status Indicator Pills */}
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-6">
               {/* Postgres */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 whitespace-nowrap">
                 <span
                   className={`inline-block rounded-full h-2 w-2 ${
-                    pgOk ? "bg-success/15" : "bg-error/15"
+                    pgOk ? "bg-[#10B981]" : "bg-[#EF4444]"
                   }`}
                 />
-                <span className="text-muted text-[11px] font-medium">Postgres:</span>
-                <span className="text-ink-2 text-[11px] font-semibold">
-                  {pgOk ? "Connected" : "Offline"}
+                <span className="text-muted text-[11px] font-medium">{t("telemetry.postgres")}:</span>
+                <span className="text-ink text-[11px] font-semibold">
+                  {pgOk ? t("telemetry.connected") : t("telemetry.offline")}
                 </span>
               </div>
 
               {/* Redis */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 whitespace-nowrap">
                 <span
                   className={`inline-block rounded-full h-2 w-2 ${
-                    redisOk ? "bg-success/15" : "bg-error/15"
+                    redisOk ? "bg-[#10B981]" : "bg-[#EF4444]"
                   }`}
                 />
-                <span className="text-muted text-[11px] font-medium">Redis:</span>
-                <span className="text-ink-2 text-[11px] font-semibold">
-                  {redisOk ? "Connected" : "Offline"}
+                <span className="text-muted text-[11px] font-medium">{t("telemetry.redis")}:</span>
+                <span className="text-ink text-[11px] font-semibold">
+                  {redisOk ? t("telemetry.connected") : t("telemetry.offline")}
                 </span>
               </div>
 
               {/* PayPal Sandbox */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 whitespace-nowrap">
                 <span
                   className={`inline-block rounded-full h-2 w-2 ${
-                    ppOk ? "bg-success/15" : "bg-error/15"
+                    ppOk ? "bg-[#10B981]" : "bg-[#EF4444]"
                   }`}
                 />
-                <span className="text-muted text-[11px] font-medium">PayPal API:</span>
-                <span className="text-ink-2 text-[11px] font-semibold">
-                  {ppOk ? "Sandbox Live" : "Unreachable"}
+                <span className="text-muted text-[11px] font-medium">{t("telemetry.paypalApi")}:</span>
+                <span className="text-ink text-[11px] font-semibold">
+                  {ppOk ? t("telemetry.sandboxLive") : t("telemetry.unreachable")}
                 </span>
               </div>
 
               {/* Model Reachability */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 whitespace-nowrap">
                 <span
                   className={`inline-block rounded-full h-2 w-2 ${
-                    modelsOk ? "bg-success/15" : "bg-warning/15"
+                    modelsOk ? "bg-[#10B981]" : "bg-[#F59E0B]"
                   }`}
                 />
-                <span className="text-muted text-[11px] font-medium">AI Model:</span>
-                <span className="text-ink-2 text-[11px] font-semibold">
-                  {modelsOk ? "Online" : "Standby"}
+                <span className="text-muted text-[11px] font-medium">{t("telemetry.aiModel")}:</span>
+                <span className="text-ink text-[11px] font-semibold">
+                  {modelsOk ? t("telemetry.online") : t("telemetry.standby")}
                 </span>
               </div>
             </div>
 
             {/* LLM Quota Gauge & Quick Refresh */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-muted text-[11px] font-medium">Daily Quota:</span>
                 <span className="text-ink text-[11px] font-mono font-bold">
@@ -302,9 +309,9 @@ export function DashboardShell({
                   <div
                     className={`h-full rounded-full ${
                       quotaPct > 80
-                        ? "bg-error/15"
+                        ? "bg-[#EF4444]"
                         : quotaPct > 50
-                        ? "bg-warning/15"
+                        ? "bg-[#F59E0B]"
                         : "bg-[#0070BA]"
                     }`}
                     style={{ width: `${quotaPct}%` }}
@@ -318,8 +325,8 @@ export function DashboardShell({
                   fetchPendingApprovals();
                 }}
                 disabled={refreshing}
-                className="text-muted hover:text-ink-2 p-1 rounded-full hover:bg-paper-subtle transition-colors disabled:opacity-50"
-                title="Refresh system status"
+                className="text-muted hover:text-ink p-1 rounded-full hover:bg-paper-subtle transition-colors disabled:opacity-50"
+                title={t("telemetry.refresh")}
               >
                 <RefreshCw
                   className={`h-3.5 w-3.5 ${
@@ -333,13 +340,13 @@ export function DashboardShell({
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-rule bg-white p-4 space-y-2">
+          <div className="lg:hidden border-t border-rule bg-paper-2 p-4 space-y-2">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold text-ink-2 hover:bg-paper-3"
             >
-              <span>Public 3D Presentation</span>
+              <span>{t("nav.public3d")}</span>
               <ExternalLink className="h-4 w-4 text-muted" />
             </Link>
             {navItems.map((item) => {

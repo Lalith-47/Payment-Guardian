@@ -308,6 +308,15 @@ html[data-disable-glass="1"] [class*="backdrop-blur"] {
   box-shadow: 0 12px 32px -8px rgba(0, 28, 68, 0.08), 0 1px 2px rgba(255, 255, 255, 0.8) inset;
 }
 
+html.dark .glass-liquid,
+[data-theme="dark"] .glass-liquid {
+  background: rgba(0, 20, 53, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(255, 255, 255, 0.12) inset;
+}
+
 .glass-liquid-dark {
   background: rgba(0, 20, 53, 0.88);
   backdrop-filter: blur(12px);
@@ -323,6 +332,54 @@ html[data-disable-glass="1"] [class*="backdrop-blur"] {
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 9999px;
   box-shadow: 0 8px 24px rgba(0, 32, 96, 0.08), 0 1px 1px rgba(255, 255, 255, 0.9) inset;
+}
+
+html.dark .glass-pill,
+[data-theme="dark"] .glass-pill {
+  background: rgba(0, 24, 64, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(255, 255, 255, 0.18) inset;
+}
+
+html.dark .card-paypal,
+[data-theme="dark"] .card-paypal {
+  background: #00173D;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #F8FAFC;
+}
+
+html.dark .card-paypal-elevated,
+[data-theme="dark"] .card-paypal-elevated {
+  background: #001F52;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #F8FAFC;
+}
+
+html.dark .btn-paypal-secondary,
+[data-theme="dark"] .btn-paypal-secondary {
+  background: #001A44;
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #F8FAFC;
+}
+
+html.dark .btn-paypal-secondary:hover,
+[data-theme="dark"] .btn-paypal-secondary:hover {
+  background: #00255E;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #FFFFFF;
+}
+
+html.dark .ag-theme-quartz,
+[data-theme="dark"] .ag-theme-quartz {
+  --ag-background-color: #001435;
+  --ag-header-background-color: #000E26;
+  --ag-header-foreground-color: #94A3B8;
+  --ag-border-color: rgba(255, 255, 255, 0.1);
+  --ag-row-hover-color: #002255;
+  --ag-selected-row-background-color: #003377;
+  --ag-foreground-color: #F8FAFC;
 }
 
 .glass-pill-dark {

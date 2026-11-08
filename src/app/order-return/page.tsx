@@ -13,8 +13,12 @@ import {
   ExternalLink,
   ShieldAlert,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 function OrderReturnContent() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
   const payerId = searchParams.get("PayerID") || "";
@@ -79,33 +83,32 @@ function OrderReturnContent() {
   }, [token]);
 
   return (
-    <div className="w-full max-w-xl p-8 rounded-3xl glass-liquid border border-white/80 shadow-2xl space-y-6">
+    <div className="w-full max-w-xl p-6 sm:p-8 rounded-3xl glass-liquid border border-rule/80 shadow-2xl space-y-6">
       <div className="flex items-center justify-between border-b border-rule pb-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#003087] to-[#0070BA] text-white font-extrabold text-base font-serif italic shadow-md shadow-[#003087]/20">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#003087] to-[#0070BA] text-white font-extrabold text-base font-serif italic shadow-md shadow-[#003087]/20 shrink-0">
             P
           </span>
           <div>
-            <h1 className="text-base font-bold text-[#001C44]">PayPal Checkout Return</h1>
-            <p className="text-xs text-muted">Buyer Order Handshake</p>
+            <h1 className="text-lg font-bold text-ink tracking-tight">{t("return.title")}</h1>
+            <p className="text-xs text-muted">{t("return.subtitle")}</p>
           </div>
         </div>
-        <div className="text-right">
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-[#0070BA]/10 text-[#0070BA] border border-[#0070BA]/20">
-            TOKEN HANDSHAKE
-          </span>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <ThemeToggle />
         </div>
       </div>
 
-      <div className="space-y-3 bg-white/60 p-4 rounded-2xl border border-rule/60 text-xs font-mono">
-        <div className="flex justify-between items-center">
-          <span className="text-muted">ORDER TOKEN:</span>
-          <span className="font-bold text-[#001C44] select-all">{token || "None"}</span>
+      <div className="space-y-3 bg-paper-3/80 p-4 rounded-2xl border border-rule text-xs font-mono">
+        <div className="flex justify-between items-center gap-2">
+          <span className="text-muted shrink-0">{t("return.orderToken")}</span>
+          <span className="font-bold text-ink select-all truncate">{token || "None"}</span>
         </div>
         {payerId && (
-          <div className="flex justify-between items-center">
-            <span className="text-muted">PAYER ID:</span>
-            <span className="font-bold text-[#001C44] select-all">{payerId}</span>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-muted shrink-0">{t("return.payerId")}</span>
+            <span className="font-bold text-ink select-all truncate">{payerId}</span>
           </div>
         )}
       </div>
@@ -114,23 +117,23 @@ function OrderReturnContent() {
         {loading ? (
           <div className="p-8 text-center space-y-3">
             <RefreshCw className="h-6 w-6 animate-spin text-[#0070BA] mx-auto" />
-            <div className="text-sm font-semibold text-[#001C44]">Finalizing PayPal Order Capture…</div>
+            <div className="text-sm font-semibold text-ink">Finalizing PayPal Order Capture…</div>
             <p className="text-xs text-muted">Evaluating merchant guardrail policies and state invariants.</p>
           </div>
         ) : (
-          <div className="p-6 rounded-2xl border border-rule/80 space-y-3 bg-white/80">
+          <div className="p-6 rounded-2xl border border-rule/80 space-y-3 bg-paper-2/90">
             <div className="flex items-center gap-2 text-xs font-bold font-mono">
               {result.status === "SUCCESS" ? (
-                <CheckCircle className="h-4 w-4 text-success" />
+                <CheckCircle className="h-4 w-4 text-[#10B981]" />
               ) : (
-                <AlertTriangle className="h-4 w-4 text-danger" />
+                <AlertTriangle className="h-4 w-4 text-[#EF4444]" />
               )}
-              <span className={result.status === "SUCCESS" ? "text-success" : "text-danger"}>
+              <span className={result.status === "SUCCESS" ? "text-[#10B981]" : "text-[#EF4444]"}>
                 {result.status === "SUCCESS"
-                  ? "PAYMENT CAPTURED & SETTLED"
+                  ? t("return.settled")
                   : result.status === "DECLINED"
-                  ? "CAPTURE DECLINED — POLICY TRIGGERED"
-                  : "EXECUTION ERROR"}
+                  ? t("return.declined")
+                  : t("return.error")}
               </span>
             </div>
 
@@ -139,13 +142,13 @@ function OrderReturnContent() {
             {result.captureId && (
               <div className="text-xs pt-1">
                 <span className="text-muted">CAPTURE ID: </span>
-                <span className="select-all font-mono font-bold text-[#001C44]">{result.captureId}</span>
+                <span className="select-all font-mono font-bold text-ink">{result.captureId}</span>
               </div>
             )}
 
             {result.eventId && (
               <div className="text-xs pt-2 border-t border-rule flex items-center justify-between">
-                <span>EVENT ID: <strong className="text-[#001C44]">{result.eventId}</strong></span>
+                <span>EVENT ID: <strong className="text-ink">{result.eventId}</strong></span>
                 <Link
                   href="/events"
                   className="btn-paypal-primary text-[11px] py-1 px-3 min-h-[28px] rounded-full inline-flex items-center gap-1"
@@ -160,11 +163,11 @@ function OrderReturnContent() {
       </div>
 
       <div className="flex items-center justify-between text-xs text-muted font-mono pt-2 border-t border-rule">
-        <Link href="/" className="hover:text-[#001C44] transition-colors">
-          ← Back to Overview
+        <Link href="/" className="hover:text-ink transition-colors">
+          ← {t("return.back")}
         </Link>
-        <Link href="/dashboard" className="text-[#0070BA] font-bold hover:underline inline-flex items-center gap-1 font-sans">
-          <span>Go to Merchant Dashboard</span>
+        <Link href="/dashboard" className="text-[#0070BA] dark:text-[#38BDF8] font-bold hover:underline inline-flex items-center gap-1 font-sans">
+          <span>{t("return.goToDashboard")}</span>
           <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
@@ -174,7 +177,7 @@ function OrderReturnContent() {
 
 export default function OrderReturnPage() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#001C44] flex items-center justify-center p-4 selection:bg-[#0070BA]/20 selection:text-[#001435]">
+    <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-4 selection:bg-[#0070BA]/20 selection:text-[#001435]">
       <Suspense
         fallback={
           <div className="text-center text-xs text-muted font-mono py-12">

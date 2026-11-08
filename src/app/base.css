@@ -56,28 +56,23 @@ a {
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: 1.2;
   overflow-wrap: break-word;
   color: var(--color-ink);
 }
 
-h1 {
+.text-display {
   font-size: var(--text-display);
   letter-spacing: -0.03em;
   line-height: 1.08;
 }
 
-h2 {
+.text-section {
   font-size: var(--text-section);
   letter-spacing: -0.025em;
   line-height: 1.15;
-}
-
-h3 {
-  font-size: var(--text-title);
-  font-weight: 600;
 }
 
 .lead {
