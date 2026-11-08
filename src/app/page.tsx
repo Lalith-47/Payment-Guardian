@@ -248,10 +248,10 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <GuardrailCard title="Auto-Refund Limit" desc="Max refund without owner approval" value="$25.00" icon={<Database className="h-6 w-6" />} />
+              <GuardrailCard title="Auto-Refund Limit" desc="Max refund without owner approval" value="Custom" icon={<Database className="h-6 w-6" />} />
               <GuardrailCard title="AI Confidence" desc="Threshold for autonomous action" value="80%" icon={<Sparkles className="h-6 w-6" />} />
               <GuardrailCard title="Max Retries" desc="Auto capture re-attempts per event" value="2" icon={<Zap className="h-6 w-6" />} />
-              <GuardrailCard title="Invoice Auto-Send" desc="Max amount before approval needed" value="$500" icon={<Shield className="h-6 w-6" />} />
+              <GuardrailCard title="Invoice Auto-Send" desc="Max amount before approval needed" value="Custom" icon={<Shield className="h-6 w-6" />} />
             </div>
           </div>
         </section>
