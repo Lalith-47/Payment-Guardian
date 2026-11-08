@@ -74,6 +74,10 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url().default("http://localhost:3000"),
   OWNER_EMAIL: z.string().email("OWNER_EMAIL must be a valid email"),
   OWNER_PASSWORD: z.string().min(8, "OWNER_PASSWORD must be at least 8 chars"),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  MICROSOFT_CLIENT_ID: z.string().optional(),
+  MICROSOFT_CLIENT_SECRET: z.string().optional(),
 }).refine(
   (data) => data.LLM_DAILY_BUDGET <= data.LLM_PROVIDER_DAILY_CAP,
   {

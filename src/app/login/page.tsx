@@ -46,6 +46,31 @@ export default function LoginPage() {
     }
   }
 
+  async function handleOAuthSignIn(provider: "google" | "microsoft") {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/sign-in/social", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider,
+          callbackURL: "/dashboard",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || `Failed to initiate ${provider} sign-in`);
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      setError((err as Error).message);
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-paper text-ink p-4 selection:bg-accent/20 selection:text-ink relative overflow-hidden">
       {/* Background ambient lighting */}
@@ -147,6 +172,36 @@ export default function LoginPage() {
               <span>{loading ? "Verifying Credentials…" : "Sign In to Business Guardian"}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
+
+            {/* Divider */}
+            <div className="relative flex items-center justify-center pt-2">
+              <div className="border-t border-rule w-full" />
+              <span className="bg-paper-2 px-3 text-[11px] text-muted font-bold uppercase tracking-wider shrink-0">
+                or continue with
+              </span>
+              <div className="border-t border-rule w-full" />
+            </div>
+
+            {/* Text-only OAuth Sign-In Buttons */}
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => handleOAuthSignIn("google")}
+                disabled={loading || success}
+                className="w-full h-10 px-4 border border-rule hover:border-focus rounded-xl bg-paper hover:bg-paper-3 text-ink font-semibold text-xs transition-colors flex items-center justify-center shadow-sm disabled:opacity-50"
+              >
+                Sign in with Google
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleOAuthSignIn("microsoft")}
+                disabled={loading || success}
+                className="w-full h-10 px-4 border border-rule hover:border-focus rounded-xl bg-paper hover:bg-paper-3 text-ink font-semibold text-xs transition-colors flex items-center justify-center shadow-sm disabled:opacity-50"
+              >
+                Sign in with Microsoft
+              </button>
+            </div>
           </form>
 
           {/* Trust strip */}

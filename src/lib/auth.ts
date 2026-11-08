@@ -32,6 +32,31 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || "mock-google-client-id",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "mock-google-client-secret",
+      enabled: true,
+    },
+    microsoft: {
+      clientId: process.env.MICROSOFT_CLIENT_ID || "mock-microsoft-client-id",
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET || "mock-microsoft-client-secret",
+      enabled: true,
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          const designated = (env.OWNER_EMAIL || "owner@revenueguardian.local").toLowerCase().trim();
+          if (user.email.toLowerCase().trim() !== designated) {
+            throw new Error(`Single-owner invariant: only ${designated} is authorized to sign in.`);
+          }
+          return { data: user };
+        },
+      },
+    },
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
