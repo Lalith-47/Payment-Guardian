@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export interface VantageLayers {
   stream: boolean;
@@ -18,16 +18,28 @@ export function VantageCanvas({
   layers = { stream: true, disputes: true, guardrails: true, recoveries: true },
   className = "",
 }: VantageCanvasProps) {
+  const [mounted, setMounted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layersRef = useRef(layers);
   layersRef.current = layers;
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(() => setMounted(true));
+      } else {
+        setTimeout(() => setMounted(true), 50);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const DPR = Math.min(window.devicePixelRatio || 1, 1.25);
 
     const gl = canvas.getContext("webgl", {
       antialias: false,
@@ -426,14 +438,21 @@ export function VantageCanvas({
       window.removeEventListener("mousemove", handlePointerMove);
       observer.disconnect();
     };
-  }, []);
+  }, [mounted]);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <div
       className={`absolute inset-0 w-full h-full pointer-events-none ${className}`}
       aria-hidden="true"
-    />
+    >
+      {mounted && (
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          aria-hidden="true"
+        />
+      )}
+    </div>
   );
 }
 
