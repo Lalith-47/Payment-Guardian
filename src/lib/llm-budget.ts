@@ -55,8 +55,9 @@ export async function getLlmDailyUsage(scope?: "real" | "test"): Promise<{
       };
     }
 
+    const isReal = scope === "real" ? true : scope === "test" ? false : isRealProvider();
     let used = 0;
-    if (scope === "test") {
+    if (!isReal) {
       const key = getTodayKey("test");
       const countStr = await redis.get(key);
       used = countStr ? parseInt(countStr, 10) : 0;
@@ -104,16 +105,20 @@ export async function incrementLlmUsage(scope?: "real" | "test"): Promise<{ used
     return { used: env.LLM_DAILY_BUDGET, allowed: false };
   }
 
-  // Budget decisions derive strictly from llm_requests table (single source of truth)
-  const usage = await getLlmDailyUsage(scope);
-  const allowed = usage.used < env.LLM_DAILY_BUDGET;
-
-  // Track transient key in redis with 48h TTL for cache / rate inspection
+  const isReal = scope === "real" ? true : scope === "test" ? false : isRealProvider();
   const key = getTodayKey(scope);
   const redisCount = await redis.incr(key);
   if (redisCount === 1) {
     await redis.expire(key, 60 * 60 * 48);
   }
+
+  if (!isReal) {
+    return { used: redisCount, allowed: redisCount <= env.LLM_DAILY_BUDGET };
+  }
+
+  // Real budget decisions derive strictly from llm_requests table (single source of truth)
+  const usage = await getLlmDailyUsage("real");
+  const allowed = usage.used < env.LLM_DAILY_BUDGET;
 
   return { used: usage.used, allowed };
 }
