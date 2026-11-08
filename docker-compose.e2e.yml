@@ -56,6 +56,9 @@ services:
 
   web:
     image: revenue-guardian-e2e:latest
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
     build:
       context: .
       dockerfile: Dockerfile
@@ -94,6 +97,9 @@ services:
 
   worker:
     image: revenue-guardian-e2e:latest
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
     build:
       context: .
       dockerfile: Dockerfile
