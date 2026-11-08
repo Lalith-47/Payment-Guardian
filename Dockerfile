@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Revenue Guardian
 FROM node:22-alpine AS base
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@12.18.0 --activate
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
