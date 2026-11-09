@@ -16,6 +16,7 @@ import {
   Clock,
   Sparkles,
   Zap,
+  ExternalLink,
 } from "lucide-react";
 
 interface EventItem {
@@ -321,9 +322,32 @@ function EventsContent() {
                       Ingested: <span className="text-ink-2 font-mono">{new Date(detail.event.createdAt).toLocaleString()}</span>
                     </p>
                     {detail.event.errorMessage && (
-                      <p className="text-error text-xs pt-1 font-medium">
-                        Error: <span className="font-mono">{detail.event.errorMessage}</span>
-                      </p>
+                      <div className="space-y-2.5 pt-1">
+                        <p className="text-error text-xs font-medium">
+                          Error: <span className="font-mono break-all">{detail.event.errorMessage}</span>
+                        </p>
+                        {(detail.event.errorMessage.includes("ORDER_NOT_APPROVED") ||
+                          detail.event.errorMessage.toLowerCase().includes("payer has not yet approved")) &&
+                          detail.event.externalId && (
+                            <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 space-y-2">
+                              <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                                Payer Approval Required in Sandbox
+                              </p>
+                              <p className="text-[11px] text-muted leading-relaxed">
+                                The payer has not yet authorized payment on this order. Complete approval via the PayPal Sandbox checkout, then retry recovery triage.
+                              </p>
+                              <a
+                                href={`https://www.sandbox.paypal.com/checkoutnow?token=${detail.event.externalId}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="btn-paypal-gold btn-sm w-full inline-flex items-center justify-center gap-1.5 font-bold shadow-sm"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                Open PayPal Sandbox Approval Link
+                              </a>
+                            </div>
+                        )}
+                      </div>
                     )}
                   </div>
 

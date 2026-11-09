@@ -140,6 +140,50 @@ export class ActionExecutor {
     // 4. Perform PayPal mutation
     try {
       const execResult = await this.performMutation(req, idempotencyKey);
+
+      if ((execResult as any)?.declined) {
+        const issue = (execResult as any).issue || "DECLINED";
+        const description = (execResult as any).description || "Mutation was declined by processor";
+        const approvalUrl = (execResult as any).approvalUrl;
+        const statusCode = (execResult as any).statusCode || 422;
+        const failureReason = description;
+
+        await updateActionStatus(actionId, "FAILED", {
+          statusCode,
+          errorMessage: failureReason,
+          responseSummary: execResult,
+        });
+
+        await updateEventStatus(req.eventId, "FAILED", failureReason);
+
+        await appendAuditLog({
+          source: "executor",
+          eventType: "action.declined",
+          eventId: req.eventId,
+          actor: "executor",
+          action: "RETRY_CAPTURE_DECLINED",
+          details: {
+            from: "DECIDED",
+            to: "FAILED",
+            actionId,
+            actionType: req.proposal.action,
+            idempotencyKey,
+            issue,
+            description,
+            approvalUrl,
+          },
+        });
+
+        return {
+          success: false,
+          actionId,
+          status: "FAILED",
+          idempotencyKey,
+          details: execResult,
+          error: failureReason,
+        };
+      }
+
       const statusCode = (execResult as any)?.statusCode || 200;
 
       await updateActionStatus(actionId, "SUCCESS", {
@@ -221,14 +265,6 @@ export class ActionExecutor {
         idempotencyKey,
         error: errMsg,
       };
-
-      return {
-        success: false,
-        actionId,
-        status: "DEAD_LETTER",
-        idempotencyKey,
-        error: errMsg,
-      };
     }
   }
 
@@ -270,7 +306,18 @@ export class ActionExecutor {
         });
 
         if (captureRes.declined) {
-          throw new Error(`Retry capture was declined: ${captureRes.issue} - ${captureRes.description}`);
+          const isUnapproved = captureRes.issue === "ORDER_NOT_APPROVED";
+          const approveUrl = `https://www.sandbox.paypal.com/checkoutnow?token=${req.targetId}`;
+          const reason = isUnapproved
+            ? `ORDER_NOT_APPROVED: Payer has not yet approved the order. Approval link: ${approveUrl}`
+            : `Retry capture was declined by PayPal: ${captureRes.issue} - ${captureRes.description}`;
+          return {
+            declined: true,
+            issue: captureRes.issue,
+            description: reason,
+            approvalUrl: isUnapproved ? approveUrl : undefined,
+            statusCode: 422,
+          };
         }
 
         return {
