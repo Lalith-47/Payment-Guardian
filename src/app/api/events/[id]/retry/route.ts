@@ -5,6 +5,7 @@ import { events, actions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { isLlmBudgetAvailable } from "@/lib/llm-budget";
 import { eventsQueue } from "@/queue";
+import { processEventPipeline } from "@/pipeline/processor";
 import { appendAuditLog } from "@/db/queries/audit";
 import { createChildLogger } from "@/lib/logger";
 
@@ -97,7 +98,7 @@ export async function POST(
     const payload = event.payload as Record<string, unknown>;
 
     // Re-enqueue for pipeline processing
-    await eventsQueue.add(event.type, {
+    const retryPayload = {
       eventId: id,
       type: event.type,
       source: event.source,
@@ -106,7 +107,19 @@ export async function POST(
       description: payload?.description as string | undefined,
       payload,
       timestamp: new Date().toISOString(),
-    });
+    };
+
+    try {
+      await eventsQueue.add(event.type, retryPayload);
+    } catch (queueErr) {
+      log.warn({ queueErr, eventId: id }, "BullMQ queue addition failed or timed out");
+    }
+
+    if (process.env.RUN_PIPELINE_DIRECT !== "0") {
+      processEventPipeline(retryPayload).catch((procErr) => {
+        log.error({ procErr, eventId: id }, "Direct retry pipeline processing error");
+      });
+    }
 
     log.info({ eventId: id }, "Event successfully re-enqueued for recovery pipeline");
 

@@ -11,6 +11,7 @@ import { db } from "@/db";
 import { events } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { eventsQueue } from "@/queue";
+import { processEventPipeline } from "@/pipeline/processor";
 import { env } from "@/config/env";
 import { createChildLogger } from "@/lib/logger";
 
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest) {
       });
 
       // 3. Enqueue to BullMQ for asynchronous recovery pipeline
-      await eventsQueue.add("payment.capture_declined", {
+      const pipelinePayload = {
         eventId,
         type: "payment.capture_declined",
         source,
@@ -169,7 +170,20 @@ export async function POST(req: NextRequest) {
         issue: captureResult.issue,
         description: captureResult.description,
         timestamp: new Date().toISOString(),
-      });
+      };
+
+      try {
+        await eventsQueue.add("payment.capture_declined", pipelinePayload);
+      } catch (queueErr) {
+        log.warn({ queueErr, eventId }, "BullMQ queue addition failed or timed out");
+      }
+
+      // In serverless environments (or fallback mode), trigger pipeline directly
+      if (process.env.RUN_PIPELINE_DIRECT !== "0") {
+        processEventPipeline(pipelinePayload).catch((procErr) => {
+          log.error({ procErr, eventId }, "Direct pipeline processing error");
+        });
+      }
 
       log.warn({ orderId, eventId, issue: captureResult.issue }, "Capture declined; recovery event recorded and enqueued");
 

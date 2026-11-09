@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { AppleLiquidBackground } from "@/components/AppleLiquidBackground";
-import { AppleLiquidScrollytelling } from "@/components/AppleLiquidScrollytelling";
+import { CheckoutLandingScrollytelling } from "@/components/CheckoutLandingScrollytelling";
 import {
   ArrowRight,
   Shield,
@@ -215,7 +215,7 @@ export default function LandingPage() {
 
       {/* ── CORE TRANSITION SCROLLYTELLING SECTION ── */}
       <section id="section-scrollytelling" className="relative w-full">
-        <AppleLiquidScrollytelling />
+        <CheckoutLandingScrollytelling />
       </section>
 
       {/* ── APPLE LIQUID ARCHITECTURE BENTO GRID ── */}

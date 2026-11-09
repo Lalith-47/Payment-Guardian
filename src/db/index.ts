@@ -13,11 +13,13 @@ declare global {
 
 export function getPgPool(): Pool {
   if (!global.__pgPool) {
+    const isSsl = env.DATABASE_URL.includes("sslmode=require") || env.DATABASE_URL.includes("neon.tech");
     global.__pgPool = new Pool({
       connectionString: env.DATABASE_URL,
+      ssl: isSsl ? { rejectUnauthorized: false } : undefined,
       max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 20000,
     });
 
     global.__pgPool.on("error", (err) => {

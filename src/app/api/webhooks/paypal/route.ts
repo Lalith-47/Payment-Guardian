@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyPayPalWebhookSignature } from "@/webhooks/verify";
 import { recordWebhookDelivery, isWebhookDeliveryDuplicate, determineWebhookOrigin } from "@/db/queries/webhooks";
 import { eventsQueue } from "@/queue";
+import { processEventPipeline } from "@/pipeline/processor";
 import { redis } from "@/lib/redis";
 import { appendAuditLog } from "@/db/queries/audit";
 import { env } from "@/config/env";
@@ -156,14 +157,27 @@ export async function POST(req: NextRequest) {
   }
 
   // 6. Enqueue untagged real verified webhook to BullMQ for asynchronous processing
-  await eventsQueue.add(eventType, {
+  const pipelinePayload = {
     eventId,
     type: eventType,
     source: "paypal_webhook",
     transmissionId,
     payload: eventPayload,
     timestamp: new Date().toISOString(),
-  });
+  };
+
+  try {
+    await eventsQueue.add(eventType, pipelinePayload);
+  } catch (queueErr) {
+    log.warn({ queueErr, eventId }, "BullMQ queue addition failed or timed out");
+  }
+
+  // In serverless environments, also trigger pipeline directly
+  if (process.env.RUN_PIPELINE_DIRECT !== "0") {
+    processEventPipeline(pipelinePayload).catch((procErr) => {
+      log.error({ procErr, eventId }, "Direct webhook pipeline processing error");
+    });
+  }
 
   log.info({ transmissionId, eventId, eventType }, "Webhook verified and enqueued to BullMQ");
   return NextResponse.json({ status: "RECEIVED", transmissionId, eventId }, { status: 200 });

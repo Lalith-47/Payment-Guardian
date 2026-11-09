@@ -28,10 +28,14 @@ export function resolveRedisUrl(): string {
 export function getRedisClient(): Redis {
   if (!global.__redisClient) {
     const url = resolveRedisUrl();
+    const isTls = url.startsWith("rediss://") || url.includes("upstash.io");
+
     global.__redisClient = new Redis(url, {
       maxRetriesPerRequest: null, // Required by BullMQ
-      enableReadyCheck: true,
+      enableReadyCheck: !url.includes("upstash.io"),
       lazyConnect: process.env.SKIP_ENV_VALIDATION === "1",
+      connectTimeout: 10000,
+      tls: isTls ? { rejectUnauthorized: false } : undefined,
       retryStrategy(times) {
         const delay = Math.min(times * 100, 3000);
         log.warn({ attempt: times, delay }, "Reconnecting to Redis...");
