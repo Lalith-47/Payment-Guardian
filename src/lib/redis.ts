@@ -33,7 +33,10 @@ export function getRedisClient(): Redis {
     global.__redisClient = new Redis(url, {
       maxRetriesPerRequest: null, // Required by BullMQ
       enableReadyCheck: !url.includes("upstash.io"),
-      lazyConnect: process.env.SKIP_ENV_VALIDATION === "1",
+      lazyConnect:
+        process.env.SKIP_ENV_VALIDATION === "1" ||
+        process.env.NEXT_PHASE === "phase-production-build" ||
+        process.env.CI === "true",
       connectTimeout: 10000,
       tls: isTls ? { rejectUnauthorized: false } : undefined,
       retryStrategy(times) {
