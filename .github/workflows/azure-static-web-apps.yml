@@ -32,7 +32,7 @@ jobs:
           output_location: ""
         env:
           SKIP_ENV_VALIDATION: "1"
-          NODE_ENV: "production"
+          NPM_CONFIG_PRODUCTION: "false"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'

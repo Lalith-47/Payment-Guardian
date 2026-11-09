@@ -6,7 +6,7 @@ const BASE_URL = "http://localhost:3000";
 const OUTPUT_DIR = path.join(process.cwd(), "docs", "screenshots");
 
 const pages = [
-  { path: "/", name: "home", waitFor: "main" },
+  { path: "/", name: "home", waitFor: "#section-hero" },
   { path: "/login", name: "login", waitFor: "form" },
   { path: "/dashboard", name: "dashboard", waitFor: "main" },
   { path: "/invoices", name: "invoices", waitFor: "main" },
@@ -15,7 +15,7 @@ const pages = [
   { path: "/events", name: "events", waitFor: "main" },
   { path: "/onboarding", name: "onboarding", waitFor: "main" },
   { path: "/checkout-landing", name: "checkout-landing", waitFor: "main" },
-  { path: "/order-return", name: "order-return", waitFor: "main" },
+  { path: "/order-return", name: "order-return", waitFor: ".glass-liquid" },
 ];
 
 async function captureScreenshots() {

@@ -175,6 +175,9 @@ importers:
       '@react-three/fiber':
         specifier: ^9.8.2
         version: 9.8.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0)
+      '@tailwindcss/postcss':
+        specifier: ^4.3.4
+        version: 4.3.4
       '@types/three':
         specifier: ^0.187.0
         version: 0.187.0
@@ -184,6 +187,9 @@ importers:
       ag-grid-react:
         specifier: ^36.3.0
         version: 36.3.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      autoprefixer:
+        specifier: ^10.6.2
+        version: 10.6.2(postcss@8.5.32)
       better-auth:
         specifier: ^1.7.15
         version: 1.7.15(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@types/pg@8.23.1)(kysely@0.29.8)(pg@8.23.1)(postgres@4.0.0))(next@16.4.4(@playwright/test@1.64.1)(@types/node@26.6.6)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(pg@8.23.1)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vitest@5.1.0(@types/node@26.6.6)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))
@@ -223,6 +229,9 @@ importers:
       pino-pretty:
         specifier: ^13.2.0
         version: 13.2.0
+      postcss:
+        specifier: ^8.5.32
+        version: 8.5.32
       postgres:
         specifier: ^4.0.0
         version: 4.0.0
@@ -235,6 +244,9 @@ importers:
       tailwind-merge:
         specifier: ^3.7.0
         version: 3.7.0
+      tailwindcss:
+        specifier: ^4.3.4
+        version: 4.3.4
       three:
         specifier: ^0.187.0
         version: 0.187.0
@@ -248,9 +260,6 @@ importers:
       '@playwright/test':
         specifier: ^1.64.1
         version: 1.64.1
-      '@tailwindcss/postcss':
-        specifier: ^4.3.4
-        version: 4.3.4
       '@types/node':
         specifier: ^26.6.6
         version: 26.6.6
@@ -263,18 +272,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.3.0
         version: 19.3.0(@types/react@19.3.0)
-      autoprefixer:
-        specifier: ^10.6.2
-        version: 10.6.2(postcss@8.5.32)
       drizzle-kit:
         specifier: ^0.31.11
         version: 0.31.11
-      postcss:
-        specifier: ^8.5.32
-        version: 8.5.32
-      tailwindcss:
-        specifier: ^4.3.4
-        version: 4.3.4
       tsx:
         specifier: ^4.23.15
         version: 4.23.15

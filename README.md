@@ -245,18 +245,26 @@ All screenshots are stored in `docs/screenshots/`:
 
 | Screen | Description |
 |---|---|
+| **Home / Landing** | Apple Liquid Glass hero with scrollytelling transition showcase |
+| ![Home](docs/screenshots/home.png) | |
+| **Login** | Secure single-owner authentication with OAuth (Google/Microsoft) |
+| ![Login](docs/screenshots/login.png) | |
 | **Dashboard** | Real-time recovery metrics, active policies, and system status |
-| ![Dashboard](docs/screenshots/01-dashboard.png) | |
-| **Policy Configuration** | Merchant-controlled thresholds, auto-refund limits, and retry rules |
-| ![Policies](docs/screenshots/02-policies.png) | |
-| **Sandbox Checkout** | Test storefront with negative testing controls |
-| ![Checkout](docs/screenshots/03-checkout.png) | |
+| ![Dashboard](docs/screenshots/dashboard.png) | |
+| **Invoices** | Natural-language draft creation with line-item extraction |
+| ![Invoices](docs/screenshots/invoices.png) | |
 | **Approvals Inbox** | Cryptographically bound approval triage for high-value actions |
-| ![Approvals](docs/screenshots/05-approvals.png) | |
+| ![Approvals](docs/screenshots/approvals.png) | |
 | **Audit Ledger** | Immutable AG Grid tracking every proposal, decision, and mutation |
-| ![Audit](docs/screenshots/06-audit.png) | |
-| **Invoicing Triage** | Natural-language draft creation with line-item extraction |
-| ![Invoices](docs/screenshots/09-invoices.png) | |
+| ![Audit](docs/screenshots/audit.png) | |
+| **Events** | Event stream with AI proposals, policy evaluation, and execution status |
+| ![Events](docs/screenshots/events.png) | |
+| **Onboarding** | Policy setup wizard and PayPal credential configuration |
+| ![Onboarding](docs/screenshots/onboarding.png) | |
+| **Checkout Landing** | Merchant storefront with negative testing simulation controls |
+| ![Checkout](docs/screenshots/checkout-landing.png) | |
+| **Order Return** | Post-checkout handshake completion and error recovery |
+| ![Order Return](docs/screenshots/order-return.png) | |
 
 ---
 
