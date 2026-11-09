@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { paypalInvoices, auditLog, proposals } from "@/db/schema";
 import { requireOwnerSession } from "@/lib/api-auth";
 import { voidApprovalsForProposal } from "@/db/queries/approvals";
+import { env } from "@/config/env";
 import { eq, desc, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
@@ -41,8 +42,20 @@ export async function GET(
     .orderBy(desc(auditLog.timestamp))
     .limit(50);
 
+  const isSandbox = env.PAYPAL_BASE_URL.includes("sandbox");
+  const payerViewUrl =
+    invoice.payerViewUrl ||
+    (invoice.id
+      ? isSandbox
+        ? `https://www.sandbox.paypal.com/invoice/p/#${invoice.id}`
+        : `https://www.paypal.com/invoice/p/#${invoice.id}`
+      : null);
+
   return NextResponse.json({
-    invoice,
+    invoice: {
+      ...invoice,
+      payerViewUrl,
+    },
     timeline,
   });
 }

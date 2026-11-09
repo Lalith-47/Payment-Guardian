@@ -208,24 +208,25 @@ export function DashboardShell({
             </div>
 
             {/* Quick Actions & Session User */}
-            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <LanguageSwitcher />
               <ThemeToggle />
 
-              <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-paper-3 border border-rule text-xs text-ink-2 shrink-0">
+              {/* Email chip: hide on regular desktop to prevent sign out button clipping */}
+              <div className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-paper-3 border border-rule text-xs text-ink-2 shrink-0">
                 <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shrink-0" />
-                <span className="truncate max-w-[120px] font-mono text-[11px] font-medium">
+                <span className="truncate max-w-[110px] font-mono text-[11px] font-medium">
                   {ownerEmail || "owner@paypal.local"}
                 </span>
               </div>
 
               <button
                 onClick={handleSignOut}
-                className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-paper-2 hover:bg-paper-3 px-3 py-1.5 text-xs font-semibold text-ink-2 hover:text-ink transition-colors shadow-2xs shrink-0 whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-paper-2 hover:bg-paper-3 px-3 py-1.5 text-xs font-semibold text-ink-2 hover:text-danger hover:border-danger/30 transition-colors shadow-2xs shrink-0 whitespace-nowrap cursor-pointer"
                 title="Sign out of owner session"
               >
-                <LogOut className="h-3.5 w-3.5 text-muted shrink-0" />
-                <span className="hidden sm:inline whitespace-nowrap">{t("nav.signOut")}</span>
+                <LogOut className="h-3.5 w-3.5 shrink-0 text-muted" />
+                <span className="whitespace-nowrap">{t("nav.signOut")}</span>
               </button>
 
               {/* Mobile menu button */}
@@ -375,6 +376,26 @@ export function DashboardShell({
                 </Link>
               );
             })}
+
+            {/* Mobile Sign Out and User Info */}
+            <div className="pt-3 mt-2 border-t border-rule space-y-2">
+              <div className="flex items-center gap-2 px-2.5 py-1 text-xs text-muted">
+                <span className="w-2 h-2 rounded-full bg-[#10B981] shrink-0" />
+                <span className="truncate font-mono">{ownerEmail || "owner@paypal.local"}</span>
+              </div>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleSignOut();
+                }}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <LogOut className="h-4 w-4" />
+                  <span>{t("nav.signOut")}</span>
+                </div>
+              </button>
+            </div>
           </div>
         )}
       </header>

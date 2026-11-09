@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Suspense } from "react";
 import { AppProviders } from "@/components/AppProviders";
+import { ResourcePrewarmer } from "@/components/ResourcePrewarmer";
+import { PageLoadingIndicator } from "@/components/PageLoadingIndicator";
 
 export const metadata: Metadata = {
   title: "Revenue Guardian | Autonomous Payment Guardrails for PayPal Merchants",
@@ -46,6 +49,10 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen bg-paper text-ink font-body transition-colors duration-200">
+        <Suspense fallback={null}>
+          <PageLoadingIndicator />
+        </Suspense>
+        <ResourcePrewarmer />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

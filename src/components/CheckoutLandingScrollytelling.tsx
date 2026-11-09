@@ -91,8 +91,8 @@ function drawCheckoutCard(
   const [cx, cy] = getGraphicCenter(W, H, "right");
 
   const scale = isMobile
-    ? Math.min(0.70, (W - 48) / 400, (H * 0.48) / 510)
-    : Math.min(1.0, (W * 0.44) / 400, (H * 0.82) / 510);
+    ? Math.min(0.85, (W - 32) / 400, (H * 0.52) / 510)
+    : Math.min(1.30, (W * 0.48) / 380, (H * 0.90) / 500);
 
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -279,7 +279,7 @@ function drawSecurity(
 ) {
   const isMobile = W < 1024;
   const [cx, cy] = getGraphicCenter(W, H, isMobile ? "center" : "right");
-  const scale = isMobile ? Math.min(0.85, W / 460) : 1.0;
+  const scale = isMobile ? Math.min(0.90, W / 460) : Math.min(1.35, (W * 0.48) / 380, (H * 0.88) / 460);
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -387,7 +387,7 @@ function drawNetwork(
 ) {
   const isMobile = W < 1024;
   const [cx, cy] = getGraphicCenter(W, H, isMobile ? "center" : "left");
-  const spread = isMobile ? Math.min(W * 0.42, 220) : Math.min(W * 0.28, 280);
+  const spread = isMobile ? Math.min(W * 0.44, 250) : Math.min(W * 0.36, 360);
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -434,22 +434,22 @@ function drawNetwork(
   // Draw nodes
   nodes.forEach(([nx, ny, label, color]) => {
     ctx.beginPath();
-    ctx.arc(nx, ny, 11, 0, Math.PI * 2);
+    ctx.arc(nx, ny, 12, 0, Math.PI * 2);
     ctx.fillStyle = isDark ? "#0B1324" : "#FFFFFF";
     ctx.fill();
     ctx.strokeStyle = color;
-    ctx.lineWidth = 1.8;
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(nx, ny, 3.5, 0, Math.PI * 2);
+    ctx.arc(nx, ny, 4, 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
 
     ctx.fillStyle = isDark ? "#FFFFFF" : "#0F172A";
-    ctx.font = "600 10.5px system-ui, sans-serif";
+    ctx.font = "600 11.5px system-ui, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(label, nx, ny + 20);
+    ctx.fillText(label, nx, ny + 22);
   });
 
   ctx.restore();
@@ -464,7 +464,7 @@ function drawIntelligence(
 ) {
   const isMobile = W < 1024;
   const [cx, cy] = getGraphicCenter(W, H, isMobile ? "center" : "right");
-  const scale = isMobile ? Math.min(0.85, (W - 32) / 440) : 1.0;
+  const scale = isMobile ? Math.min(0.95, (W - 32) / 420) : Math.min(1.35, (W * 0.48) / 400, (H * 0.88) / 440);
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -541,7 +541,7 @@ function drawDeveloper(
 ) {
   const isMobile = W < 1024;
   const [cx, cy] = getGraphicCenter(W, H, isMobile ? "center" : "left");
-  const scale = isMobile ? Math.min(0.85, (W - 32) / 480) : 1.0;
+  const scale = isMobile ? Math.min(0.92, (W - 32) / 480) : Math.min(1.32, (W * 0.50) / 460, (H * 0.88) / 300);
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -609,7 +609,7 @@ function drawFinale(
 ) {
   const isMobile = W < 1024;
   const [cx, cy] = getGraphicCenter(W, H, "center");
-  const scale = isMobile ? Math.min(0.85, W / 420) : 1.0;
+  const scale = isMobile ? Math.min(1.0, W / 420) : Math.min(1.38, (W * 0.52) / 420, (H * 0.88) / 420);
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -686,32 +686,32 @@ function SectionCopyPanel({
 
   return (
     <div
-      className={`absolute top-1/2 -translate-y-1/2 transition-all duration-700 pointer-events-auto max-w-[420px] w-[90vw] sm:w-[38vw] ${
+      className={`absolute top-1/2 -translate-y-1/2 transition-all duration-700 pointer-events-auto max-w-[500px] lg:max-w-[560px] xl:max-w-[620px] w-[92vw] lg:w-[45vw] ${
         isRight
-          ? "right-4 sm:right-12 lg:right-24 text-left"
-          : "left-4 sm:left-12 lg:left-24 text-left"
+          ? "right-4 sm:right-10 lg:right-16 xl:right-24 text-left"
+          : "left-4 sm:left-10 lg:left-16 xl:left-24 text-left"
       } ${visible ? "opacity-100 translate-y-[-50%]" : "opacity-0 translate-y-[-45%] pointer-events-none"}`}
       aria-hidden={!visible}
     >
-      <div className="glass-liquid p-6 sm:p-8 rounded-3xl border border-rule shadow-xl backdrop-blur-2xl space-y-4">
-        <div className="inline-flex items-center gap-2 glass-pill px-3 py-1 text-xs font-bold uppercase tracking-wider" style={{ color: accentColor }}>
-          <Sparkles className="w-3.5 h-3.5" />
+      <div className="glass-liquid p-6 sm:p-8 lg:p-10 rounded-3xl border border-rule shadow-xl backdrop-blur-2xl space-y-5">
+        <div className="inline-flex items-center gap-2 glass-pill px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider" style={{ color: accentColor }}>
+          <Sparkles className="w-4 h-4" />
           <span>{eyebrow}</span>
         </div>
 
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-ink leading-[1.1] whitespace-pre-line">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight text-ink leading-[1.08] whitespace-pre-line">
           {headline}
         </h2>
 
-        <p className="text-xs sm:text-sm text-ink-2 leading-relaxed">
+        <p className="text-sm sm:text-base text-ink-2 leading-relaxed">
           {body}
         </p>
 
         {bullets && (
-          <ul className="space-y-2 pt-2 border-t border-rule">
+          <ul className="space-y-2.5 pt-3 border-t border-rule">
             {bullets.map((b, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-ink-2">
-                <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: accentColor }} />
+              <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-ink-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: accentColor }} />
                 <span>{b}</span>
               </li>
             ))}

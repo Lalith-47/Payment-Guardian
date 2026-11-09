@@ -16,7 +16,10 @@ export function resolveRedisUrl(): string {
   if (process.env.NODE_ENV === "test") {
     try {
       const u = new URL(env.REDIS_URL);
-      u.pathname = "/2"; // Redis DB 2 strictly reserved for tests to avoid demo DB pollution
+      // Upstash serverless Redis only supports DB 0; only use DB 2 on local standalone Redis
+      if (!u.hostname.includes("upstash.io")) {
+        u.pathname = "/2";
+      }
       return u.toString();
     } catch {
       return env.REDIS_URL;

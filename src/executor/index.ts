@@ -358,18 +358,37 @@ export class ActionExecutor {
         });
 
         // 2. Send invoice (executor-only, idempotent via PayPal-Request-Id)
-        const sendRequestId = `send_${idempotencyKey}`;
-        const sendRes = await paypalClient.sendInvoice(draftRes.id, sendRequestId);
+        let sendRes: { success: boolean; raw?: Record<string, unknown> } = { success: false };
+        try {
+          const sendRequestId = `send_${idempotencyKey}`;
+          sendRes = await paypalClient.sendInvoice(draftRes.id, sendRequestId);
+        } catch (sendErr) {
+          log.warn(
+            { invoiceId: draftRes.id, err: (sendErr as Error).message },
+            "PayPal sendInvoice notice (email delivery skipped or unsupported in sandbox; invoice draft preserved with direct hosted link)"
+          );
+        }
 
         // 3. GET fresh invoice details directly from PayPal to capture reported terms and due date
-        const freshInv = await paypalClient.getInvoice(draftRes.id);
+        let freshInv: { status: string; payerViewUrl: string | null; raw: Record<string, unknown> };
+        try {
+          freshInv = await paypalClient.getInvoice(draftRes.id);
+        } catch {
+          freshInv = { status: draftRes.status || "DRAFT", payerViewUrl: null, raw: draftRes.raw };
+        }
+
+        const isSandbox = env.PAYPAL_BASE_URL.includes("sandbox");
+        const defaultViewUrl = isSandbox
+          ? `https://www.sandbox.paypal.com/invoice/p/#${draftRes.id}`
+          : `https://www.paypal.com/invoice/p/#${draftRes.id}`;
+
         const paypalReportedTerm = (freshInv.raw as any)?.detail?.payment_term;
         const termReported = paypalReportedTerm?.term_type || null;
         const dueDateReported = paypalReportedTerm?.due_date || null;
         const payerViewUrl =
           freshInv.payerViewUrl ||
           (draftRes.raw as { detail?: { metadata?: { payer_view_url?: string } } })?.detail?.metadata?.payer_view_url ||
-          null;
+          defaultViewUrl;
 
         const effectiveDays = termReported?.startsWith("NET_")
           ? parseInt(termReported.replace("NET_", ""), 10)
@@ -377,9 +396,11 @@ export class ActionExecutor {
           ? parsedDueDays
           : defaultDueDays;
 
+        const invStatus = sendRes.success ? "SENT" : (freshInv.status || "DRAFT");
+
         await upsertPayPalInvoice({
           id: draftRes.id,
-          status: "SENT",
+          status: invStatus,
           invoiceNumber: draftRes.invoiceNumber,
           amount,
           currency,
@@ -399,7 +420,7 @@ export class ActionExecutor {
         return {
           invoiceId: draftRes.id,
           invoiceNumber: draftRes.invoiceNumber,
-          status: "SENT",
+          status: invStatus,
           recipientEmail,
           customerName,
           amount,

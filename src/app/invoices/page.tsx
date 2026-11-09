@@ -83,6 +83,7 @@ function InvoicesContent() {
     type: "success" | "warning" | "error";
     text: string;
     approvalId?: string;
+    payerViewUrl?: string;
   } | null>(null);
 
   const [formData, setFormData] = useState<ExtractedFormData>({
@@ -217,9 +218,13 @@ function InvoicesContent() {
       }
 
       if (data.decision === "AUTO") {
+        const payerView =
+          data.payerViewUrl ||
+          (data.invoiceId ? `https://www.sandbox.paypal.com/invoice/p/#${data.invoiceId}` : undefined);
         setActionNotice({
           type: "success",
           text: `Invoice #${data.invoiceNumber || data.invoiceId} generated and dispatched via ActionExecutor.`,
+          payerViewUrl: payerView,
         });
         await fetchInvoices();
         if (data.invoiceId) {
@@ -253,6 +258,30 @@ function InvoicesContent() {
             {params.value || params.data?.id.slice(0, 12) || "—"}
           </span>
         ),
+      },
+      {
+        headerName: "PayPal View",
+        width: 130,
+        cellRenderer: (params: { data?: InvoiceItem }) => {
+          if (!params.data) return null;
+          const url =
+            params.data.payerViewUrl ||
+            (params.data.id ? `https://www.sandbox.paypal.com/invoice/p/#${params.data.id}` : null);
+          if (!url) return <span className="text-muted text-[11px]">—</span>;
+          return (
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0070BA] hover:text-[#003087] hover:underline"
+              title="Open real PayPal hosted invoice link"
+            >
+              <span>View</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          );
+        },
       },
       {
         headerName: "Recipient",
@@ -405,15 +434,28 @@ function InvoicesContent() {
               )}
               <span>{actionNotice.text}</span>
             </div>
-            {actionNotice.approvalId && (
-              <Link
-                href="/approvals"
-                className="btn-paypal-primary btn-sm inline-flex items-center gap-1 text-xs font-bold"
-              >
-                <span>View Warrant</span>
-                <ArrowRight className="h-3 w-3" />
-              </Link>
-            )}
+            <div className="flex items-center gap-2">
+              {actionNotice.payerViewUrl && (
+                <a
+                  href={actionNotice.payerViewUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-paypal-secondary btn-sm inline-flex items-center gap-1.5 text-xs font-bold"
+                >
+                  <span>Open PayPal Link</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+              {actionNotice.approvalId && (
+                <Link
+                  href="/approvals"
+                  className="btn-paypal-primary btn-sm inline-flex items-center gap-1 text-xs font-bold"
+                >
+                  <span>View Warrant</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              )}
+            </div>
           </div>
         )}
 
@@ -493,19 +535,28 @@ function InvoicesContent() {
                       </div>
                     </div>
 
-                    {detail.invoice.payerViewUrl && (
-                      <div className="pt-3 border-t border-rule">
-                        <a
-                          href={detail.invoice.payerViewUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-paypal-secondary btn-sm w-full inline-flex items-center justify-center gap-1.5"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          <span>Open PayPal Sandbox View</span>
-                        </a>
-                      </div>
-                    )}
+                    {(() => {
+                      const url =
+                        detail.invoice.payerViewUrl ||
+                        (detail.invoice.id ? `https://www.sandbox.paypal.com/invoice/p/#${detail.invoice.id}` : null);
+                      if (!url) return null;
+                      return (
+                        <div className="pt-3 border-t border-rule space-y-2">
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn-paypal-primary btn-sm w-full inline-flex items-center justify-center gap-2 font-bold py-2 shadow-xs"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            <span>Open PayPal Sandbox View</span>
+                          </a>
+                          <div className="text-[10px] text-muted text-center break-all font-mono bg-paper-2 p-2 rounded-lg border border-rule select-all">
+                            {url}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Customer Draft Message */}
