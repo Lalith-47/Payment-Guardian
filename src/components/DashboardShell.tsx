@@ -78,13 +78,10 @@ export function DashboardShell({
 
   const fetchPendingApprovals = async () => {
     try {
-      const res = await fetch("/api/approvals");
+      const res = await fetch("/api/approvals?countOnly=true");
       if (res.ok) {
         const data = await res.json();
-        const pending = (data.approvals || []).filter(
-          (a: { status: string }) => a.status === "PENDING"
-        );
-        setPendingApprovalsCount(pending.length);
+        setPendingApprovalsCount(data.count ?? 0);
       }
     } catch {
       // Ignore

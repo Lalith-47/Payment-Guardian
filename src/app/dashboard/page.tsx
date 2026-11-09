@@ -25,32 +25,24 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const activePolicy = await getActivePolicy();
-
-  // Metrics from DB
-  const [pendingApprovalsRow] = await db
-    .select({ total: count() })
-    .from(approvals)
-    .where(eq(approvals.status, "PENDING"));
-
-  const [totalEventsRow] = await db
-    .select({ total: count() })
-    .from(events);
-
-  const [executedActionsRow] = await db
-    .select({ total: count() })
-    .from(actions)
-    .where(eq(actions.status, "SUCCESS"));
+  // Execute all metric queries in parallel to eliminate sequential roundtrips
+  const [
+    activePolicy,
+    [pendingApprovalsRow],
+    [totalEventsRow],
+    [executedActionsRow],
+    recentEvents,
+  ] = await Promise.all([
+    getActivePolicy(),
+    db.select({ total: count() }).from(approvals).where(eq(approvals.status, "PENDING")),
+    db.select({ total: count() }).from(events),
+    db.select({ total: count() }).from(actions).where(eq(actions.status, "SUCCESS")),
+    db.select().from(events).orderBy(desc(events.createdAt)).limit(6),
+  ]);
 
   const pendingApprovalsCount = Number(pendingApprovalsRow?.total || 0);
   const totalEventsCount = Number(totalEventsRow?.total || 0);
   const executedActionsCount = Number(executedActionsRow?.total || 0);
-
-  const recentEvents = await db
-    .select()
-    .from(events)
-    .orderBy(desc(events.createdAt))
-    .limit(6);
 
   return (
     <DashboardShell ownerEmail={env.OWNER_EMAIL}>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireOwnerSession } from "@/lib/api-auth";
 import { db } from "@/db";
 import { approvals, proposals, events } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { redis } from "@/lib/redis";
 import { createChildLogger } from "@/lib/logger";
 
@@ -14,57 +14,53 @@ export async function GET(req: NextRequest) {
     return authResult.errorResponse;
   }
 
+  // Fast-path: count-only query for navigation badge counters (<10ms)
+  if (req.nextUrl.searchParams.get("countOnly") === "true") {
+    try {
+      const [row] = await db
+        .select({ total: count() })
+        .from(approvals)
+        .where(eq(approvals.status, "PENDING"));
+      return NextResponse.json({ count: Number(row?.total || 0) });
+    } catch {
+      return NextResponse.json({ count: 0 });
+    }
+  }
+
   try {
-    const rawApprovals = await db
+    // Single joined query instead of N+1 sequential database roundtrips
+    const joinedRows = await db
       .select({
-        id: approvals.id,
-        token: approvals.token,
-        tokenHash: approvals.tokenHash,
-        payloadHash: approvals.payloadHash,
-        status: approvals.status,
-        triggerRule: approvals.triggerRule,
-        rejectionReason: approvals.rejectionReason,
-        expiresAt: approvals.expiresAt,
-        decidedAt: approvals.decidedAt,
-        decidedBy: approvals.decidedBy,
-        createdAt: approvals.createdAt,
-        eventId: approvals.eventId,
-        proposalId: approvals.proposalId,
+        approval: {
+          id: approvals.id,
+          token: approvals.token,
+          tokenHash: approvals.tokenHash,
+          payloadHash: approvals.payloadHash,
+          status: approvals.status,
+          triggerRule: approvals.triggerRule,
+          rejectionReason: approvals.rejectionReason,
+          expiresAt: approvals.expiresAt,
+          decidedAt: approvals.decidedAt,
+          decidedBy: approvals.decidedBy,
+          createdAt: approvals.createdAt,
+          eventId: approvals.eventId,
+          proposalId: approvals.proposalId,
+        },
+        proposal: proposals,
+        event: events,
       })
       .from(approvals)
+      .leftJoin(proposals, eq(approvals.proposalId, proposals.id))
+      .leftJoin(events, eq(approvals.eventId, events.id))
       .orderBy(desc(approvals.createdAt))
       .limit(100);
 
-    const enriched = await Promise.all(
-      rawApprovals.map(async (appr) => {
-        let activeToken: string | null = null;
-        try {
-          activeToken = (await redis.get(`approval_raw:${appr.tokenHash}`)) ||
-                        (await redis.get(`approval_token:${appr.id}`));
-        } catch {
-          // ignore redis error
-        }
-
-        const [prop] = await db
-          .select()
-          .from(proposals)
-          .where(eq(proposals.id, appr.proposalId))
-          .limit(1);
-
-        const [ev] = await db
-          .select()
-          .from(events)
-          .where(eq(events.id, appr.eventId))
-          .limit(1);
-
-        return {
-          ...appr,
-          token: activeToken || appr.token || appr.id,
-          proposal: prop || null,
-          event: ev || null,
-        };
-      })
-    );
+    const enriched = joinedRows.map((row) => ({
+      ...row.approval,
+      token: row.approval.token || row.approval.id,
+      proposal: row.proposal || null,
+      event: row.event || null,
+    }));
 
     return NextResponse.json({ approvals: enriched });
   } catch (err) {
