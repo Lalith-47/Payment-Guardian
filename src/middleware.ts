@@ -10,6 +10,7 @@ export function isAllowlistedPath(pathname: string): boolean {
   if (
     pathname.startsWith("/api/auth") ||
     pathname === "/api/webhooks/paypal" ||
+    pathname === "/api/warmup" ||
     pathname === "/healthz" ||
     pathname === "/readyz"
   ) {

@@ -7,6 +7,7 @@ describe("S1 Architecture Audit: API Route Authentication Enforcement", () => {
   const allowlistedRoutes = new Set([
     path.normalize("src/app/api/auth/[...all]/route.ts"),
     path.normalize("src/app/api/webhooks/paypal/route.ts"),
+    path.normalize("src/app/api/warmup/route.ts"),
   ]);
 
   function findApiRoutes(dir: string): string[] {
@@ -74,6 +75,7 @@ describe("S1 Architecture Audit: API Route Authentication Enforcement", () => {
     expect(isAllowlistedPath("/readyz")).toBe(true);
     expect(isAllowlistedPath("/api/auth/signin")).toBe(true);
     expect(isAllowlistedPath("/api/webhooks/paypal")).toBe(true);
+    expect(isAllowlistedPath("/api/warmup")).toBe(true);
 
     // Business routes MUST NOT be allowlisted
     expect(isAllowlistedPath("/api/paypal/capture")).toBe(false);
