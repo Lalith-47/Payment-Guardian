@@ -3,7 +3,12 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db, schema } from "@/db";
 import { env } from "@/config/env";
 
-const origins: string[] = [];
+const origins: string[] = [
+  "https://payment.lalithtech.dev",
+  "https://witty-pebble-03bad9f10.4.azurestaticapps.net",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
 
 if (env.APP_URL) {
   origins.push(env.APP_URL);
@@ -11,9 +16,8 @@ if (env.APP_URL) {
 if (env.BETTER_AUTH_URL) {
   origins.push(env.BETTER_AUTH_URL);
 }
-
-if (env.NODE_ENV !== "production") {
-  origins.push("http://localhost:3000", "http://127.0.0.1:3000");
+if (process.env.NEXT_PUBLIC_APP_URL) {
+  origins.push(process.env.NEXT_PUBLIC_APP_URL);
 }
 
 export const auth = betterAuth({

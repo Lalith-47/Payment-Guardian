@@ -12,9 +12,16 @@ html, body {
 }
 
 html {
+  font-size: 112.5%;
   scroll-behavior: smooth;
   scrollbar-color: var(--color-rule-2) var(--color-paper);
   scroll-padding-top: var(--space-3xl);
+}
+
+@media (min-width: 1280px) {
+  html {
+    font-size: 118.75%;
+  }
 }
 
 body {

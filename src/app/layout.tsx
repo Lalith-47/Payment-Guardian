@@ -29,7 +29,7 @@ export default function RootLayout({
                 if (p.get("disableCanvas") === "1") document.documentElement.dataset.disableCanvas = "1";
                 if (p.get("disableGlass") === "1") document.documentElement.dataset.disableGlass = "1";
                 var t = localStorage.getItem("paypal-theme");
-                if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+                if (t === "dark") {
                   document.documentElement.classList.add("dark");
                   document.documentElement.dataset.theme = "dark";
                   document.documentElement.style.colorScheme = "dark";

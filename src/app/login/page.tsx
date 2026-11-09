@@ -126,7 +126,7 @@ export default function LoginPage() {
                   autoComplete="email"
                   disabled={loading || success}
                   className="block w-full rounded-xl border border-rule bg-paper-3 pl-10 pr-3.5 py-2.5 text-xs text-ink placeholder-muted focus:border-focus focus:bg-paper-2 focus:outline-none transition-all disabled:opacity-50"
-                  placeholder="owner@revenueguardian.local"
+                  placeholder="User login"
                 />
               </div>
             </div>
