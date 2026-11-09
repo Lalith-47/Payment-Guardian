@@ -268,7 +268,20 @@ All screenshots are stored in `docs/screenshots/`:
 
 ---
 
-## 9. License
+## 9. Cloud Deployment & Architecture
+
+Revenue Guardian is deployed on **Azure Static Web Apps** with globally distributed serverless execution and managed cloud persistence:
+
+- **Hosting Platform**: Azure Static Web Apps (`rg-payment-guardian`, Central US)
+- **Primary Database**: [Neon Serverless PostgreSQL](https://neon.tech) (AWS ap-southeast-1 pooler, strict TLS)
+- **Distributed Cache & Queues**: [Upstash Redis](https://upstash.com) with TLS encryption
+- **Production Custom Domain**: `https://payment.lalithtech.dev`
+- **Default Azure Hostname**: `https://witty-pebble-03bad9f10.4.azurestaticapps.net`
+- **Automated CI/CD**: GitHub Actions workflow deploying via official `Azure/static-web-apps-deploy@v1`
+
+---
+
+## 10. License
 
 This project is licensed under the [MIT License](LICENSE).  
 Copyright (c) 2026 lalith.
