@@ -35,7 +35,8 @@ export async function GET(req?: Request) {
   const url = req ? new URL(req.url) : null;
   const forceFresh = url?.searchParams.get("fresh") === "true";
 
-  if (!forceFresh && cachedReadyz && Date.now() < cachedReadyz.expiresAt) {
+  const isTest = process.env.NODE_ENV === "test";
+  if (!isTest && !forceFresh && cachedReadyz && Date.now() < cachedReadyz.expiresAt) {
     return NextResponse.json(cachedReadyz.body, {
       status: cachedReadyz.status,
       headers: {

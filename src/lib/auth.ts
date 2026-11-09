@@ -3,22 +3,25 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db, schema } from "@/db";
 import { env } from "@/config/env";
 
-const origins: string[] = [
-  "https://payment.lalithtech.dev",
+const trustedOrigins: string[] = [
+  "https://payment.lalithdev.tech",
+  "https://lalithdev.tech",
   "https://witty-pebble-03bad9f10.4.azurestaticapps.net",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ];
 
 if (env.APP_URL) {
-  origins.push(env.APP_URL);
+  trustedOrigins.push(env.APP_URL);
 }
 if (env.BETTER_AUTH_URL) {
-  origins.push(env.BETTER_AUTH_URL);
+  trustedOrigins.push(env.BETTER_AUTH_URL);
 }
 if (process.env.NEXT_PUBLIC_APP_URL) {
-  origins.push(process.env.NEXT_PUBLIC_APP_URL);
+  trustedOrigins.push(process.env.NEXT_PUBLIC_APP_URL);
 }
+
+const baseURL = env.BETTER_AUTH_URL || env.APP_URL || "https://payment.lalithdev.tech";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -31,8 +34,8 @@ export const auth = betterAuth({
     },
   }),
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.APP_URL || env.BETTER_AUTH_URL,
-  trustedOrigins: Array.from(new Set(origins)),
+  baseURL,
+  trustedOrigins: Array.from(new Set(trustedOrigins)),
   emailAndPassword: {
     enabled: true,
   },
