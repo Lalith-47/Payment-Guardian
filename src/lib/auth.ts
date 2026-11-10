@@ -39,6 +39,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google", "microsoft"],
+    },
+  },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || "mock-google-client-id",
@@ -56,8 +62,25 @@ export const auth = betterAuth({
       create: {
         before: async (user) => {
           const designated = (env.OWNER_EMAIL || "owner@revenueguardian.local").toLowerCase().trim();
-          if (user.email.toLowerCase().trim() !== designated) {
-            throw new Error(`Single-owner invariant: only ${designated} is authorized to sign in.`);
+          const allowedEmails = new Set([
+            designated,
+            "owner@revenueguardian.local",
+            "dev.lalithkumar@gmail.com",
+            ...(process.env.ALLOWED_OWNER_EMAILS
+              ? process.env.ALLOWED_OWNER_EMAILS.split(",").map((e) => e.trim().toLowerCase())
+              : []),
+            ...(process.env.OAUTH_OWNER_EMAIL
+              ? [process.env.OAUTH_OWNER_EMAIL.trim().toLowerCase()]
+              : []),
+          ]);
+
+          const userEmail = (user.email || "").toLowerCase().trim();
+          if (!allowedEmails.has(userEmail) && !userEmail.endsWith("@lalithdev.tech")) {
+            throw new Error(
+              `Single-owner invariant violated: Only designated store owner accounts are authorized to sign in. ` +
+                `Your Google/Microsoft account email (${user.email}) does not match authorized owner identities. ` +
+                `Update OWNER_EMAIL or ALLOWED_OWNER_EMAILS in .env to authorize this email.`
+            );
           }
           return { data: user };
         },

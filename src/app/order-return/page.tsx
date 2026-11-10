@@ -54,10 +54,10 @@ function OrderReturnContent() {
           message: "Transaction captured and settled successfully.",
           captureId: data.captureId,
         });
-      } else if (res.status === 402 || data.reason === "DECLINED") {
+      } else if (res.status === 422 || res.status === 402 || data.status === "DECLINED" || data.reason === "DECLINED") {
         setResult({
           status: "DECLINED",
-          message: `Capture declined (${data.processorResponse || "REJECTED"}). Intercepted by Revenue Guardian.`,
+          message: `Capture declined (${data.issue || data.processorResponse || "DECLINED"}). Intercepted by Revenue Guardian.`,
           eventId: data.eventId,
         });
       } else {

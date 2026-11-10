@@ -227,16 +227,23 @@ export default function CheckoutTestPage() {
                   </p>
                 </div>
                 {createdOrder.approvalLink && (
-                  <div className="pt-2 border-t border-success/30">
+                  <div className="pt-2 border-t border-success/30 space-y-2">
+                    <div className="flex items-center gap-1.5 text-warning font-semibold text-[11px]">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      <span>Required before capture: Approve in PayPal Sandbox</span>
+                    </div>
                     <a
                       href={createdOrder.approvalLink}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 text-[#0070BA] font-bold hover:underline text-xs"
+                      className="btn-paypal-gold btn-sm w-full inline-flex items-center justify-center gap-1.5 font-bold shadow-sm"
                     >
                       <span>Open PayPal Sandbox Approval Page</span>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     </a>
+                    <p className="text-[10px] text-muted">
+                      Log in with sandbox buyer credentials and approve the order so PayPal will allow captures.
+                    </p>
                   </div>
                 )}
               </div>

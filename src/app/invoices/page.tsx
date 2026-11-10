@@ -300,7 +300,9 @@ function InvoicesContent() {
         valueGetter: (params) =>
           params.data ? `${params.data.currency} ${parseFloat(params.data.amount).toFixed(2)}` : "—",
         cellRenderer: (params: { value: string }) => (
-          <span className="font-mono text-ink font-bold">{params.value}</span>
+          <div className="flex items-center h-full">
+            <span className="font-mono text-ink font-bold">{params.value}</span>
+          </div>
         ),
       },
       {
@@ -309,38 +311,27 @@ function InvoicesContent() {
         width: 170,
         cellRenderer: (params: { value: string; data?: InvoiceItem }) => {
           const val = params.value || "DRAFT";
+          let badgeClass = "badge-status badge-status--info";
+          let label = val;
           if (val === "PAID_CONFIRMED_BY_POLLING") {
-            return (
-              <span className="badge-status badge-status--success">
-                PAID (Polled)
-              </span>
-            );
-          }
-          if (val === "PAID") {
-            return (
-              <span className="badge-status badge-status--success">
-                PAID (Webhook)
-              </span>
-            );
-          }
-          if (val === "SENT") {
-            return (
-              <span className="badge-status badge-status--info">
-                SENT
-              </span>
-            );
-          }
-          if (val === "CANCELLED") {
-            return (
-              <span className="badge-status badge-status--error">
-                CANCELLED
-              </span>
-            );
+            badgeClass = "badge-status badge-status--success";
+            label = "PAID (Polled)";
+          } else if (val === "PAID") {
+            badgeClass = "badge-status badge-status--success";
+            label = "PAID (Webhook)";
+          } else if (val === "SENT") {
+            badgeClass = "badge-status badge-status--info";
+            label = "SENT";
+          } else if (val === "CANCELLED") {
+            badgeClass = "badge-status badge-status--error";
+            label = "CANCELLED";
           }
           return (
-            <span className="badge-status badge-status--info">
-              {val}
-            </span>
+            <div className="flex items-center h-full">
+              <span className={badgeClass}>
+                {label}
+              </span>
+            </div>
           );
         },
       },
@@ -349,9 +340,11 @@ function InvoicesContent() {
         field: "confirmationSource",
         width: 120,
         cellRenderer: (params: { value: string | null }) => (
-          <span className="text-muted font-mono text-[11px] bg-paper-3 px-2 py-0.5 rounded-full">
-            {params.value || "executor"}
-          </span>
+          <div className="flex items-center h-full">
+            <span className="text-muted font-mono text-[11px] bg-paper-3 px-2 py-0.5 rounded-full leading-tight inline-flex items-center">
+              {params.value || "executor"}
+            </span>
+          </div>
         ),
       },
       {

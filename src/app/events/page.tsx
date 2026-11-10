@@ -175,11 +175,13 @@ function EventsContent() {
       {
         field: "source",
         headerName: "Source",
-        width: 130,
+        width: 140,
         cellRenderer: (params: any) => (
-          <span className="font-mono text-muted bg-paper-3 px-2 py-0.5 rounded-full text-[11px]">
-            {params.value}
-          </span>
+          <div className="flex items-center h-full">
+            <span className="font-mono text-muted bg-paper-3 px-2 py-0.5 rounded-full text-[11px] leading-tight inline-flex items-center">
+              {params.value}
+            </span>
+          </div>
         ),
       },
       {
@@ -201,9 +203,11 @@ function EventsContent() {
             badgeClass = "badge-status badge-status--error";
           }
           return (
-            <span className={badgeClass}>
-              {s}
-            </span>
+            <div className="flex items-center h-full">
+              <span className={badgeClass}>
+                {s}
+              </span>
+            </div>
           );
         },
       },
@@ -213,7 +217,9 @@ function EventsContent() {
         width: 130,
         valueGetter: (params) => (params.data?.amount ? `$${params.data.amount} ${params.data.currency}` : "—"),
         cellRenderer: (params: any) => (
-          <span className="font-mono text-ink font-bold">{params.value}</span>
+          <div className="flex items-center h-full">
+            <span className="font-mono text-ink font-bold">{params.value}</span>
+          </div>
         ),
       },
       {

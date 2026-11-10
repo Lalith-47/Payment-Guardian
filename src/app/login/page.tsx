@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Shield, Lock, Mail, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
@@ -13,6 +13,22 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlError = params.get("error_description") || params.get("error");
+      if (urlError) {
+        setError(
+          urlError.includes("Single-owner")
+            ? urlError
+            : urlError === "oauth_failed"
+            ? "OAuth sign-in failed. Please ensure you are signing in with an authorized owner account."
+            : `Authentication error: ${urlError}`
+        );
+      }
+    }
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -50,12 +66,16 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
+      const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+      const callbackURL = `${baseUrl}/dashboard`;
       const res = await fetch("/api/auth/sign-in/social", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider,
-          callbackURL: "/dashboard",
+          callbackURL,
+          newUserCallbackURL: callbackURL,
+          errorCallbackURL: `${baseUrl}/login`,
         }),
       });
       const data = await res.json().catch(() => ({}));
