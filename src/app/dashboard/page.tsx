@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { getActivePolicy } from "@/db/queries/policies";
 import { db } from "@/db";
 import { events, approvals, actions } from "@/db/schema";
@@ -25,6 +28,12 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const reqHeaders = await headers();
+  const session = await auth.api.getSession({ headers: reqHeaders });
+  if (!session || !session.user) {
+    redirect("/login");
+  }
+
   // Execute all metric queries in parallel to eliminate sequential roundtrips
   const [
     activePolicy,
@@ -45,7 +54,7 @@ export default async function DashboardPage() {
   const executedActionsCount = Number(executedActionsRow?.total || 0);
 
   return (
-    <DashboardShell ownerEmail={env.OWNER_EMAIL}>
+    <DashboardShell ownerEmail={session.user.email}>
       <div className="space-y-8">
         {/* Merchant Mission & Status Hero Banner */}
         <div className="card-paypal p-6 sm:p-8 bg-gradient-to-r from-white via-white to-accent relative overflow-hidden">

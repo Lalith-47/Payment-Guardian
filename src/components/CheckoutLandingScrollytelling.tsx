@@ -980,8 +980,8 @@ export function CheckoutLandingScrollytelling() {
               Ready to safeguard merchant revenue with deterministic safety and zero hallucination risk?
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-              <Link href="/dashboard" className="btn-paypal-primary text-xs py-2 px-5 rounded-full inline-flex items-center gap-1.5">
-                <span>Open Console</span>
+              <Link href="/login" className="btn-paypal-primary text-xs py-2 px-5 rounded-full inline-flex items-center gap-1.5 font-bold">
+                <span>Sign In to Merchant Console</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <a href="#section-features" className="btn-paypal-secondary text-xs py-2 px-5 rounded-full">

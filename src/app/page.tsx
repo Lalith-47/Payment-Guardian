@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppleLiquidBackground } from "@/components/AppleLiquidBackground";
 import { CheckoutLandingScrollytelling } from "@/components/CheckoutLandingScrollytelling";
@@ -31,6 +31,18 @@ export default function LandingPage() {
   const { t } = useI18n();
   const [thresholdCeiling, setThresholdCeiling] = useState<number>(50);
   const [selectedSpec, setSelectedSpec] = useState<number>(0);
+  const [sessionUser, setSessionUser] = useState<{ email?: string; name?: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/get-session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.user) {
+          setSessionUser(data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const autoCoveragePercent = Math.min(96, Math.round(42 + (thresholdCeiling / 250) * 52));
   const estimatedRecoveredUsd = (thresholdCeiling * 34.8).toFixed(0);
@@ -110,19 +122,43 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 shrink-0">
             <LanguageSwitcher />
             <ThemeToggle />
-            <Link
-              href="/login"
-              className="text-xs font-semibold text-ink-2 hover:text-ink px-3 py-1.5 rounded-full hover:bg-paper-3 transition-colors shrink-0 whitespace-nowrap"
-            >
-              {t("nav.signIn")}
-            </Link>
-            <Link
-              href="/dashboard"
-              className="btn-paypal-primary text-xs py-1.5 px-3.5 min-h-[32px] rounded-full shadow-md shadow-[#0070BA]/20 hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 whitespace-nowrap"
-            >
-              <span>{t("nav.console")}</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            {sessionUser ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline text-[11px] font-mono text-muted bg-paper-3 px-2.5 py-1 rounded-full border border-rule">
+                  {sessionUser.email}
+                </span>
+                <Link
+                  href="/dashboard"
+                  className="btn-paypal-primary text-xs py-1.5 px-3.5 min-h-[32px] rounded-full shadow-md shadow-[#0070BA]/20 hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 whitespace-nowrap"
+                >
+                  <span>{t("nav.overview")}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await fetch("/api/auth/sign-out", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: "{}",
+                    });
+                    setSessionUser(null);
+                    window.location.reload();
+                  }}
+                  className="text-xs font-semibold text-ink-2 hover:text-error px-2.5 py-1 rounded-full hover:bg-paper-3 transition-colors shrink-0"
+                >
+                  {t("nav.signOut") || "Sign Out"}
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="btn-paypal-primary text-xs py-1.5 px-4 min-h-[32px] rounded-full shadow-md shadow-[#0070BA]/20 hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 whitespace-nowrap font-bold inline-flex items-center gap-1.5"
+              >
+                <span>{t("nav.signIn")}</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            )}
           </div>
         </nav>
       </header>
@@ -144,10 +180,17 @@ export default function LandingPage() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-6">
-          <div className="inline-flex items-center gap-2 glass-pill px-4 py-1.5 text-xs font-semibold text-[#003087] dark:text-[#38BDF8] shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-ping shrink-0" />
-            <span>{t("hero.badge")}</span>
-          </div>
+          {sessionUser ? (
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 shadow-sm">
+              <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Signed in as {sessionUser.email} &bull; Active Merchant Session</span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 glass-pill px-4 py-1.5 text-xs font-semibold text-[#003087] dark:text-[#38BDF8] shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-[#10B981] animate-ping shrink-0" />
+              <span>{t("hero.badge")}</span>
+            </div>
+          )}
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-ink leading-[1.12]">
             {t("hero.title")}
@@ -158,13 +201,23 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3.5 pt-4">
-            <Link
-              href="/dashboard"
-              className="btn-paypal-primary py-2.5 px-6 text-xs sm:text-sm shadow-lg shadow-[#0070BA]/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              <span>{t("hero.cta.dashboard")}</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            {sessionUser ? (
+              <Link
+                href="/dashboard"
+                className="btn-paypal-primary py-2.5 px-6 text-xs sm:text-sm shadow-lg shadow-[#0070BA]/25 hover:scale-[1.02] active:scale-[0.98] transition-all font-bold"
+              >
+                <span>{t("nav.overview")} Dashboard</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="btn-paypal-primary py-2.5 px-6 text-xs sm:text-sm shadow-lg shadow-[#0070BA]/25 hover:scale-[1.02] active:scale-[0.98] transition-all font-bold inline-flex items-center gap-2"
+              >
+                <span>{t("nav.signIn")} to Guardrail Console</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
             <a
               href="#section-scrollytelling"
               className="glass-pill py-2.5 px-5 text-xs sm:text-sm font-semibold text-[#003087] dark:text-[#38BDF8] hover:bg-paper-3 transition-all flex items-center gap-2"
@@ -381,12 +434,15 @@ export default function LandingPage() {
             <span>Apple Liquid Glass Edition</span>
           </div>
           <div className="flex items-center gap-6 font-medium">
-            <Link href="/dashboard" className="hover:text-ink transition-colors">
-              {t("nav.console")}
-            </Link>
-            <Link href="/login" className="hover:text-ink transition-colors">
-              {t("nav.signIn")}
-            </Link>
+            {sessionUser ? (
+              <Link href="/dashboard" className="hover:text-ink transition-colors font-semibold">
+                {t("nav.overview")}
+              </Link>
+            ) : (
+              <Link href="/login" className="hover:text-ink transition-colors font-semibold">
+                {t("nav.signIn")}
+              </Link>
+            )}
             <a href="#section-hero" className="hover:text-ink transition-colors">
               {t("nav.overview")}
             </a>

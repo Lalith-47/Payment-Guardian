@@ -55,11 +55,23 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [currentEmail, setCurrentEmail] = useState<string>(ownerEmail || "");
   const [readyz, setReadyz] = useState<ReadyzData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useI18n();
+
+  useEffect(() => {
+    fetch("/api/auth/get-session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.user?.email) {
+          setCurrentEmail(data.user.email);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchReadyz = async () => {
     try {
@@ -209,11 +221,11 @@ export function DashboardShell({
               <LanguageSwitcher />
               <ThemeToggle />
 
-              {/* Email chip: hide on regular desktop to prevent sign out button clipping */}
-              <div className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-paper-3 border border-rule text-xs text-ink-2 shrink-0">
+              {/* Dynamic Logged-in User Email */}
+              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-paper-3 border border-rule text-xs text-ink-2 shrink-0 max-w-[200px]" title={currentEmail || ownerEmail}>
                 <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shrink-0" />
-                <span className="truncate max-w-[110px] font-mono text-[11px] font-medium">
-                  {ownerEmail || "owner@paypal.local"}
+                <span className="truncate font-mono text-[11px] font-medium">
+                  {currentEmail || ownerEmail || "owner@revenueguardian.local"}
                 </span>
               </div>
 
@@ -378,7 +390,7 @@ export function DashboardShell({
             <div className="pt-3 mt-2 border-t border-rule space-y-2">
               <div className="flex items-center gap-2 px-2.5 py-1 text-xs text-muted">
                 <span className="w-2 h-2 rounded-full bg-[#10B981] shrink-0" />
-                <span className="truncate font-mono">{ownerEmail || "owner@paypal.local"}</span>
+                <span className="truncate font-mono">{currentEmail || ownerEmail || "owner@revenueguardian.local"}</span>
               </div>
               <button
                 onClick={() => {

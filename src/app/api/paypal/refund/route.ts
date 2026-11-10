@@ -267,6 +267,8 @@ export async function POST(req: NextRequest) {
       ruleTriggered: "AMOUNT_EXCEEDS_AUTO_REFUND_LIMIT",
       approvalId: approval.id,
       token: approval.token,
+      approvalToken: approval.token,
+      proposalId,
       eventId,
       orderId,
       captureId: resolvedCaptureId,

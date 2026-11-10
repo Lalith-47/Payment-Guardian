@@ -4,8 +4,11 @@ import { createAction, getActionByIdempotencyKey, updateActionStatus } from "@/d
 import { appendAuditLog } from "@/db/queries/audit";
 import { updateEventStatus } from "@/db/queries/events";
 import { getApprovalByToken, decideApproval } from "@/db/queries/approvals";
-import { upsertPayPalInvoice } from "@/db/queries/paypal-entities";
+import { getPayPalOrder, upsertPayPalInvoice } from "@/db/queries/paypal-entities";
 import { getActivePolicy } from "@/db/queries/policies";
+import { db } from "@/db";
+import { paypalOrders } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { env } from "@/config/env";
 import { createChildLogger } from "@/lib/logger";
 import { AgentProposal } from "@/agent/schema";
@@ -328,14 +331,44 @@ export class ActionExecutor {
       }
 
       case "refund": {
+        let captureId = req.targetId;
+        let linkedOrderId: string | null = null;
+
+        // If targetId is an order ID, resolve the capture ID from paypal_orders table
+        const order = await getPayPalOrder(req.targetId).catch(() => null);
+        if (order) {
+          linkedOrderId = order.id;
+          if (order.rawPayload) {
+            const raw = order.rawPayload as Record<string, unknown>;
+            const purchaseUnits = (raw.purchase_units as Array<Record<string, unknown>>) || [];
+            const payments = (purchaseUnits[0]?.payments as Record<string, unknown>) || {};
+            const captures = (payments.captures as Array<Record<string, unknown>>) || [];
+            if (captures[0]?.id) {
+              captureId = captures[0].id as string;
+            }
+          }
+        }
+
         // Refund capture
         const refundRes = await paypalClient.refundCapture({
-          captureId: req.targetId,
+          captureId,
           amount: req.proposal.amount ? req.proposal.amount.toFixed(2) : undefined,
           currency: req.proposal.currency || undefined,
           note: req.proposal.message,
           requestId: idempotencyKey,
         });
+
+        // Sync order status to REFUNDED in DB
+        if (linkedOrderId) {
+          try {
+            await db
+              .update(paypalOrders)
+              .set({ status: "REFUNDED", updatedAt: new Date() })
+              .where(eq(paypalOrders.id, linkedOrderId));
+          } catch (dbErr) {
+            log.warn({ dbErr, linkedOrderId }, "Failed to update paypal_orders status to REFUNDED");
+          }
+        }
 
         return {
           refundId: refundRes.id,

@@ -163,8 +163,8 @@ function OrderReturnContent() {
       </div>
 
       <div className="flex items-center justify-between text-xs text-muted font-mono pt-2 border-t border-rule">
-        <Link href="/" className="hover:text-ink transition-colors">
-          ← {t("return.back")}
+        <Link href="/dashboard" className="hover:text-ink transition-colors font-semibold flex items-center gap-1">
+          <span>← {t("return.back")}</span>
         </Link>
         <Link href="/dashboard" className="text-[#0070BA] dark:text-[#38BDF8] font-bold hover:underline inline-flex items-center gap-1 font-sans">
           <span>{t("return.goToDashboard")}</span>

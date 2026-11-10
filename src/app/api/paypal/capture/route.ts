@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   let body: {
     orderId?: string;
-    mockCode?: "INSTRUMENT_DECLINED" | "TRANSACTION_REFUSED";
+    mockCode?: "INSTRUMENT_DECLINED" | "TRANSACTION_REFUSED" | "SIMULATE_SUCCESS";
     requestId?: string;
   } = {};
 
@@ -106,14 +106,75 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (body.mockCode !== "INSTRUMENT_DECLINED" && body.mockCode !== "TRANSACTION_REFUSED") {
+    if (
+      body.mockCode !== "INSTRUMENT_DECLINED" &&
+      body.mockCode !== "TRANSACTION_REFUSED" &&
+      body.mockCode !== "SIMULATE_SUCCESS"
+    ) {
       return NextResponse.json(
         {
-          error: `Invalid mock code '${body.mockCode}'. Only INSTRUMENT_DECLINED or TRANSACTION_REFUSED are permitted.`,
+          error: `Invalid mock code '${body.mockCode}'. Only INSTRUMENT_DECLINED, TRANSACTION_REFUSED, or SIMULATE_SUCCESS are permitted.`,
         },
         { status: 400 }
       );
     }
+  }
+
+  // Handle simulated successful capture for testing ownership & refund policies
+  if (body.mockCode === "SIMULATE_SUCCESS") {
+    const simCaptureId = `sim_cap_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
+    const captureAmount = {
+      value: existingOrder.amount,
+      currency_code: existingOrder.currency,
+    };
+
+    await upsertPayPalOrder({
+      id: orderId,
+      status: "COMPLETED",
+      intent: "CAPTURE",
+      amount: captureAmount.value,
+      currency: captureAmount.currency_code,
+      rawPayload: {
+        id: orderId,
+        status: "COMPLETED",
+        purchase_units: [
+          {
+            payments: {
+              captures: [
+                {
+                  id: simCaptureId,
+                  status: "COMPLETED",
+                  amount: captureAmount,
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    await appendAuditLog({
+      source: "sandbox_negative_testing",
+      eventType: "payment.capture_completed",
+      actor: "paypal_capture_route",
+      action: "ORDER_CAPTURED",
+      details: {
+        orderId,
+        captureId: simCaptureId,
+        amount: captureAmount,
+        simulated: true,
+      },
+    });
+
+    log.info({ orderId, simCaptureId }, "Simulated successful capture persisted for testing");
+
+    return NextResponse.json({
+      status: "COMPLETED",
+      orderId,
+      captureId: simCaptureId,
+      amount: captureAmount,
+      simulated: true,
+    });
   }
 
   const source = body.mockCode ? "sandbox_negative_testing" : "paypal_capture_route";
