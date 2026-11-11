@@ -78,6 +78,13 @@ export async function POST(req: NextRequest) {
     extractedData = extractionResult.extracted;
     missingFields = extractionResult.missingFields;
 
+    if (extractedData.customerEmail) {
+      extractedData.customerEmail = extractedData.customerEmail.trim();
+      if (extractedData.customerEmail.includes("@") && !extractedData.customerEmail.split("@")[1].includes(".")) {
+        extractedData.customerEmail = `${extractedData.customerEmail}.com`;
+      }
+    }
+
     if (body.extractOnly) {
       return NextResponse.json(
         {
@@ -98,9 +105,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let rawEmail = typeof body.customerEmail === "string" ? body.customerEmail.trim() : null;
+    if (rawEmail && rawEmail.includes("@") && !rawEmail.split("@")[1].includes(".")) {
+      rawEmail = `${rawEmail}.com`;
+    }
+
     extractedData = {
       customerName: (body.customerName as string) || null,
-      customerEmail: (body.customerEmail as string) || null,
+      customerEmail: rawEmail,
       amount: rawAmount,
       currency: (body.currency as string) || "USD",
       dueDays: typeof body.dueDays === "number" ? body.dueDays : 15,
@@ -110,8 +122,9 @@ export async function POST(req: NextRequest) {
       reasoning: "Direct owner input from form",
     };
 
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!extractedData.customerName) missingFields.push("customerName");
-    if (!extractedData.customerEmail) missingFields.push("customerEmail");
+    if (!extractedData.customerEmail || !EMAIL_REGEX.test(extractedData.customerEmail)) missingFields.push("customerEmail");
     if (!extractedData.amount || extractedData.amount <= 0) missingFields.push("amount");
     if (!extractedData.currency) missingFields.push("currency");
   }

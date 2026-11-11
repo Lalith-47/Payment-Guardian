@@ -390,12 +390,22 @@ export class PayPalClient {
     const isE2E = (process.env.STACK_ROLE === "e2e" || env.STACK_ROLE === "e2e") && process.env.STACK_ROLE !== "demo";
     const requestId = params.requestId || crypto.randomUUID();
     const rawNumber = await this.generateNextInvoiceNumber();
-    const invoiceNumber = isE2E ? `E2E-${rawNumber}` : rawNumber;
+    const invoiceNumber = isE2E ? (rawNumber.startsWith("E2E-") ? rawNumber : `E2E-${rawNumber}`) : rawNumber;
     const businessEmail = env.PAYPAL_BUSINESS_EMAIL || "merchant@example.com";
     const todayStr = new Date().toISOString().split("T")[0];
     const paymentTerm =
       params.paymentTerm ||
       buildPaymentTerm(params.dueDays, params.defaultDueDays ?? 15);
+
+    // Normalize recipient email to guarantee RFC/PayPal schema conformance
+    let normalizedRecipient = (params.recipientEmail || "").trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedRecipient)) {
+      if (normalizedRecipient.includes("@") && !normalizedRecipient.split("@")[1].includes(".")) {
+        normalizedRecipient = `${normalizedRecipient}.com`;
+      } else {
+        normalizedRecipient = env.SANDBOX_PERSONAL_EMAIL || "sb-b6gt753713793@personal.example.com";
+      }
+    }
 
     const payload = {
       detail: {
@@ -413,7 +423,7 @@ export class PayPalClient {
         {
           billing_info: {
             name: { given_name: "Client", surname: "Customer" },
-            email_address: params.recipientEmail,
+            email_address: normalizedRecipient,
           },
         },
       ],

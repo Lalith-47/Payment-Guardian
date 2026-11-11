@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DashboardShell } from "@/components/DashboardShell";
 import {
   CreditCard,
@@ -21,6 +21,22 @@ import {
 import Link from "next/link";
 
 export default function CheckoutTestPage() {
+  const [policyLimit, setPolicyLimit] = useState<number>(25.0);
+
+  useEffect(() => {
+    fetch("/api/policies")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.policy?.autoRefundMaxAmount) {
+          const parsed = parseFloat(data.policy.autoRefundMaxAmount);
+          if (!isNaN(parsed) && parsed > 0) {
+            setPolicyLimit(parsed);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Step 1: Create Order state
   const [createAmount, setCreateAmount] = useState("15.00");
   const [createCurrency, setCreateCurrency] = useState("USD");
@@ -235,7 +251,7 @@ export default function CheckoutTestPage() {
     }
   };
 
-  const isUnderLimit = parseFloat(createAmount || "0") <= 25.0;
+  const isUnderLimit = parseFloat(createAmount || "0") <= policyLimit;
 
   return (
     <DashboardShell>
@@ -248,12 +264,12 @@ export default function CheckoutTestPage() {
               <span>Checkout Sandbox & Policy Engine Testing</span>
             </h1>
             <p className="mt-1 text-sm text-muted">
-              Test end-to-end checkout, entitlement ownership, and policy-governed refund limits (&le; $25 auto-refund vs &gt; $25 approval warrant).
+              Test end-to-end checkout, entitlement ownership, and policy-governed limits (&le; ${policyLimit.toFixed(2)} auto-refund vs &gt; ${policyLimit.toFixed(2)} approval warrant).
             </p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-xs font-mono font-bold text-sky-600 dark:text-sky-400 self-start sm:self-auto">
             <Zap className="h-3.5 w-3.5" />
-            <span>Store Policy Ceiling: $25.00 USD</span>
+            <span>Store Policy Ceiling: ${policyLimit.toFixed(2)} USD</span>
           </div>
         </div>
 
@@ -270,7 +286,7 @@ export default function CheckoutTestPage() {
               className="px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
             >
               <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
-              <span>&le; $25: Under Limit ($15.00 &rarr; Auto-Refund)</span>
+              <span>&le; ${policyLimit.toFixed(2)}: Under Limit ($15.00 &rarr; Auto-Refund)</span>
             </button>
             <button
               type="button"
@@ -279,7 +295,7 @@ export default function CheckoutTestPage() {
               className="px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
             >
               <Clock className="h-3.5 w-3.5 text-amber-600" />
-              <span>&gt; $25: Over Limit ($75.00 &rarr; Approval Warrant)</span>
+              <span>&gt; ${policyLimit.toFixed(2)}: Over Limit ($75.00 &rarr; Approval Warrant)</span>
             </button>
             <button
               type="button"
@@ -326,7 +342,7 @@ export default function CheckoutTestPage() {
                     />
                   </div>
                   <span className={`text-[10px] font-mono font-semibold ${isUnderLimit ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
-                    {isUnderLimit ? "✓ Eligible for auto-refund (<= $25.00)" : "⚠ Requires warrant approval (> $25.00)"}
+                    {isUnderLimit ? `✓ Eligible for auto-refund (<= $${policyLimit.toFixed(2)})` : `⚠ Requires warrant approval (> $${policyLimit.toFixed(2)})`}
                   </span>
                 </div>
                 <div className="space-y-1.5">
@@ -571,16 +587,16 @@ export default function CheckoutTestPage() {
               <div className="p-3 rounded-xl bg-paper-3 border border-rule">
                 <span className="text-muted block text-[10px] uppercase">Auto-Refund Threshold</span>
                 <span className="font-bold text-[#0070BA] dark:text-[#38BDF8] text-sm mt-0.5 block">
-                  $25.00 USD
+                  ${policyLimit.toFixed(2)} USD
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-paper-3 border border-rule">
                 <span className="text-muted block text-[10px] uppercase">Policy Assessment</span>
                 <span className="font-bold text-ink mt-0.5 block">
-                  {parseFloat(ownedItem.amount) <= 25.0 ? (
-                    <span className="text-emerald-600 dark:text-emerald-400">Instant Auto-Refund (&le; $25)</span>
+                  {parseFloat(ownedItem.amount) <= policyLimit ? (
+                    <span className="text-emerald-600 dark:text-emerald-400">Instant Auto-Refund (&le; ${policyLimit.toFixed(2)})</span>
                   ) : (
-                    <span className="text-amber-600 dark:text-amber-400">Requires Warrant Approval (&gt; $25)</span>
+                    <span className="text-amber-600 dark:text-amber-400">Requires Warrant Approval (&gt; ${policyLimit.toFixed(2)})</span>
                   )}
                 </span>
               </div>

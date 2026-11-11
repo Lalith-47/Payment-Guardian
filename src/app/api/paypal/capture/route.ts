@@ -216,6 +216,8 @@ export async function POST(req: NextRequest) {
         action: "RECORD_CAPTURE_DECLINE",
         details: {
           orderId,
+          amount: existingOrder.amount,
+          currency: existingOrder.currency,
           issue: captureResult.issue,
           description: captureResult.description,
           source,

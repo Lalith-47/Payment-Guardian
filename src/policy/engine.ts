@@ -126,6 +126,17 @@ export function evaluatePolicy(
           ruleTriggered: "MAX_RETRIES_EXCEEDED",
         };
       }
+
+      // If the transaction amount exceeds the auto-resolution policy threshold, require owner approval warrant
+      const effectiveAmount = context.originalAmount ?? proposal.amount;
+      if (effectiveAmount != null && effectiveAmount > autoRefundMax) {
+        return {
+          decision: "NEEDS_APPROVAL",
+          reason: `Transaction amount ($${effectiveAmount.toFixed(2)}) exceeds auto-resolution policy threshold ($${autoRefundMax.toFixed(2)}). Escalated for owner approval warrant review.`,
+          ruleTriggered: "AMOUNT_EXCEEDS_POLICY_LIMIT",
+        };
+      }
+
       return {
         decision: "AUTO",
         reason: `Retry count (${currentRetries}/${maxRetries}) is within policy limits and confidence meets threshold.`,

@@ -143,13 +143,24 @@ export async function processEventPipeline(
     const proposal = agentResult.proposal;
     const proposalId = `prop_${crypto.randomUUID()}`;
 
+    const effectiveAmount = amount != null ? amount : proposal.amount;
+    const effectiveCurrency = currency || proposal.currency || "USD";
+
+    // Ensure proposal object itself carries the verified checkout order amount & currency
+    if (amount != null) {
+      proposal.amount = amount;
+    }
+    if (currency) {
+      proposal.currency = currency;
+    }
+
     // Record Proposal in DB with exact context snapshot
     await createProposal({
       id: proposalId,
       eventId: jobData.eventId,
       action: proposal.action,
-      amount: proposal.amount != null ? proposal.amount.toFixed(2) : null,
-      currency: proposal.currency,
+      amount: effectiveAmount != null ? Number(effectiveAmount).toFixed(2) : null,
+      currency: effectiveCurrency,
       message: proposal.message,
       confidence: proposal.confidence.toFixed(2),
       reasoning: proposal.reasoning,
@@ -171,6 +182,8 @@ export async function processEventPipeline(
         to: "PROPOSED",
         proposalId,
         action: proposal.action,
+        amount: effectiveAmount != null ? Number(effectiveAmount).toFixed(2) : null,
+        currency: effectiveCurrency,
         confidence: proposal.confidence,
       },
     });
@@ -208,6 +221,8 @@ export async function processEventPipeline(
         decision: policyResult.decision,
         reason: policyResult.reason,
         ruleTriggered: policyResult.ruleTriggered,
+        amount: effectiveAmount != null ? Number(effectiveAmount).toFixed(2) : null,
+        currency: effectiveCurrency,
       },
     });
 
@@ -240,6 +255,8 @@ export async function processEventPipeline(
           proposalId,
           approvalId: approval.id,
           expiresAt: approval.expiresAt,
+          amount: effectiveAmount != null ? Number(effectiveAmount).toFixed(2) : null,
+          currency: effectiveCurrency,
         },
       });
     } else {

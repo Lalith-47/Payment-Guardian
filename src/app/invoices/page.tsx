@@ -187,9 +187,22 @@ function InvoicesContent() {
     setActionNotice(null);
 
     try {
+      let email = formData.customerEmail.trim();
+      if (email.includes("@") && !email.split("@")[1].includes(".")) {
+        email = `${email}.com`;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setActionNotice({
+          type: "error",
+          text: "Please enter a valid customer email address with a domain (e.g. name@domain.com).",
+        });
+        setSubmitting(false);
+        return;
+      }
+
       const payload = {
         customerName: formData.customerName.trim(),
-        customerEmail: formData.customerEmail.trim(),
+        customerEmail: email,
         amount: typeof formData.amount === "number" ? formData.amount : parseFloat(formData.amount as string) || 0,
         currency: formData.currency,
         dueDays: formData.dueDays,

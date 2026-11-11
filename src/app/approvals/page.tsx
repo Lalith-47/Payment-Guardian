@@ -59,6 +59,7 @@ export default function ApprovalsPage() {
   const [rejectingItem, setRejectingItem] = useState<ApprovalItem | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [policyLimit, setPolicyLimit] = useState<number>(25.0);
 
   const fetchApprovals = async () => {
     try {
@@ -81,6 +82,17 @@ export default function ApprovalsPage() {
 
   useEffect(() => {
     fetchApprovals();
+    fetch("/api/policies")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.policy?.autoRefundMaxAmount) {
+          const parsed = parseFloat(data.policy.autoRefundMaxAmount);
+          if (!isNaN(parsed) && parsed > 0) {
+            setPolicyLimit(parsed);
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleSimulateDecline = async (amount: string = "85.00") => {
@@ -292,7 +304,7 @@ export default function ApprovalsPage() {
 
           <div className="card-paypal p-5 space-y-2">
             <div className="text-xs font-semibold text-muted">Auto-Refund Ceiling</div>
-            <div className="text-3xl font-extrabold text-[#0070BA] font-mono">$25.00</div>
+            <div className="text-3xl font-extrabold text-[#0070BA] font-mono">${policyLimit.toFixed(2)}</div>
             <div className="text-xs text-muted">PostgreSQL enforced</div>
           </div>
 

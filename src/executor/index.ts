@@ -400,12 +400,20 @@ export class ActionExecutor {
           | Record<string, unknown>
           | undefined;
         const propAny = req.proposal as unknown as Record<string, unknown>;
-        const recipientEmail =
+        let rawRecipientEmail =
           (metadata?.customerEmail as string) ||
           (propAny?.customerEmail as string) ||
           (req as unknown as Record<string, unknown>)?.recipientEmail as string ||
           env.SANDBOX_PERSONAL_EMAIL ||
           "sb-b6gt753713793@personal.example.com";
+        let recipientEmail = (rawRecipientEmail || "").trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+          if (recipientEmail.includes("@") && !recipientEmail.split("@")[1].includes(".")) {
+            recipientEmail = `${recipientEmail}.com`;
+          } else {
+            recipientEmail = env.SANDBOX_PERSONAL_EMAIL || "sb-b6gt753713793@personal.example.com";
+          }
+        }
         const customerName =
           (metadata?.customerName as string) ||
           (propAny?.customerName as string) ||
